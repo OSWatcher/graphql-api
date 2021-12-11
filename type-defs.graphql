@@ -1,0 +1,25 @@
+type Blob {
+    hash: String!
+}
+
+interface HasFilenameRel @relationshipProperties {
+    name: String!
+}
+
+type Tree {
+    hash: String!
+    child_blobs: [Blob] @relationship(type: "HAS_CHILD_BLOB", direction: OUT, properties: "HasFilenameRel")
+    child_trees: [Tree] @relationship(type: "HAS_CHILD_TREE", direction: OUT, properties: "HasFilenameRel")
+}
+
+type Commit {
+    hash: String!
+    name: String!
+    date: String!
+    previous: Commit @relationship(type: "HAS_PREVIOUS", direction: OUT)
+    filesystem: Tree @relationship(type: "OWNS_FILESYSTEM", direction: OUT)
+}
+
+type Mutation {
+    mergeTree(input: TreeCreateInput!): String!
+}
