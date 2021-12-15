@@ -1,5 +1,5 @@
 type Blob {
-    hash: String!
+    hash: String! @unique
 }
 
 interface HasFilenameRel @relationshipProperties {
@@ -7,13 +7,13 @@ interface HasFilenameRel @relationshipProperties {
 }
 
 type Tree {
-    hash: String!
+    hash: String! @unique
     child_blobs: [Blob] @relationship(type: "HAS_CHILD_BLOB", direction: OUT, properties: "HasFilenameRel")
     child_trees: [Tree] @relationship(type: "HAS_CHILD_TREE", direction: OUT, properties: "HasFilenameRel")
 }
 
 type Commit {
-    hash: String!
+    hash: String! @unique
     name: String!
     date: String!
     previous: Commit @relationship(type: "HAS_PREVIOUS", direction: OUT)
