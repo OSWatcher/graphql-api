@@ -20,6 +20,11 @@ type Commit {
     filesystem: Tree @relationship(type: "OWNS_FILESYSTEM", direction: OUT)
 }
 
+type Branch {
+    name: String!
+    tracks: Commit @relationship(type: "TRACKS_COMMIT", direction: OUT)
+}
+
 type Mutation {
     mergeTree(input: TreeCreateInput!): String!
 }
