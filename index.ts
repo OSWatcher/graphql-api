@@ -25,7 +25,7 @@ const resolvers = {
   Mutation: {
     async mergeTree(_source, {input}) {
       const session = driver.session()
-      const prom = driver.session().writeTransaction(tx => {
+      const prom = session.writeTransaction(tx => {
           // merge parent tree
           tx.run(
             "MERGE (parent:Tree {hash: $hash})",
@@ -58,8 +58,9 @@ const resolvers = {
           const result = await prom;
       } catch(error) {
           console.log(error)
+      } finally{
+        session.close()
       }
-      session.close()
       return "hello";
     }
   }
