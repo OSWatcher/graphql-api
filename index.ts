@@ -1,16 +1,25 @@
 const { Neo4jGraphQL } = require("@neo4j/graphql");
 const { ApolloServer, gql } = require("apollo-server");
 const { readFileSync } = require('fs');
+import { createConstraintsIfNotExists } from './constraints';
 const neo4j = require("neo4j-driver");
 require("dotenv").config();
 
-// we must convert the file Buffer to a UTF-8 string
-const typeDefs = readFileSync('./type-defs.graphql').toString('utf-8')
-
+// Neo4j driver instance
 const driver = neo4j.driver(
   process.env.NEO4J_URI,
   neo4j.auth.basic(process.env.NEO4J_USER, process.env.NEO4J_PASSWORD)
 );
+
+// ensure Neo4j constraints are applied
+console.log("Ensure Neo4j constraints are effective");
+createConstraintsIfNotExists(driver);
+
+
+// we must convert the file Buffer to a UTF-8 string
+const typeDefs = readFileSync('./type-defs.graphql').toString('utf-8')
+
+
 
 const resolvers = {
   Mutation: {
