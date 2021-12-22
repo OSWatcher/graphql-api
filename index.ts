@@ -1,9 +1,11 @@
 const { Neo4jGraphQL } = require("@neo4j/graphql");
+const { OGM } = require("@neo4j/graphql-ogm");
 const { ApolloServer, gql } = require("apollo-server");
 const { readFileSync } = require('fs');
-import { createConstraintsIfNotExists } from './constraints';
 const neo4j = require("neo4j-driver");
 require("dotenv").config();
+
+import { createConstraintsIfNotExists } from './constraints';
 
 // Neo4j driver instance
 const driver = neo4j.driver(
@@ -15,10 +17,11 @@ const driver = neo4j.driver(
 console.log("Ensure Neo4j constraints are effective");
 createConstraintsIfNotExists(driver);
 
-
 // we must convert the file Buffer to a UTF-8 string
 const typeDefs = readFileSync('./type-defs.graphql').toString('utf-8')
 
+// OGM instance
+const ogm = new OGM({ typeDefs, driver });
 
 
 const resolvers = {
