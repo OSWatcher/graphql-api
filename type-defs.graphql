@@ -1,4 +1,10 @@
-type Blob {
+# common interface for all hashable nodes
+# having a .hash property
+interface Hashable {
+    hash: String!
+}
+
+type Blob implements Hashable {
     hash: String! @unique
 }
 
@@ -6,13 +12,13 @@ interface HasFilenameRel @relationshipProperties {
     name: String!
 }
 
-type Tree {
+type Tree implements Hashable {
     hash: String! @unique
     child_blobs: [Blob] @relationship(type: "HAS_CHILD_BLOB", direction: OUT, properties: "HasFilenameRel")
     child_trees: [Tree] @relationship(type: "HAS_CHILD_TREE", direction: OUT, properties: "HasFilenameRel")
 }
 
-type Commit {
+type Commit implements Hashable {
     hash: String! @unique
     name: String!
     date: String!
