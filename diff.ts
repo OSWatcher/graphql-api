@@ -1,30 +1,26 @@
 const path = require('path');
 
 const DIFF_QUERY = `
-MATCH (t1:Tree)-[r1:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c1)
-WHERE t1.hash = $base
-WITH apoc.map.fromLists(
-    // keys
-    collect(r1.name),
-    // values (another map)
-    collect({
-        type: type(r1),
-        hash: c1.hash
-    })
-) as map_base
-WITH map_base
-// second tree
-MATCH (t2:Tree)-[r2:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c2)
-WHERE t2.hash = $diffee
-WITH map_base, apoc.map.fromLists(
-    // keys
-    collect(r2.name),
-    // values (another map)
-    collect({
-        type: type(r2),
-        hash: c2.hash
-    })
-) as map_diffee
+// use a single match to capture all nodes from both Trees
+// if we use 2 MATCH statement separated by a WITH and the second MATCH return no records (empty directory)
+// then both map_base and map_diffee will return no records
+MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
+WHERE t.hash = $base
+    OR t.hash = $diffee
+WITH
+// conditional collect to differentiate between base and diffee nodes 
+    collect(CASE
+        WHEN t.hash = $base THEN [r.name, {type: type(r), hash: c.hash}]
+        END) as tmp_col_base,
+    collect(CASE
+        WHEN t.hash = $diffee THEN [r.name, {type: type(r), hash: c.hash}]
+        END) as tmp_col_diffee
+WITH apoc.map.fromPairs(
+    tmp_col_base
+) as map_base,
+    apoc.map.fromPairs(
+        tmp_col_diffee
+    ) as map_diffee
 // new items
 //      filename in diffee NOT IN base
 WITH apoc.map.submap(map_diffee, [k IN keys(map_diffee) WHERE NOT k IN keys(map_base)]) as map_newitems,
@@ -86,6 +82,7 @@ async function diffTreesRecursive(session, current_path: string, base_hash: stri
             'old_hash': undefined,
             'new_hash': item['hash']
         }
+        console.log("NEW: "+ diff_obj['path']);
         diff_rec_result['newitems_path'].push(diff_obj);
         if (item['type'] == "HAS_CHILD_TREE") {
             // TODO: list filesystem of diffee_hash at this path
@@ -101,6 +98,7 @@ async function diffTreesRecursive(session, current_path: string, base_hash: stri
             'old_hash': item['hash'],
             'new_hash': undefined
         }
+        console.log("DEL: "+ diff_obj['path']);
         diff_rec_result['deleteditems_path'].push(diff_obj);
         if (item['type'] == "HAS_CHILD_TREE") {
             // TODO: list filesystem of base_hash at this path
@@ -116,6 +114,7 @@ async function diffTreesRecursive(session, current_path: string, base_hash: stri
             'old_hash': item['old_hash'],
             'new_hash': item['new_hash']
         }
+        console.log("MOD: "+ diff_obj['path']);
         diff_rec_result['modifieditems_path'].push(diff_obj);
         if (item['type'] == "HAS_CHILD_TREE") {
             // recurse
