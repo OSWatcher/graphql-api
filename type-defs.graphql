@@ -31,6 +31,33 @@ type Branch {
     tracks: Commit @relationship(type: "TRACKS_COMMIT", direction: OUT)
 }
 
+# custom Mutations
 type Mutation {
     mergeTree(input: TreeCreateInput!): String!
+}
+
+# custom types not part of Data model
+type DiffResult @exclude {
+    # must put at least one non array field:
+    #   otherwise: "Input Object type DiffResultCreateInput must define one or more fields."
+    # TODO: how to remove this ?
+    unused: String
+    newitems: [DiffItem]! @ignore
+    delitems: [DiffItem]! @ignore
+    moditems: [DiffItem]! @ignore
+}
+
+type DiffItem @exclude {
+    path: String!
+    old_hash: String
+    new_hash: String
+}
+
+type User {
+    name: String!
+}
+
+# custom Queries
+type Query {
+    diffCommits(base_commit_hash: String!, diffee_commit_hash: String!): DiffResult!
 }

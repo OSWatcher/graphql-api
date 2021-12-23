@@ -6,6 +6,9 @@ const neo4j = require("neo4j-driver");
 require("dotenv").config();
 
 import { createConstraintsIfNotExists } from './constraints';
+import { diffTreesRecursive } from './diff';
+
+const ROOT_PATH = '/';
 
 // Neo4j driver instance
 const driver = neo4j.driver(
@@ -25,6 +28,44 @@ const ogm = new OGM({ typeDefs, driver });
 
 
 const resolvers = {
+  Query: {
+    async diffCommits(_source, {base_commit_hash, diffee_commit_hash}) {
+      // find Commits based on hash
+      const Commit = ogm.model("Commit");
+      const arr_commit = await Promise.all([base_commit_hash, diffee_commit_hash].map(async hash => {
+        // select filesystem relationship and get the root Tree hash
+        const selectionSet = `
+          {
+            hash
+            filesystem {
+              hash
+            }
+          }`;
+        return Commit.find({
+          selectionSet,
+          where: {
+            hash
+          }
+        }).then(result => {
+          if (!result) {
+            throw new Error(`Commit hash ${hash} doesn't exists !`);
+          }
+          return result[0]
+        });
+      }));
+      // get root trees hash
+      const [base_root_hash, diffee_root_hash] = arr_commit.map(com => com['filesystem']['hash']);
+      // TODO: diff them recursively
+      const session = driver.session();
+      const diff_result = await diffTreesRecursive(session, ROOT_PATH, base_root_hash, diffee_root_hash);
+
+      return {
+        'newitems': diff_result['newitems_path'],
+        'delitems': diff_result['deleteditems_path'],
+        'moditems': diff_result['modifieditems_path']
+      };
+    }
+  },
   Mutation: {
     async mergeTree(_source, {input}) {
       const session = driver.session()
