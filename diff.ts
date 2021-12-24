@@ -71,14 +71,18 @@ async function diffTrees(session, base_hash: string, diffee_hash: string) {
     return diff_tree_result;
 }
 
-async function diffTreesRecursive(session, current_path: string, base_hash: string, diffee_hash: string) {
+async function diffTreesRecursive(driver, current_path: string, base_hash: string, diffee_hash: string) {
     // result
     let diff_rec_result = {
         'newitems_path': Array(),
         'deleteditems_path': Array(),
         'modifieditems_path': Array(),
     }
+    // one transaction per session is allowed
+    // so we need one session per diffTreesRecursive call
+    const session = driver.session();
     let diff_result = await diffTrees(session, base_hash, diffee_hash);
+    session.close();
     // process new
     for (const name in diff_result['newitems']) {
         const item = diff_result['newitems'][name];
@@ -111,26 +115,36 @@ async function diffTreesRecursive(session, current_path: string, base_hash: stri
             // deleted directory on diffee_hash, was present on base_hash
         }
     }
-    // process modfied
-    for (const name in diff_result['moditems']) {
+    // process modfied items
+    // use Promise.all to process them in parallel
+    //      build diff_obj first for all items
+    const mod_diff_obj_arr = Object.keys(diff_result['moditems']).map(function(name, index) {
         const item = diff_result['moditems'][name];
         const diff_obj = {
             'path': path.join(current_path, name),
             'type': (item['type'] == 'HAS_CHILD_BLOB' ? 'Blob': 'Tree'),
             'old_hash': item['old_hash'],
             'new_hash': item['new_hash']
-        }
+        };
         console.log("MOD: "+ diff_obj['path']);
-        diff_rec_result['modifieditems_path'].push(diff_obj);
-        if (item['type'] == "HAS_CHILD_TREE") {
-            // recurse
-            let sub_diff_rec_result = await diffTreesRecursive(session, diff_obj['path'], diff_obj['old_hash'], diff_obj['new_hash']);
-            // merge results
-            diff_rec_result['newitems_path'].push(...sub_diff_rec_result['newitems_path']);
-            diff_rec_result['deleteditems_path'].push(...sub_diff_rec_result['deleteditems_path']);
-            diff_rec_result['modifieditems_path'].push(...sub_diff_rec_result['modifieditems_path']);
-        }
-    }
+        return diff_obj;
+    });
+    //      loop on diff obj array, for each Blob, push to diff_rec_result
+    diff_rec_result['modifieditems_path'].push(
+        ...mod_diff_obj_arr.filter(diff_obj => diff_obj['type'] == 'Blob')
+    );
+    //      loop on diff obj array, and for each Tree, parallel diffTreesRecursive execution
+    const sub_diff_result_arr = await Promise.all(
+        mod_diff_obj_arr.filter(diff_obj => diff_obj['type'] == 'Tree').map(
+            diff_obj => diffTreesRecursive(driver, diff_obj['path'], diff_obj['old_hash'], diff_obj['new_hash'])
+        )
+    );
+    //      merge results
+    sub_diff_result_arr.map(sub_diff_result => {
+        diff_rec_result['newitems_path'].push(...sub_diff_result['newitems_path']);
+        diff_rec_result['deleteditems_path'].push(...sub_diff_result['deleteditems_path']);
+        diff_rec_result['modifieditems_path'].push(...sub_diff_result['modifieditems_path']);
+    });
     return diff_rec_result;
 }
 

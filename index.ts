@@ -56,8 +56,7 @@ const resolvers = {
       // get root trees hash
       const [base_root_hash, diffee_root_hash] = arr_commit.map(com => com['filesystem']['hash']);
       // TODO: diff them recursively
-      const session = driver.session();
-      const diff_result = await diffTreesRecursive(session, ROOT_PATH, base_root_hash, diffee_root_hash);
+      const diff_result = await diffTreesRecursive(driver, ROOT_PATH, base_root_hash, diffee_root_hash);
 
       return {
         'newitems': diff_result['newitems_path'],
