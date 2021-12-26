@@ -6,6 +6,40 @@ WHERE t.hash = $base
     OR t.hash = $diffee
 RETURN t.hash as parent_hash, type(r) as type, r.name as name, c.hash as child_hash
 `
+// recursive query to fetch all sub blobs under a given Tree
+const RECURSIVE_BLOBS_QUERY = `
+MATCH path = (t:Tree)-[:HAS_CHILD_BLOB|HAS_CHILD_TREE*]->(b:Blob)
+WHERE t.hash = $parent_hash
+RETURN [r IN relationships(path) | r.name] as path_parts, b.hash as blob_hash
+`
+
+async function fetchRecusiveBlobs(driver, parent_tree_hash: string) {
+    const result = await driver.session().readTransaction(tx => {
+        return tx.run(RECURSIVE_BLOBS_QUERY, { parent_hash: parent_tree_hash })
+    });
+    /*
+    results looks like this:
+        path_parts	                                        blob_hash
+    1   ["src", "main", "resources", "Unlicense"]           f6067df486cbdbb0aac026b799b26261c92734a3
+    2   ["src", "main", "resources", "BSD License"]         d50f85b2ba155047d15ba915158350a18e76b710
+
+    return [
+        {
+            'rel_path': 'src/main/resources/Unlicense',
+            'hash': 'f6067df486cbdbb0aac026b799b26261c92734a3'
+        }
+    ]
+    */
+    return result.records.map(current => {
+        const path_parts: Array<string> = current.get('path_parts');
+        const blob_hash: string = current.get('blob_hash');
+        return {
+            'rel_path': path.join(...path_parts),
+            'hash': blob_hash
+        };
+    });
+}
+
 
 async function diffTrees(session, base_hash: string, diffee_hash: string) {
     const result = await session.readTransaction(tx => {
@@ -75,46 +109,92 @@ async function diffTreesRecursive(driver, current_path: string, base_hash: strin
     // result
     let diff_rec_result = {
         'newitems_path': Array(),
-        'deleteditems_path': Array(),
-        'modifieditems_path': Array(),
+        'delitems_path': Array(),
+        'moditems_path': Array(),
     }
     // one transaction per session is allowed
     // so we need one session per diffTreesRecursive call
     const session = driver.session();
     let diff_result = await diffTrees(session, base_hash, diffee_hash);
-    session.close();
+
     // process new
-    for (const name in diff_result['newitems']) {
-        const item = diff_result['newitems'][name];
+    //      partition newitems between blobs and trees
+    const [new_diff_blobs_arr, new_diff_trees_arr] = Object.keys(diff_result['newitems']).reduce((result: Object[][], name: string) => {
+        const new_item = diff_result['newitems'][name];
         const diff_obj = {
             'path': path.join(current_path, name),
-            'type': (item['type'] == 'HAS_CHILD_BLOB' ? 'Blob': 'Tree'),
+            'type': (new_item['type'] == 'HAS_CHILD_BLOB' ? 'Blob': 'Tree'),
             'old_hash': undefined,
-            'new_hash': item['hash']
-        }
+            'new_hash': new_item['hash']
+        };
         console.log("NEW: "+ diff_obj['path']);
-        diff_rec_result['newitems_path'].push(diff_obj);
-        if (item['type'] == "HAS_CHILD_TREE") {
-            // TODO: list filesystem of diffee_hash at this path
-            // new directory on diffee_hash
-        }
-    }
+        result[diff_obj['type'] == 'Blob' ? 0 : 1].push(diff_obj);
+        return result;
+    }, [[], []]);
+    //      push new blobs
+    diff_rec_result['newitems_path'].push(
+        ...new_diff_blobs_arr
+    );
+    //      fetch sub blobs for each new directory, parallelize with Promise.all
+    const new_subblobs_arr = await Promise.all(
+        new_diff_trees_arr.map(
+            diff_obj => fetchRecusiveBlobs(driver, diff_obj['new_hash'])
+        )
+    );
+    new_subblobs_arr.reduce(
+        (result, subblob_arr) =>
+            result.push(
+                ...subblob_arr.map((subblob) => {
+                    return {
+                        path: path.join(current_path, subblob["rel_path"]),
+                        type: "Blob",
+                        old_hash: undefined,
+                        new_hash: subblob["hash"],
+                    };
+                })
+            ),
+        diff_rec_result["newitems_path"]
+    );
+
     // process deleted
-    for (const name in diff_result['delitems']) {
-        const item = diff_result['delitems'][name];
+    //      partition
+    const [del_diff_blobs_arr, del_diff_trees_arr] = Object.keys(diff_result['delitems']).reduce((result: Object[][], name: string) => {
+        const del_item = diff_result['delitems'][name];
         const diff_obj = {
             'path': path.join(current_path, name),
-            'type': (item['type'] == 'HAS_CHILD_BLOB' ? 'Blob': 'Tree'),
-            'old_hash': item['hash'],
+            'type': (del_item['type'] == 'HAS_CHILD_BLOB' ? 'Blob': 'Tree'),
+            'old_hash': del_item['hash'],
             'new_hash': undefined
-        }
+        };
         console.log("DEL: "+ diff_obj['path']);
-        diff_rec_result['deleteditems_path'].push(diff_obj);
-        if (item['type'] == "HAS_CHILD_TREE") {
-            // TODO: list filesystem of base_hash at this path
-            // deleted directory on diffee_hash, was present on base_hash
-        }
-    }
+        result[diff_obj['type'] == 'Blob' ? 0 : 1].push(diff_obj);
+        return result;
+    }, [[], []]);
+    //      push del blobs
+    diff_rec_result['delitems_path'].push(
+        ...del_diff_blobs_arr
+    );
+    //      fetch sub blobs for each new directory, parallelize with Promise.all
+    const del_subblobs_arr = await Promise.all(
+        del_diff_trees_arr.map(
+            diff_obj => fetchRecusiveBlobs(driver, diff_obj['old_hash'])
+        )
+    );
+    del_subblobs_arr.reduce(
+        (result, subblob_arr) =>
+            result.push(
+                ...subblob_arr.map((subblob) => {
+                    return {
+                        path: path.join(current_path, subblob["rel_path"]),
+                        type: "Blob",
+                        old_hash: subblob["hash"],
+                        new_hash: undefined,
+                    };
+                })
+            ),
+        diff_rec_result["delitems_path"]
+    );
+
     // process modfied items
     // use Promise.all to process them in parallel
     //      build diff_obj first for all items
@@ -130,7 +210,7 @@ async function diffTreesRecursive(driver, current_path: string, base_hash: strin
         return diff_obj;
     });
     //      loop on diff obj array, for each Blob, push to diff_rec_result
-    diff_rec_result['modifieditems_path'].push(
+    diff_rec_result['moditems_path'].push(
         ...mod_diff_obj_arr.filter(diff_obj => diff_obj['type'] == 'Blob')
     );
     //      loop on diff obj array, and for each Tree, parallel diffTreesRecursive execution
@@ -142,9 +222,10 @@ async function diffTreesRecursive(driver, current_path: string, base_hash: strin
     //      merge results
     sub_diff_result_arr.map(sub_diff_result => {
         diff_rec_result['newitems_path'].push(...sub_diff_result['newitems_path']);
-        diff_rec_result['deleteditems_path'].push(...sub_diff_result['deleteditems_path']);
-        diff_rec_result['modifieditems_path'].push(...sub_diff_result['modifieditems_path']);
+        diff_rec_result['delitems_path'].push(...sub_diff_result['delitems_path']);
+        diff_rec_result['moditems_path'].push(...sub_diff_result['moditems_path']);
     });
+    session.close();
     return diff_rec_result;
 }
 

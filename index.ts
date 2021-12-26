@@ -60,8 +60,8 @@ const resolvers = {
 
       return {
         'newitems': diff_result['newitems_path'],
-        'delitems': diff_result['deleteditems_path'],
-        'moditems': diff_result['modifieditems_path']
+        'delitems': diff_result['delitems_path'],
+        'moditems': diff_result['moditems_path']
       };
     }
   },
