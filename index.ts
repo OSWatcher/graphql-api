@@ -1,12 +1,21 @@
-const { Neo4jGraphQL } = require("@neo4j/graphql");
-const { OGM } = require("@neo4j/graphql-ogm");
-const { ApolloServer, gql } = require("apollo-server");
-const { readFileSync } = require("fs");
-const neo4j = require("neo4j-driver");
-require("dotenv").config();
-
+import { Neo4jGraphQL } from "@neo4j/graphql";
+import { OGM } from "@neo4j/graphql-ogm";
+import { ApolloServer } from "apollo-server";
+import { readFileSync } from "fs";
+import neo4j from "neo4j-driver";
+import * as dotenv from "dotenv";
 import { createConstraintsIfNotExists } from "./constraints";
 import { diffTreesRecursive } from "./diff";
+
+dotenv.config();
+
+if (
+    process.env.NEO4J_URI == undefined ||
+    process.env.NEO4J_USER == undefined ||
+    process.env.NEO4J_PASSWORD == undefined
+) {
+    throw Error("Invalid env configuration");
+}
 
 // Neo4j driver instance
 const driver = neo4j.driver(
@@ -115,7 +124,7 @@ const resolvers = {
                 }
             });
             try {
-                const result = await prom;
+                await prom;
             } catch (error) {
                 console.log(error);
             } finally {

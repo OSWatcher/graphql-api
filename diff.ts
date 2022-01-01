@@ -1,4 +1,11 @@
-const path = require("path");
+import path from "path";
+
+type DiffObj = {
+    path: string;
+    type: string;
+    old_hash: undefined | string;
+    new_hash: undefined | string;
+};
 
 const DIFF_QUERY = `
 MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
@@ -75,7 +82,7 @@ async function diffTrees(session, base_hash: string, diffee_hash: string) {
     const map_base = map_records[base_hash];
     const map_diffee = map_records[diffee_hash];
     // compute diff
-    let diff_tree_result = {
+    const diff_tree_result = {
         newitems: {},
         delitems: {},
         moditems: {},
@@ -119,22 +126,26 @@ async function diffTreesRecursive(
     diffee_hash: string
 ) {
     // result
-    let diff_rec_result = {
-        newitems_path: Array(),
-        delitems_path: Array(),
-        moditems_path: Array(),
+    const diff_rec_result: {
+        newitems_path: unknown[];
+        delitems_path: unknown[];
+        moditems_path: unknown[];
+    } = {
+        newitems_path: [],
+        delitems_path: [],
+        moditems_path: [],
     };
     // one transaction per session is allowed
     // so we need one session per diffTreesRecursive call
     const session = driver.session();
-    let diff_result = await diffTrees(session, base_hash, diffee_hash);
+    const diff_result = await diffTrees(session, base_hash, diffee_hash);
 
     // process new
     //      partition newitems between blobs and trees
     const [new_diff_blobs_arr, new_diff_trees_arr] = Object.keys(
         diff_result["newitems"]
     ).reduce(
-        (result: Object[][], name: string) => {
+        (result: DiffObj[][], name: string) => {
             const new_item = diff_result["newitems"][name];
             const diff_obj = {
                 path: path.join(current_path, name),
@@ -153,7 +164,8 @@ async function diffTreesRecursive(
     //      fetch sub blobs for each new directory, parallelize with Promise.all
     const new_subblobs_arr = await Promise.all(
         new_diff_trees_arr.map((diff_obj) =>
-            fetchRecusiveBlobs(driver, diff_obj["new_hash"])
+            // TODO; typescript quick fix
+            fetchRecusiveBlobs(driver, diff_obj["new_hash"] || "")
         )
     );
     new_subblobs_arr.reduce(
@@ -182,7 +194,7 @@ async function diffTreesRecursive(
     const [del_diff_blobs_arr, del_diff_trees_arr] = Object.keys(
         diff_result["delitems"]
     ).reduce(
-        (result: Object[][], name: string) => {
+        (result: DiffObj[][], name: string) => {
             const del_item = diff_result["delitems"][name];
             const diff_obj = {
                 path: path.join(current_path, name),
@@ -201,7 +213,8 @@ async function diffTreesRecursive(
     //      fetch sub blobs for each new directory, parallelize with Promise.all
     const del_subblobs_arr = await Promise.all(
         del_diff_trees_arr.map((diff_obj) =>
-            fetchRecusiveBlobs(driver, diff_obj["old_hash"])
+            // TODO; typescript quick fix
+            fetchRecusiveBlobs(driver, diff_obj["old_hash"] || "")
         )
     );
     del_subblobs_arr.reduce(
@@ -229,8 +242,7 @@ async function diffTreesRecursive(
     // use Promise.all to process them in parallel
     //      build diff_obj first for all items
     const mod_diff_obj_arr = Object.keys(diff_result["moditems"]).map(function (
-        name,
-        index
+        name
     ) {
         const item = diff_result["moditems"][name];
         const diff_obj = {
