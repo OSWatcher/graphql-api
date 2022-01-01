@@ -157,11 +157,17 @@ async function diffTreesRecursive(
         )
     );
     new_subblobs_arr.reduce(
-        (result, subblob_arr) =>
+        (result, subblob_arr, currentIndex) =>
             result.push(
                 ...subblob_arr.map((subblob) => {
+                    const diff_obj = new_diff_trees_arr[currentIndex];
+                    const new_path = path.join(
+                        diff_obj["path"],
+                        subblob["rel_path"]
+                    );
+                    console.log(`NEW: ${new_path}`);
                     return {
-                        path: path.join(current_path, subblob["rel_path"]),
+                        path: new_path,
                         type: "Blob",
                         old_hash: undefined,
                         new_hash: subblob["hash"],
@@ -199,11 +205,17 @@ async function diffTreesRecursive(
         )
     );
     del_subblobs_arr.reduce(
-        (result, subblob_arr) =>
+        (result, subblob_arr, currentIndex) =>
             result.push(
                 ...subblob_arr.map((subblob) => {
+                    const diff_obj = del_diff_trees_arr[currentIndex];
+                    const new_path = path.join(
+                        diff_obj["path"],
+                        subblob["rel_path"]
+                    );
+                    console.log(`DEL: ${new_path}`);
                     return {
-                        path: path.join(current_path, subblob["rel_path"]),
+                        path: new_path,
                         type: "Blob",
                         old_hash: subblob["hash"],
                         new_hash: undefined,
