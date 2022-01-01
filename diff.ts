@@ -7,6 +7,11 @@ type DiffObj = {
     new_hash: undefined | string;
 };
 
+enum NodeType {
+    Blob,
+    Tree,
+}
+
 const DIFF_QUERY = `
 MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
 WHERE t.hash = $base
@@ -65,10 +70,21 @@ async function diffTrees(session, base_hash: string, diffee_hash: string) {
         (prev, current) => {
             const parent_hash = current.get("parent_hash");
             const type = current.get("type");
+            let type_enum: NodeType;
+            switch (type) {
+                case "HAS_CHILD_BLOB":
+                    type_enum = NodeType.Blob;
+                    break;
+                case "HAS_CHILD_TREE":
+                    type_enum = NodeType.Tree;
+                    break;
+                default:
+                    throw Error(`Unexpected relationship type ${type}`);
+            }
             const name = current.get("name");
             const child_hash = current.get("child_hash");
             prev[parent_hash][name] = {
-                type: type,
+                type: type_enum,
                 hash: child_hash,
             };
             return prev;
@@ -149,12 +165,12 @@ async function diffTreesRecursive(
             const new_item = diff_result["newitems"][name];
             const diff_obj = {
                 path: path.join(current_path, name),
-                type: new_item["type"] == "HAS_CHILD_BLOB" ? "Blob" : "Tree",
+                type: new_item["type"],
                 old_hash: undefined,
                 new_hash: new_item["hash"],
             };
             console.log("NEW: " + diff_obj["path"]);
-            result[diff_obj["type"] == "Blob" ? 0 : 1].push(diff_obj);
+            result[diff_obj["type"] == NodeType.Blob ? 0 : 1].push(diff_obj);
             return result;
         },
         [[], []]
@@ -180,7 +196,7 @@ async function diffTreesRecursive(
                     console.log(`NEW: ${new_path}`);
                     return {
                         path: new_path,
-                        type: "Blob",
+                        type: NodeType.Blob,
                         old_hash: undefined,
                         new_hash: subblob["hash"],
                     };
@@ -198,12 +214,12 @@ async function diffTreesRecursive(
             const del_item = diff_result["delitems"][name];
             const diff_obj = {
                 path: path.join(current_path, name),
-                type: del_item["type"] == "HAS_CHILD_BLOB" ? "Blob" : "Tree",
+                type: del_item["type"],
                 old_hash: del_item["hash"],
                 new_hash: undefined,
             };
             console.log("DEL: " + diff_obj["path"]);
-            result[diff_obj["type"] == "Blob" ? 0 : 1].push(diff_obj);
+            result[diff_obj["type"] == NodeType.Blob ? 0 : 1].push(diff_obj);
             return result;
         },
         [[], []]
@@ -229,7 +245,7 @@ async function diffTreesRecursive(
                     console.log(`DEL: ${new_path}`);
                     return {
                         path: new_path,
-                        type: "Blob",
+                        type: NodeType.Blob,
                         old_hash: subblob["hash"],
                         new_hash: undefined,
                     };
@@ -247,7 +263,7 @@ async function diffTreesRecursive(
         const item = diff_result["moditems"][name];
         const diff_obj = {
             path: path.join(current_path, name),
-            type: item["type"] == "HAS_CHILD_BLOB" ? "Blob" : "Tree",
+            type: item["type"],
             old_hash: item["old_hash"],
             new_hash: item["new_hash"],
         };
@@ -256,12 +272,14 @@ async function diffTreesRecursive(
     });
     //      loop on diff obj array, for each Blob, push to diff_rec_result
     diff_rec_result["moditems_path"].push(
-        ...mod_diff_obj_arr.filter((diff_obj) => diff_obj["type"] == "Blob")
+        ...mod_diff_obj_arr.filter(
+            (diff_obj) => diff_obj["type"] == NodeType.Blob
+        )
     );
     //      loop on diff obj array, and for each Tree, parallel diffTreesRecursive execution
     const sub_diff_result_arr = await Promise.all(
         mod_diff_obj_arr
-            .filter((diff_obj) => diff_obj["type"] == "Tree")
+            .filter((diff_obj) => diff_obj["type"] == NodeType.Tree)
             .map((diff_obj) =>
                 diffTreesRecursive(
                     driver,
