@@ -20,3 +20,15 @@ jobs:
 
             - name: Check format
               run: npm run format-check
+
+    lint:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Install dev deps
+              run: npm install --only=dev
+
+            - name: lint
+              run: npm run lint
