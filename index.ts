@@ -8,8 +8,6 @@ require("dotenv").config();
 import { createConstraintsIfNotExists } from "./constraints";
 import { diffTreesRecursive } from "./diff";
 
-const ROOT_PATH = "/";
-
 // Neo4j driver instance
 const driver = neo4j.driver(
     process.env.NEO4J_URI,
@@ -63,7 +61,7 @@ const resolvers = {
             // TODO: diff them recursively
             const diff_result = await diffTreesRecursive(
                 driver,
-                ROOT_PATH,
+                "",
                 base_root_hash,
                 diffee_root_hash
             );
