@@ -184,26 +184,25 @@ async function diffTreesRecursive(
             fetchRecusiveBlobs(driver, diff_obj["new_hash"] || "")
         )
     );
-    new_subblobs_arr.reduce(
-        (result, subblob_arr, currentIndex) =>
-            result.push(
-                ...subblob_arr.map((subblob) => {
-                    const diff_obj = new_diff_trees_arr[currentIndex];
-                    const new_path = path.join(
-                        diff_obj["path"],
-                        subblob["rel_path"]
-                    );
-                    console.log(`NEW: ${new_path}`);
-                    return {
-                        path: new_path,
-                        type: NodeType.Blob,
-                        old_hash: undefined,
-                        new_hash: subblob["hash"],
-                    };
-                })
-            ),
-        diff_rec_result["newitems_path"]
-    );
+    new_subblobs_arr.reduce((result, subblob_arr, currentIndex) => {
+        result.push(
+            ...subblob_arr.map((subblob) => {
+                const diff_obj = new_diff_trees_arr[currentIndex];
+                const new_path = path.join(
+                    diff_obj["path"],
+                    subblob["rel_path"]
+                );
+                console.log(`NEW: ${new_path}`);
+                return {
+                    path: new_path,
+                    type: NodeType.Blob,
+                    old_hash: undefined,
+                    new_hash: subblob["hash"],
+                };
+            })
+        );
+        return result;
+    }, diff_rec_result["newitems_path"]);
 
     // process deleted
     //      partition
@@ -233,26 +232,25 @@ async function diffTreesRecursive(
             fetchRecusiveBlobs(driver, diff_obj["old_hash"] || "")
         )
     );
-    del_subblobs_arr.reduce(
-        (result, subblob_arr, currentIndex) =>
-            result.push(
-                ...subblob_arr.map((subblob) => {
-                    const diff_obj = del_diff_trees_arr[currentIndex];
-                    const new_path = path.join(
-                        diff_obj["path"],
-                        subblob["rel_path"]
-                    );
-                    console.log(`DEL: ${new_path}`);
-                    return {
-                        path: new_path,
-                        type: NodeType.Blob,
-                        old_hash: subblob["hash"],
-                        new_hash: undefined,
-                    };
-                })
-            ),
-        diff_rec_result["delitems_path"]
-    );
+    del_subblobs_arr.reduce((result, subblob_arr, currentIndex) => {
+        result.push(
+            ...subblob_arr.map((subblob) => {
+                const diff_obj = del_diff_trees_arr[currentIndex];
+                const new_path = path.join(
+                    diff_obj["path"],
+                    subblob["rel_path"]
+                );
+                console.log(`DEL: ${new_path}`);
+                return {
+                    path: new_path,
+                    type: NodeType.Blob,
+                    old_hash: subblob["hash"],
+                    new_hash: undefined,
+                };
+            })
+        );
+        return result;
+    }, diff_rec_result["delitems_path"]);
 
     // process modfied items
     // use Promise.all to process them in parallel
