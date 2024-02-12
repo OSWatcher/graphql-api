@@ -1,8 +1,17 @@
+import { Driver, Session } from "neo4j-driver";
 import path from "path";
 
 type DiffObj = {
+    // status of the diff (NEW / MOD / DEL)
+    status: DiffStatus;
+    type: NodeType;
+    // object path. If relative the it refer to the filename only
     path: string;
-    type: string;
+    // old and new hash values, defined depending on the DiffStatus
+    // depends on status
+    // NEW: new_hash is defined
+    // DEL: old_hash is defined
+    // MOD: both hashes are defined
     old_hash: undefined | string;
     new_hash: undefined | string;
 };
@@ -12,12 +21,77 @@ enum NodeType {
     Tree,
 }
 
+enum DiffStatus {
+    NEW,
+    MOD,
+    DEL,
+}
+
+// helpers
+function getNodeTypeFromRel(relationship: string): NodeType {
+    switch (relationship) {
+        case "HAS_CHILD_BLOB":
+            return NodeType.Blob;
+        case "HAS_CHILD_TREE":
+            return NodeType.Tree;
+        default:
+            throw Error(`Unexpected relationship ${relationship}`);
+    }
+}
+
+type ComputeDiffMapType = Record<string, Record<string, NodeType | string>>;
+
+function* computeDifferences(
+    mapA: ComputeDiffMapType,
+    mapB: ComputeDiffMapType,
+    status: DiffStatus
+): IterableIterator<DiffObj> {
+    if (status == DiffStatus.MOD) {
+        for (const [key, value] of Object.entries(mapA)) {
+            if (key in mapB) {
+                // check != hashes
+                if (value["hash"] != mapB[key]["hash"]) {
+                    const diff_obj: DiffObj = {
+                        status: status,
+                        type: value["type"] as NodeType,
+                        path: key,
+                        old_hash: mapA[key]["hash"] as string,
+                        new_hash: mapB[key]["hash"] as string,
+                    };
+                    yield diff_obj;
+                }
+            }
+        }
+    } else {
+        for (const [key, value] of Object.entries(mapA)) {
+            if (!(key in mapB)) {
+                // build DiffObj
+                const diff_obj: DiffObj = {
+                    status: status,
+                    type: value["type"] as NodeType,
+                    path: key as string,
+                    old_hash:
+                        status == DiffStatus.DEL
+                            ? (value["hash"] as string)
+                            : undefined,
+                    new_hash:
+                        status == DiffStatus.NEW
+                            ? (value["hash"] as string)
+                            : undefined,
+                };
+                yield diff_obj;
+            }
+        }
+    }
+}
+
 const DIFF_QUERY = `
 MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
 WHERE t.hash = $base
     OR t.hash = $diffee
 RETURN t.hash as parent_hash, type(r) as type, r.name as name, c.hash as child_hash
 `;
+
 // recursive query to fetch all sub blobs under a given Tree
 const RECURSIVE_BLOBS_QUERY = `
 MATCH path = (t:Tree)-[:HAS_CHILD_BLOB|HAS_CHILD_TREE*]->(b:Blob)
@@ -25,7 +99,11 @@ WHERE t.hash = $parent_hash
 RETURN [r IN relationships(path) | r.name] as path_parts, b.hash as blob_hash
 `;
 
-async function fetchRecusiveBlobs(driver, parent_tree_hash: string) {
+async function fetchRecusiveBlobs(
+    driver: Driver,
+    parent_tree_hash: string,
+    status: DiffStatus
+): Promise<DiffObj[]> {
     const result = await driver.session().readTransaction((tx) => {
         return tx.run(RECURSIVE_BLOBS_QUERY, { parent_hash: parent_tree_hash });
     });
@@ -45,94 +123,86 @@ async function fetchRecusiveBlobs(driver, parent_tree_hash: string) {
     return result.records.map((current) => {
         const path_parts: Array<string> = current.get("path_parts");
         const blob_hash: string = current.get("blob_hash");
-        return {
-            rel_path: path.join(...path_parts),
-            hash: blob_hash,
+        const diff_obj: DiffObj = {
+            status: status,
+            path: path.join(...path_parts),
+            type: NodeType.Blob,
+            old_hash: status == DiffStatus.DEL ? blob_hash : undefined,
+            new_hash: status == DiffStatus.NEW ? blob_hash : undefined,
         };
+        return diff_obj;
     });
 }
 
-async function diffTrees(session, base_hash: string, diffee_hash: string) {
+async function diffTrees(
+    session: Session,
+    base_hash: string,
+    diffee_hash: string
+): Promise<Map<DiffStatus, DiffObj[]>> {
     const result = await session.readTransaction((tx) => {
         return tx.run(DIFF_QUERY, { base: base_hash, diffee: diffee_hash });
     });
     // reduce records into a map
     // {
     //      base_hash: {
-    //          filename1: {item metadata},
-    //          ...
+    //          filename1: {
+    //              'type': ''HAS_CHILD_BLOB' | 'HASH_CHILD_TREE'
+    //              'hash': d86xxxxx
+    //            },
     //      },
     //      diffee_hash: {
     //      }
     //
     // }
-    const map_records = result.records.reduce(
-        (prev, current) => {
-            const parent_hash = current.get("parent_hash");
-            const type = current.get("type");
-            let type_enum: NodeType;
-            switch (type) {
-                case "HAS_CHILD_BLOB":
-                    type_enum = NodeType.Blob;
-                    break;
-                case "HAS_CHILD_TREE":
-                    type_enum = NodeType.Tree;
-                    break;
-                default:
-                    throw Error(`Unexpected relationship type ${type}`);
-            }
-            const name = current.get("name");
-            const child_hash = current.get("child_hash");
-            prev[parent_hash][name] = {
-                type: type_enum,
-                hash: child_hash,
-            };
-            return prev;
-        },
-        // intial value
-        {
-            [base_hash]: {},
-            [diffee_hash]: {},
-        }
-    );
+    const map_records: Record<string, ComputeDiffMapType> = {
+        [base_hash]: {},
+        [diffee_hash]: {},
+    };
+
+    // base_hash == parent_hash
+
+    result.records.forEach((record) => {
+        const parent_hash = record.get("parent_hash");
+        const name = record.get("name");
+        const rel = record.get("type");
+        const child_hash = record.get("child_hash");
+
+        map_records[parent_hash][name] = {
+            type: getNodeTypeFromRel(rel),
+            hash: child_hash,
+        };
+    });
+
     const map_base = map_records[base_hash];
     const map_diffee = map_records[diffee_hash];
     // compute diff
-    const diff_tree_result = {
-        newitems: {},
-        delitems: {},
-        moditems: {},
-    };
-    const base_filename_arr = Object.keys(map_base);
-    const diffee_filename_arr = Object.keys(map_diffee);
-    // extract newitems
-    // filename dans diffee NOT IN base
-    for (const new_name of diffee_filename_arr.filter(
-        (x) => !base_filename_arr.includes(x)
-    )) {
-        diff_tree_result["newitems"][new_name] = map_diffee[new_name];
-    }
-    // extract delitems
-    // filename dans base NOT IN diffee
-    for (const del_name of base_filename_arr.filter(
-        (x) => !diffee_filename_arr.includes(x)
-    )) {
-        diff_tree_result["delitems"][del_name] = map_base[del_name];
-    }
-    // modified items
-    // filename present in both maps, but child hash is !=
-    for (const same_name of diffee_filename_arr.filter((x) =>
-        base_filename_arr.includes(x)
-    )) {
-        if (map_diffee[same_name]["hash"] != map_base[same_name]["hash"]) {
-            diff_tree_result["moditems"][same_name] = {
-                type: map_base[same_name]["type"],
-                old_hash: map_base[same_name]["hash"],
-                new_hash: map_diffee[same_name]["hash"],
-            };
-        }
-    }
+    const diff_tree_result = new Map<DiffStatus, DiffObj[]>([
+        [DiffStatus.NEW, []],
+        [DiffStatus.MOD, []],
+        [DiffStatus.DEL, []],
+    ]);
+
+    const new_iter = computeDifferences(map_diffee, map_base, DiffStatus.NEW);
+    const del_iter = computeDifferences(map_base, map_diffee, DiffStatus.DEL);
+    const mod_iter = computeDifferences(map_base, map_diffee, DiffStatus.MOD);
+
+    // push results
+    diff_tree_result.get(DiffStatus.NEW)!.push(...new_iter);
+    diff_tree_result.get(DiffStatus.DEL)!.push(...del_iter);
+    diff_tree_result.get(DiffStatus.MOD)!.push(...mod_iter);
     return diff_tree_result;
+}
+
+function partition_blobs(diff_result: DiffObj[]): [DiffObj[], DiffObj[]] {
+    return diff_result.reduce(
+        (acc: [DiffObj[], DiffObj[]], current: DiffObj) => {
+            // push into array index 0 or 1 based on type
+            acc[current.type == NodeType.Blob ? 0 : 1].push(current);
+            return acc;
+        },
+        // initial value
+        [[], []]
+    );
 }
 
 async function diffTreesRecursive(
@@ -143,9 +213,9 @@ async function diffTreesRecursive(
 ) {
     // result
     const diff_rec_result: {
-        newitems_path: unknown[];
-        delitems_path: unknown[];
-        moditems_path: unknown[];
+        newitems_path: DiffObj[];
+        delitems_path: DiffObj[];
+        moditems_path: DiffObj[];
     } = {
         newitems_path: [],
         delitems_path: [],
@@ -155,138 +225,72 @@ async function diffTreesRecursive(
     // so we need one session per diffTreesRecursive call
     const session = driver.session();
     const diff_result = await diffTrees(session, base_hash, diffee_hash);
+    session.close();
+    // we need to process Trees first since we need to run subqueries
 
-    // process new
+    // process NEW
     //      partition newitems between blobs and trees
-    const [new_diff_blobs_arr, new_diff_trees_arr] = Object.keys(
-        diff_result["newitems"]
-    ).reduce(
-        (result: DiffObj[][], name: string) => {
-            const new_item = diff_result["newitems"][name];
-            const diff_obj = {
-                path: path.join(current_path, name),
-                type: new_item["type"],
-                old_hash: undefined,
-                new_hash: new_item["hash"],
-            };
-            console.log("NEW: " + diff_obj["path"]);
-            result[diff_obj["type"] == NodeType.Blob ? 0 : 1].push(diff_obj);
-            return result;
-        },
-        [[], []]
+
+    const [new_diff_blobs_arr, new_diff_trees] = partition_blobs(
+        diff_result.get(DiffStatus.NEW)!
     );
-    //      push new blobs
     diff_rec_result["newitems_path"].push(...new_diff_blobs_arr);
-    //      fetch sub blobs for each new directory, parallelize with Promise.all
-    const new_subblobs_arr = await Promise.all(
-        new_diff_trees_arr.map((diff_obj) =>
-            // TODO; typescript quick fix
-            fetchRecusiveBlobs(driver, diff_obj["new_hash"] || "")
+
+    // process new subtrees and get their blobs recursively
+    const new_subblobs_arr: DiffObj[][] = await Promise.all(
+        new_diff_trees.map((diff_obj) =>
+            fetchRecusiveBlobs(driver, diff_obj.new_hash!, DiffStatus.NEW)
         )
     );
-    new_subblobs_arr.reduce((result, subblob_arr, currentIndex) => {
-        result.push(
-            ...subblob_arr.map((subblob) => {
-                const diff_obj = new_diff_trees_arr[currentIndex];
-                const new_path = path.join(
-                    diff_obj["path"],
-                    subblob["rel_path"]
-                );
-                console.log(`NEW: ${new_path}`);
-                return {
-                    path: new_path,
-                    type: NodeType.Blob,
-                    old_hash: undefined,
-                    new_hash: subblob["hash"],
-                };
-            })
-        );
-        return result;
-    }, diff_rec_result["newitems_path"]);
+    for (const arr of new_subblobs_arr) {
+        diff_rec_result["newitems_path"].push(...arr);
+    }
+    // update all objects to set the path
+    for (const new_blob of diff_rec_result["newitems_path"]) {
+        // update full path
+        new_blob.path = path.join(current_path, new_blob.path);
+        // console.debug(`NEW: ${new_blob.path}`);
+    }
 
-    // process deleted
-    //      partition
-    const [del_diff_blobs_arr, del_diff_trees_arr] = Object.keys(
-        diff_result["delitems"]
-    ).reduce(
-        (result: DiffObj[][], name: string) => {
-            const del_item = diff_result["delitems"][name];
-            const diff_obj = {
-                path: path.join(current_path, name),
-                type: del_item["type"],
-                old_hash: del_item["hash"],
-                new_hash: undefined,
-            };
-            console.log("DEL: " + diff_obj["path"]);
-            result[diff_obj["type"] == NodeType.Blob ? 0 : 1].push(diff_obj);
-            return result;
-        },
-        [[], []]
+    // process DEL
+    //      partition newitems between blobs and trees
+    const [del_diff_blobs_arr, del_diff_trees_arr] = partition_blobs(
+        diff_result.get(DiffStatus.DEL)!
     );
-    //      push del blobs
     diff_rec_result["delitems_path"].push(...del_diff_blobs_arr);
-    //      fetch sub blobs for each new directory, parallelize with Promise.all
-    const del_subblobs_arr = await Promise.all(
+    // process subtrees
+    const del_subblobs_arr: DiffObj[][] = await Promise.all(
         del_diff_trees_arr.map((diff_obj) =>
-            // TODO; typescript quick fix
-            fetchRecusiveBlobs(driver, diff_obj["old_hash"] || "")
+            fetchRecusiveBlobs(driver, diff_obj.old_hash!, DiffStatus.DEL)
         )
     );
-    del_subblobs_arr.reduce((result, subblob_arr, currentIndex) => {
-        result.push(
-            ...subblob_arr.map((subblob) => {
-                const diff_obj = del_diff_trees_arr[currentIndex];
-                const new_path = path.join(
-                    diff_obj["path"],
-                    subblob["rel_path"]
-                );
-                console.log(`DEL: ${new_path}`);
-                return {
-                    path: new_path,
-                    type: NodeType.Blob,
-                    old_hash: subblob["hash"],
-                    new_hash: undefined,
-                };
-            })
-        );
-        return result;
-    }, diff_rec_result["delitems_path"]);
+    for (const arr of del_subblobs_arr) {
+        diff_rec_result["delitems_path"].push(...arr);
+    }
+    // update all objects to set the path
+    for (const del_blob of diff_rec_result["delitems_path"]) {
+        // update full path
+        del_blob.path = path.join(current_path, del_blob.path);
+        // console.debug(`DEL: ${del_blob.path}`);
+    }
 
-    // process modfied items
-    // use Promise.all to process them in parallel
-    //      build diff_obj first for all items
-    const mod_diff_obj_arr = Object.keys(diff_result["moditems"]).map(function (
-        name
-    ) {
-        const item = diff_result["moditems"][name];
-        const diff_obj = {
-            path: path.join(current_path, name),
-            type: item["type"],
-            old_hash: item["old_hash"],
-            new_hash: item["new_hash"],
-        };
-        console.log("MOD: " + diff_obj["path"]);
-        return diff_obj;
-    });
-    //      loop on diff obj array, for each Blob, push to diff_rec_result
-    diff_rec_result["moditems_path"].push(
-        ...mod_diff_obj_arr.filter(
-            (diff_obj) => diff_obj["type"] == NodeType.Blob
+    // process MOD
+    const [mod_diff_blobs_arr, mod_diff_trees_arr] = partition_blobs(
+        diff_result.get(DiffStatus.MOD)!
+    );
+    diff_rec_result["moditems_path"].push(...mod_diff_blobs_arr);
+    // process subtrees
+    const sub_diff_result_arr = await Promise.all(
+        mod_diff_trees_arr.map((diff_obj) =>
+            diffTreesRecursive(
+                driver,
+                diff_obj.path,
+                diff_obj.old_hash!,
+                diff_obj.new_hash!
+            )
         )
     );
-    //      loop on diff obj array, and for each Tree, parallel diffTreesRecursive execution
-    const sub_diff_result_arr = await Promise.all(
-        mod_diff_obj_arr
-            .filter((diff_obj) => diff_obj["type"] == NodeType.Tree)
-            .map((diff_obj) =>
-                diffTreesRecursive(
-                    driver,
-                    diff_obj["path"],
-                    diff_obj["old_hash"],
-                    diff_obj["new_hash"]
-                )
-            )
-    );
+
     //      merge results
     sub_diff_result_arr.map((sub_diff_result) => {
         diff_rec_result["newitems_path"].push(
@@ -299,7 +303,12 @@ async function diffTreesRecursive(
             ...sub_diff_result["moditems_path"]
         );
     });
-    session.close();
+    // update all objects to set the path
+    for (const mod_blob of diff_rec_result["moditems_path"]) {
+        // update full path
+        mod_blob.path = path.join(current_path, mod_blob.path);
+        // console.debug(`MOD: ${mod_blob.path}`);
+    }
     return diff_rec_result;
 }
 

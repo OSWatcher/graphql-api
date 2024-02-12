@@ -14,8 +14,18 @@ interface HasFilenameRel @relationshipProperties {
 
 type Tree implements Hashable {
     hash: String! @unique
-    child_blobs: [Blob] @relationship(type: "HAS_CHILD_BLOB", direction: OUT, properties: "HasFilenameRel")
-    child_trees: [Tree] @relationship(type: "HAS_CHILD_TREE", direction: OUT, properties: "HasFilenameRel")
+    child_blobs: [Blob]
+        @relationship(
+            type: "HAS_CHILD_BLOB"
+            direction: OUT
+            properties: "HasFilenameRel"
+        )
+    child_trees: [Tree]
+        @relationship(
+            type: "HAS_CHILD_TREE"
+            direction: OUT
+            properties: "HasFilenameRel"
+        )
 }
 
 type Commit implements Hashable {
@@ -38,10 +48,6 @@ type Mutation {
 
 # custom types not part of Data model
 type DiffResult @exclude {
-    # must put at least one non array field:
-    #   otherwise: "Input Object type DiffResultCreateInput must define one or more fields."
-    # TODO: how to remove this ?
-    unused: String
     newitems: [DiffItem]! @ignore
     delitems: [DiffItem]! @ignore
     moditems: [DiffItem]! @ignore
@@ -59,5 +65,8 @@ type User {
 
 # custom Queries
 type Query {
-    diffCommits(base_commit_hash: String!, diffee_commit_hash: String!): DiffResult!
+    diffCommits(
+        base_commit_hash: String!
+        diffee_commit_hash: String!
+    ): DiffResult!
 }
