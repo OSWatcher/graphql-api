@@ -70,7 +70,7 @@ const resolvers = {
             // TODO: diff them recursively
             const diff_result = await diffTreesRecursive(
                 driver,
-                "",
+                "/",
                 base_root_hash,
                 diffee_root_hash
             );
