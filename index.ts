@@ -7,7 +7,8 @@ import { readFileSync } from "fs";
 import neo4j from "neo4j-driver";
 import * as dotenv from "dotenv";
 import { createConstraintsIfNotExists } from "./constraints.js";
-import { diffTreesRecursive } from "./diff.js";
+import { DiffObj, DiffStatus, diffTreesRecursive } from "./diff.js";
+
 
 dotenv.config();
 
@@ -37,6 +38,11 @@ const ogm = new OGM({ typeDefs, driver });
 await ogm.init();
 
 const resolvers = {
+    DiffStatus: {
+        NEW: DiffStatus.NEW,
+        MOD: DiffStatus.MOD,
+        DEL: DiffStatus.DEL,
+    },
     Query: {
         async diffCommits(_source, { base_commit_hash, diffee_commit_hash }) {
             // find Commits based on hash
@@ -72,18 +78,16 @@ const resolvers = {
                     (com) => com["filesystem"]["hash"]
                 );
                 // TODO: diff them recursively
-                const diff_result = await diffTreesRecursive(
+                const diff_result: DiffObj[] = [];
+                for await (const value of diffTreesRecursive(
                     driver,
                     "/",
                     base_root_hash,
                     diffee_root_hash
-                );
-
-                return {
-                    newitems: diff_result["newitems_path"],
-                    delitems: diff_result["delitems_path"],
-                    moditems: diff_result["moditems_path"],
-                };
+                )) {
+                    diff_result.push(value);
+                }
+                return { items: diff_result };
             } catch (error) {
                 console.error("Error in diffCommits: ", error);
                 throw new Error(
@@ -104,12 +108,12 @@ const resolvers = {
                     // merge blobs with relationships
                     tx.run(
                         `
-                        MATCH (p:Tree {hash: $parent_hash})
-                        WITH p
-                        UNWIND $unwind_param as rel
-                        MERGE (c:Blob {hash: rel.node.hash})
-                        MERGE (p)-[:HAS_CHILD_BLOB {name: rel.edge.name}]->(c)
-                    `,
+                    MATCH (p:Tree {hash: $parent_hash})
+                    WITH p
+                    UNWIND $unwind_param as rel
+                    MERGE (c:Blob {hash: rel.node.hash})
+                    MERGE (p)-[:HAS_CHILD_BLOB {name: rel.edge.name}]->(c)
+                `,
                         {
                             parent_hash: input["hash"],
                             unwind_param: input["child_blobs"]["create"],
@@ -120,12 +124,12 @@ const resolvers = {
                     // merge trees with relationships
                     tx.run(
                         `
-                        MATCH (p:Tree {hash: $parent_hash})
-                        WITH p
-                        UNWIND $unwind_param as rel
-                        MERGE (c:Tree {hash: rel.node.hash})
-                        MERGE (p)-[:HAS_CHILD_TREE {name: rel.edge.name}]->(c)
-                    `,
+                    MATCH (p:Tree {hash: $parent_hash})
+                    WITH p
+                    UNWIND $unwind_param as rel
+                    MERGE (c:Tree {hash: rel.node.hash})
+                    MERGE (p)-[:HAS_CHILD_TREE {name: rel.edge.name}]->(c)
+                `,
                         {
                             parent_hash: input["hash"],
                             unwind_param: input["child_trees"]["create"],
@@ -144,14 +148,8 @@ const resolvers = {
         },
     },
     DiffResult: {
-        newitems: (parent, _args, _context) => {
-            return parent["newitems"];
-        },
-        delitems: (parent, _args, _context) => {
-            return parent["delitems"];
-        },
-        moditems: (parent, _args, _context) => {
-            return parent["moditems"];
+        items: (parent, _args, _context) => {
+            return parent["items"];
         },
     },
 };

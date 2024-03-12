@@ -205,12 +205,12 @@ function partition_blobs(diff_result: DiffObj[]): [DiffObj[], DiffObj[]] {
     );
 }
 
-async function diffTreesRecursive(
+async function* diffTreesRecursive(
     driver,
     current_path: string,
     base_hash: string,
     diffee_hash: string
-) {
+): AsyncGenerator<DiffObj, void, void> {
     // result
     const diff_rec_result: {
         newitems_path: DiffObj[];
@@ -250,6 +250,7 @@ async function diffTreesRecursive(
         // update full path
         new_blob.path = path.join(current_path, new_blob.path);
         // console.debug(`NEW: ${new_blob.path}`);
+        yield new_blob;
     }
 
     // process DEL
@@ -272,12 +273,20 @@ async function diffTreesRecursive(
         // update full path
         del_blob.path = path.join(current_path, del_blob.path);
         // console.debug(`DEL: ${del_blob.path}`);
+        yield del_blob;
     }
 
     // process MOD
     const [mod_diff_blobs_arr, mod_diff_trees_arr] = partition_blobs(
         diff_result.get(DiffStatus.MOD)!
     );
+    // update all objects to set the path
+    for (const mod_blob of diff_rec_result["moditems_path"]) {
+        // update full path
+        mod_blob.path = path.join(current_path, mod_blob.path);
+        // console.debug(`MOD: ${mod_blob.path}`);
+        yield mod_blob;
+    }
     diff_rec_result["moditems_path"].push(...mod_diff_blobs_arr);
     // process subtrees
     const sub_diff_result_arr = await Promise.all(
@@ -290,26 +299,13 @@ async function diffTreesRecursive(
             )
         )
     );
-
-    //      merge results
-    sub_diff_result_arr.map((sub_diff_result) => {
-        diff_rec_result["newitems_path"].push(
-            ...sub_diff_result["newitems_path"]
-        );
-        diff_rec_result["delitems_path"].push(
-            ...sub_diff_result["delitems_path"]
-        );
-        diff_rec_result["moditems_path"].push(
-            ...sub_diff_result["moditems_path"]
-        );
-    });
-    // update all objects to set the path
-    for (const mod_blob of diff_rec_result["moditems_path"]) {
-        // update full path
-        mod_blob.path = path.join(current_path, mod_blob.path);
-        // console.debug(`MOD: ${mod_blob.path}`);
+    // yield subdirs
+    for (const mod_sub_blob_arr of sub_diff_result_arr) {
+        for await (const mod_sub_blob of mod_sub_blob_arr) {
+            mod_sub_blob.path = path.join(current_path, mod_sub_blob.path);
+            yield mod_sub_blob;
+        }
     }
-    return diff_rec_result;
 }
 
-export { diffTreesRecursive };
+export { diffTreesRecursive, DiffStatus, DiffObj };

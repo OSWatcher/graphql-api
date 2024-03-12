@@ -47,13 +47,18 @@ type Mutation {
 }
 
 # custom types not part of Data model
+enum DiffStatus {
+    NEW
+    MOD
+    DEL
+}
+
 type DiffResult {
-    newitems: [DiffItem]!
-    delitems: [DiffItem]!
-    moditems: [DiffItem]!
+    items: [DiffItem]!
 }
 
 type DiffItem {
+    status: DiffStatus!
     path: String!
     old_hash: String
     new_hash: String
