@@ -27,7 +27,7 @@ const driver = neo4j.driver(
 
 // ensure Neo4j constraints are applied
 console.log("Ensure Neo4j constraints are effective");
-createConstraintsIfNotExists(driver);
+await createConstraintsIfNotExists(driver);
 
 // we must convert the file Buffer to a UTF-8 string
 const typeDefs = readFileSync("./type-defs.graphql").toString("utf-8");
