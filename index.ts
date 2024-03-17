@@ -1,8 +1,8 @@
 import { Neo4jGraphQL } from "@neo4j/graphql";
-import pkg from '@neo4j/graphql-ogm';
+import pkg from "@neo4j/graphql-ogm";
 const { OGM } = pkg;
-import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
+import { ApolloServer } from "@apollo/server";
+import { startStandaloneServer } from "@apollo/server/standalone";
 import { readFileSync } from "fs";
 import neo4j from "neo4j-driver";
 import * as dotenv from "dotenv";
@@ -141,6 +141,17 @@ const resolvers = {
                 session.close();
             }
             return "hello";
+        },
+    },
+    DiffResult: {
+        newitems: (parent, args, context) => {
+            return parent["newitems"];
+        },
+        delitems: (parent, args, context) => {
+            return parent["delitems"];
+        },
+        moditems: (parent, args, context) => {
+            return parent["moditems"];
         },
     },
 };
