@@ -38,48 +38,55 @@ const resolvers = {
         async diffCommits(_source, { base_commit_hash, diffee_commit_hash }) {
             // find Commits based on hash
             const Commit = ogm.model("Commit");
-            const arr_commit = await Promise.all(
-                [base_commit_hash, diffee_commit_hash].map(async (hash) => {
-                    // select filesystem relationship and get the root Tree hash
-                    const selectionSet = `
-                    {
-                      hash
-                      filesystem {
+            try {
+                const arr_commit = await Promise.all(
+                    [base_commit_hash, diffee_commit_hash].map(async (hash) => {
+                        // select filesystem relationship and get the root Tree hash
+                        const selectionSet = `
+                        {
                         hash
-                      }
-                    }`;
-                    return Commit.find({
-                        selectionSet,
-                        where: {
-                            hash,
-                        },
-                    }).then((result) => {
-                        if (!result) {
-                            throw new Error(
-                                `Commit hash ${hash} doesn't exists !`
-                            );
+                        filesystem {
+                            hash
                         }
-                        return result[0];
-                    });
-                })
-            );
-            // get root trees hash
-            const [base_root_hash, diffee_root_hash] = arr_commit.map(
-                (com) => com["filesystem"]["hash"]
-            );
-            // TODO: diff them recursively
-            const diff_result = await diffTreesRecursive(
-                driver,
-                "/",
-                base_root_hash,
-                diffee_root_hash
-            );
+                        }`;
+                        return Commit.find({
+                            selectionSet,
+                            where: {
+                                hash,
+                            },
+                        }).then((result) => {
+                            if (!result) {
+                                throw new Error(
+                                    `Commit hash ${hash} doesn't exists !`
+                                );
+                            }
+                            return result[0];
+                        });
+                    })
+                );
+                // get root trees hash
+                const [base_root_hash, diffee_root_hash] = arr_commit.map(
+                    (com) => com["filesystem"]["hash"]
+                );
+                // TODO: diff them recursively
+                const diff_result = await diffTreesRecursive(
+                    driver,
+                    "/",
+                    base_root_hash,
+                    diffee_root_hash
+                );
 
-            return {
-                newitems: diff_result["newitems_path"],
-                delitems: diff_result["delitems_path"],
-                moditems: diff_result["moditems_path"],
-            };
+                return {
+                    newitems: diff_result["newitems_path"],
+                    delitems: diff_result["delitems_path"],
+                    moditems: diff_result["moditems_path"],
+                };
+            } catch (error) {
+                console.error("Error in diffCommits: ", error);
+                throw new Error(
+                    "An error occurred while processing the request."
+                );
+            }
         },
     },
     Mutation: {
