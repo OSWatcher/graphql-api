@@ -1,11 +1,13 @@
 import { Neo4jGraphQL } from "@neo4j/graphql";
-import { OGM } from "@neo4j/graphql-ogm";
-import { ApolloServer } from "apollo-server";
+import pkg from '@neo4j/graphql-ogm';
+const { OGM } = pkg;
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 import { readFileSync } from "fs";
 import neo4j from "neo4j-driver";
 import * as dotenv from "dotenv";
-import { createConstraintsIfNotExists } from "./constraints";
-import { diffTreesRecursive } from "./diff";
+import { createConstraintsIfNotExists } from "./constraints.js";
+import { diffTreesRecursive } from "./diff.js";
 
 dotenv.config();
 
@@ -145,9 +147,12 @@ const resolvers = {
 const neoSchema = new Neo4jGraphQL({ typeDefs, driver, resolvers });
 
 const server = new ApolloServer({
-    schema: neoSchema.schema,
+    schema: await neoSchema.getSchema(),
 });
 
-server.listen().then(({ url }) => {
-    console.log(`🚀 Server ready at ${url}`);
+const { url } = await startStandaloneServer(server, {
+    context: async ({ req }) => ({ req }),
+    listen: { port: 4000 },
 });
+
+console.log(`🚀 Server ready at ${url}`);
