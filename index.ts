@@ -144,13 +144,13 @@ const resolvers = {
         },
     },
     DiffResult: {
-        newitems: (parent, args, context) => {
+        newitems: (parent, _args, _context) => {
             return parent["newitems"];
         },
-        delitems: (parent, args, context) => {
+        delitems: (parent, _args, _context) => {
             return parent["delitems"];
         },
-        moditems: (parent, args, context) => {
+        moditems: (parent, _args, _context) => {
             return parent["moditems"];
         },
     },
