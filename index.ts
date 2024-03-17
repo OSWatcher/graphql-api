@@ -34,6 +34,7 @@ const typeDefs = readFileSync("./type-defs.graphql").toString("utf-8");
 
 // OGM instance
 const ogm = new OGM({ typeDefs, driver });
+await ogm.init();
 
 const resolvers = {
     Query: {
