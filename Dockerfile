@@ -10,8 +10,9 @@ RUN npm install
 
 # copy rest of source
 COPY . .
+# pre-compile
+RUN npm run build
 
 EXPOSE 4000
 
-CMD ["npm", "run", "serve"]
-
+CMD ["npm", "run", "serve_from_build"]
