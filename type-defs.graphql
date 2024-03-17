@@ -8,19 +8,19 @@ type Blob implements Hashable {
     hash: String! @unique
 }
 
-interface HasFilenameRel @relationshipProperties {
+type HasFilenameRel @relationshipProperties {
     name: String!
 }
 
 type Tree implements Hashable {
     hash: String! @unique
-    child_blobs: [Blob]
+    child_blobs: [Blob!]!
         @relationship(
             type: "HAS_CHILD_BLOB"
             direction: OUT
             properties: "HasFilenameRel"
         )
-    child_trees: [Tree]
+    child_trees: [Tree!]!
         @relationship(
             type: "HAS_CHILD_TREE"
             direction: OUT
@@ -47,13 +47,13 @@ type Mutation {
 }
 
 # custom types not part of Data model
-type DiffResult @exclude {
-    newitems: [DiffItem]! @ignore
-    delitems: [DiffItem]! @ignore
-    moditems: [DiffItem]! @ignore
+type DiffResult {
+    newitems: [DiffItem]!
+    delitems: [DiffItem]!
+    moditems: [DiffItem]!
 }
 
-type DiffItem @exclude {
+type DiffItem {
     path: String!
     old_hash: String
     new_hash: String
