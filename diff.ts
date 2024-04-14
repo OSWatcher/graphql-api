@@ -104,7 +104,7 @@ async function fetchRecusiveBlobs(
     parent_tree_hash: string,
     status: DiffStatus
 ): Promise<DiffObj[]> {
-    const result = await driver.session().readTransaction((tx) => {
+    const result = await driver.session().executeRead((tx) => {
         return tx.run(RECURSIVE_BLOBS_QUERY, { parent_hash: parent_tree_hash });
     });
     /*
@@ -139,7 +139,7 @@ async function diffTrees(
     base_hash: string,
     diffee_hash: string
 ): Promise<Map<DiffStatus, DiffObj[]>> {
-    const result = await session.readTransaction((tx) => {
+    const result = await session.executeRead((tx) => {
         return tx.run(DIFF_QUERY, { base: base_hash, diffee: diffee_hash });
     });
     // reduce records into a map

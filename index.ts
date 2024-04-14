@@ -95,7 +95,7 @@ const resolvers = {
     Mutation: {
         async mergeTree(_source, { input }) {
             const session = driver.session();
-            const prom = session.writeTransaction((tx) => {
+            const prom = session.executeWrite((tx) => {
                 // merge parent tree
                 tx.run("MERGE (parent:Tree {hash: $hash})", {
                     hash: input["hash"],
