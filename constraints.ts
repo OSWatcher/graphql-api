@@ -6,7 +6,7 @@ import { Driver } from "neo4j-driver";
 async function createConstraintsIfNotExists(driver: Driver) {
     const session = driver.session();
     try {
-        await session.writeTransaction(async (tx) => {
+        await session.executeWrite(async (tx) => {
             const label_array = ["Blob", "Tree", "Commit"];
             const promises = label_array.map((label) =>
                 tx.run(`
