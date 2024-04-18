@@ -1,6 +1,6 @@
 import { Neo4jGraphQL } from "@neo4j/graphql";
-import pkg from "@neo4j/graphql-ogm";
-const { OGM } = pkg;
+import pkg from '@neo4j/graphql-ogm';
+const { OGM, generate } = pkg;
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { readFileSync } from "fs";
@@ -8,6 +8,12 @@ import neo4j from "neo4j-driver";
 import * as dotenv from "dotenv";
 import { createConstraintsIfNotExists } from "./constraints.js";
 import { diffTreesRecursive } from "./diff.js";
+import path from "path";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 
@@ -156,15 +162,34 @@ const resolvers = {
     },
 };
 
-const neoSchema = new Neo4jGraphQL({ typeDefs, driver, resolvers });
 
-const server = new ApolloServer({
-    schema: await neoSchema.getSchema(),
-});
+async function main() {
+    // Only generate types when you make a schema change
+    if (process.env.GENERATE) {
+        const outFile = path.join(__dirname, "ogm-types.ts");
 
-const { url } = await startStandaloneServer(server, {
-    context: async ({ req }) => ({ req }),
-    listen: { port: 4000 },
-});
+        await generate({
+            ogm,
+            outFile,
+        });
 
-console.log(`🚀 Server ready at ${url}`);
+        console.log("Types Generated");
+
+        process.exit(0);
+    }
+
+    const neoSchema = new Neo4jGraphQL({ typeDefs, driver, resolvers });
+
+    const server = new ApolloServer({
+        schema: await neoSchema.getSchema(),
+    });
+
+    const { url } = await startStandaloneServer(server, {
+        context: async ({ req }) => ({ req }),
+        listen: { port: 4000 },
+    });
+
+    console.log(`🚀 Server ready at ${url}`);
+}
+
+main()
