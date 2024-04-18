@@ -12,6 +12,7 @@
     "build": "npx tsc",
     "serve": "npm run build && npm run serve_from_build",
     "serve_from_build": "node dist/index.js",
+    "gentypes": "GENERATE=true npm run serve && mv dist/ogm-types.ts .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier --write '*.ts'",
     "format-check": "prettier --check '*.ts'",
