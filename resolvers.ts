@@ -1,8 +1,17 @@
+import { fetch_commit_history } from "./commits.js";
 import { diffTreesRecursive } from "./diff.js";
 import { driver, ogm } from "./index.js";
+import { Commit } from "./ogm-types.js";
 
 const resolvers = {
     Query: {
+        async fetchCommitHistory(_source, { branch_name }) {
+            const results: Commit[] = [];
+            for await (const commit of fetch_commit_history(driver, ogm, branch_name)) {
+                results.push(commit);
+            }
+            return results;
+        },
         async diffCommits(_source, { base_commit_hash, diffee_commit_hash }) {
             // find Commits based on hash
             const Commit = ogm.model("Commit");

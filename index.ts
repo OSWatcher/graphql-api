@@ -1,5 +1,5 @@
 import { Neo4jGraphQL } from "@neo4j/graphql";
-import pkg from '@neo4j/graphql-ogm';
+import pkg from "@neo4j/graphql-ogm";
 const { OGM } = pkg;
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
@@ -36,7 +36,6 @@ const typeDefs = readFileSync("./type-defs.graphql").toString("utf-8");
 const ogm = new OGM({ typeDefs, driver });
 await ogm.init();
 
-
 async function main() {
     const neoSchema = new Neo4jGraphQL({ typeDefs, driver, resolvers });
 
@@ -52,6 +51,6 @@ async function main() {
     console.log(`🚀 Server ready at ${url}`);
 }
 
-main()
+main();
 
 export { driver, ogm };
