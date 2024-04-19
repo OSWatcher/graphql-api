@@ -4,6 +4,7 @@
 !constraints.ts
 !diff.ts
 !index.ts
+!resolvers.ts
 !commits.ts
 !package-lock.json
 !package.json
