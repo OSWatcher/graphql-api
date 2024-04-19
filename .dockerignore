@@ -4,6 +4,10 @@
 !constraints.ts
 !diff.ts
 !index.ts
+!resolvers.ts
+!commits.ts
+!gentypes.js
+!ogm-types.ts
 !package-lock.json
 !package.json
 !tsconfig.json
