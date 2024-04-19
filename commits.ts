@@ -1,4 +1,4 @@
-import { Driver, Integer } from "neo4j-driver";
+import { Driver } from "neo4j-driver";
 import { Commit } from "./ogm-types.js";
 
 async function* fetch_commit_history(
@@ -10,7 +10,6 @@ async function* fetch_commit_history(
     // to search for search_term
     // returns an iterator
     const session = driver.session();
-    const Commit = ogm.model("Commit");
 
     try {
         const query = `
