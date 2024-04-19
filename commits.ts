@@ -25,7 +25,7 @@ async function* fetch_commit_history(
         );
 
         for (const record of result.records) {
-            const commitNode = record.get('c');
+            const commitNode = record.get("c");
             const commitProps = commitNode.properties;
             const commit: Commit = {
                 hash: commitProps.hash,
@@ -34,8 +34,8 @@ async function* fetch_commit_history(
                 previousConnection: commitProps.previousConnection,
                 filesystem: commitProps.filesystem,
                 filesystemConnection: commitProps.filesystemConnection,
-            }
-            yield commit
+            };
+            yield commit;
         }
     } catch (error) {
         console.error("Error searching filesystem by full path:", error);
