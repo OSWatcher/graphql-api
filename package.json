@@ -9,6 +9,7 @@
     "npm": ">= 6.0.0"
   },
   "scripts": {
+    "gentypes": "node gentypes.js",
     "build": "npx tsc",
     "serve": "npm run build && npm run serve_from_build",
     "serve_from_build": "node dist/index.js",
