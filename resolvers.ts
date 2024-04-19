@@ -7,7 +7,11 @@ const resolvers = {
     Query: {
         async fetchCommitHistory(_source, { branch_name }) {
             const results: Commit[] = [];
-            for await (const commit of fetch_commit_history(driver, ogm, branch_name)) {
+            for await (const commit of fetch_commit_history(
+                driver,
+                ogm,
+                branch_name
+            )) {
                 results.push(commit);
             }
             return results;
