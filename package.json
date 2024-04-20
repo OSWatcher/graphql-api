@@ -14,8 +14,8 @@
     "serve": "npm run build && npm run serve_from_build",
     "serve_from_build": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "prettier --write '*.ts'",
-    "format-check": "prettier --check '*.ts'",
+    "format": "prettier --write 'src/*.ts'",
+    "format-check": "prettier --check 'src/*.ts'",
     "lint": "npx eslint . --ext .ts"
   },
   "keywords": [],
