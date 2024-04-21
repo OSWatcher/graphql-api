@@ -5,12 +5,17 @@ async function get_path_entry(
     root_fs_hash: string,
     path: string
 ) {
+    // path should be absolute
+    if (!path.startsWith("/")) {
+        throw new Error("Path should be absolute");
+    }
     // given a commit hash and a path, return the Tree or Blob at that path
     // if it exists
     const session = driver.session();
     try {
         // Normalize the path and split into components
-        const pathParts = path.split("/");
+        // Split the path by slash and filter out any empty strings
+        const pathParts = path.split("/").filter(Boolean);
 
         let currentParentHash = root_fs_hash;
 
