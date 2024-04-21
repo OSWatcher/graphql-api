@@ -97,6 +97,9 @@ const resolvers = {
         },
         async getTreeAtPath(_source, { commit_hash, path }) {
             const root_hash = await getTreeHashFromCommit(commit_hash);
+            if (path === "/") {
+                return root_hash;
+            }
             const entry = await get_path_entry(driver, root_hash, path);
             // if Blob, return error
             if (entry.label === "Blob") {
