@@ -71,4 +71,6 @@ type Query {
     ): DiffResult!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
+    # get Tree hash at path
+    getTreeAtPath(commit_hash: String!, path: String!): String
 }

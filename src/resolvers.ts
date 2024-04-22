@@ -2,6 +2,32 @@ import { fetch_commit_history } from "./commits.js";
 import { diffTreesRecursive } from "./diff.js";
 import { driver, ogm } from "./index.js";
 import { Commit } from "./ogm-types.js";
+import { get_path_entry } from "./filesystem.js";
+
+// utils functions
+async function getTreeHashFromCommit(commitHash) {
+    const Commit = ogm.model("Commit");
+    const selectionSet = `
+    {
+        hash
+        filesystem {
+            hash
+        }
+    }`;
+
+    const result = await Commit.find({
+        selectionSet,
+        where: {
+            hash: commitHash,
+        },
+    });
+
+    if (!result || result.length === 0) {
+        throw new Error(`Commit hash ${commitHash} doesn't exist!`);
+    }
+
+    return result[0].filesystem.hash;
+}
 
 const resolvers = {
     Query: {
@@ -68,6 +94,18 @@ const resolvers = {
                     "An error occurred while processing the request."
                 );
             }
+        },
+        async getTreeAtPath(_source, { commit_hash, path }) {
+            const root_hash = await getTreeHashFromCommit(commit_hash);
+            if (path === "/") {
+                return root_hash;
+            }
+            const entry = await get_path_entry(driver, root_hash, path);
+            // if Blob, return error
+            if (entry.label === "Blob") {
+                throw new Error("Not a directory");
+            }
+            return entry.hash;
         },
     },
     Mutation: {

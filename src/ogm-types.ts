@@ -36,6 +36,7 @@ export type Query = {
   __typename?: "Query";
   diffCommits: DiffResult;
   fetchCommitHistory: Array<Commit>;
+  getTreeAtPath?: Maybe<Scalars["String"]["output"]>;
   hashables: Array<Hashable>;
   hashablesConnection: HashablesConnection;
   hashablesAggregate: HashableAggregateSelection;
@@ -69,6 +70,11 @@ export type QueryDiffCommitsArgs = {
 
 export type QueryFetchCommitHistoryArgs = {
   branch_name: Scalars["String"]["input"];
+};
+
+export type QueryGetTreeAtPathArgs = {
+  commit_hash: Scalars["String"]["input"];
+  path: Scalars["String"]["input"];
 };
 
 export type QueryHashablesArgs = {
