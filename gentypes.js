@@ -29,7 +29,7 @@ const ogm = new OGM({ typeDefs, driver });
 async function initAndGenerate() {
     await ogm.init();
 
-    const outFile = path.join(__dirname, "ogm-types.ts");
+    const outFile = path.join(__dirname, "src", "ogm-types.ts");
 
     await generate({
         ogm,
