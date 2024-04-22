@@ -3,7 +3,6 @@ import { Commit } from "./ogm-types.js";
 
 async function* fetch_commit_history(
     driver: Driver,
-    ogm,
     branch_name: string
 ): AsyncGenerator<Commit> {
     // search the filesystem in Neo4j, reconstructing the full path to Blob nodes
@@ -44,4 +43,32 @@ async function* fetch_commit_history(
     }
 }
 
-export { fetch_commit_history };
+async function get_commit_capabilities(
+    driver: Driver,
+    commit_hash: string
+): Promise<string[]> {
+    const session = driver.session();
+
+    try {
+        const query = `
+            MATCH (c:Commit {hash: $commit_hash})-[*]->(n)
+            WITH labels(n) AS labels_list
+            UNWIND labels_list AS label
+            RETURN COLLECT(DISTINCT label) AS uniqueLabels
+        `;
+
+        const result = await session.executeRead((tx) =>
+            tx.run(query, { commit_hash })
+        );
+
+        // return list of string (labels)
+        return result.records[0].get("uniqueLabels");
+    } catch (error) {
+        console.error("Error searching filesystem by full path:", error);
+        throw error;
+    } finally {
+        await session.close();
+    }
+}
+
+export { fetch_commit_history, get_commit_capabilities };
