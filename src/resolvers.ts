@@ -1,4 +1,4 @@
-import { fetch_commit_history } from "./commits.js";
+import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
 import { diffTreesRecursive } from "./diff.js";
 import { driver, ogm } from "./index.js";
 import { Commit } from "./ogm-types.js";
@@ -35,7 +35,6 @@ const resolvers = {
             const results: Commit[] = [];
             for await (const commit of fetch_commit_history(
                 driver,
-                ogm,
                 branch_name
             )) {
                 results.push(commit);
@@ -106,6 +105,9 @@ const resolvers = {
                 throw new Error("Not a directory");
             }
             return entry.hash;
+        },
+        async getCommitExtractedDataLabels(_source, { commit_hash }) {
+            return get_commit_capabilities(driver, commit_hash);
         },
     },
     Mutation: {
