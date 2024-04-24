@@ -94,20 +94,11 @@ const resolvers = {
                 );
             }
         },
-        async getTreeAtPath(_source, { commit_hash, path }) {
-            const root_hash = await getTreeHashFromCommit(commit_hash);
-            if (path === "/") {
-                return root_hash;
-            }
-            const entry = await get_path_entry(driver, root_hash, path);
-            // if Blob, return error
-            if (entry.label === "Blob") {
-                throw new Error("Not a directory");
-            }
-            return entry.hash;
-        },
         async getCommitExtractedDataLabels(_source, { commit_hash }) {
             return get_commit_capabilities(driver, commit_hash);
+        },
+        async traversePath(_source, { tree_hash, path }) {
+            return await get_path_entry(driver, tree_hash, path);
         },
     },
     Mutation: {

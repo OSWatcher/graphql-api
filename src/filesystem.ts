@@ -9,6 +9,9 @@ async function get_path_entry(
     if (!path.startsWith("/")) {
         throw new Error("Path should be absolute");
     }
+    if (path === "/") {
+        return root_fs_hash;
+    }
     // given a commit hash and a path, return the Tree or Blob at that path
     // if it exists
     const session = driver.session();
@@ -23,8 +26,8 @@ async function get_path_entry(
         for (let i = 0; i < pathParts.length - 1; i++) {
             const part = pathParts[i];
             const query = `
-            MATCH (p:Tree)-[r:HAS_CHILD_TREE]->(c:Tree)
-            WHERE  p.hash = $parent_hash AND r.name = $filename
+            MATCH (p)-[r]->(c)
+            WHERE p.hash = $parent_hash AND r.name = $filename
             RETURN c
             `;
             const result = await session.run(query, {
@@ -42,26 +45,21 @@ async function get_path_entry(
         // The last part of the path, could be a Tree or Blob
         const lastPart = pathParts[pathParts.length - 1];
         const finalQuery = `
-        MATCH (p:Tree)-[r:HAS_CHILD_TREE|HAS_CHILD_BLOB]->(c)
+        MATCH (p)-[r]->(c)
         WHERE p.hash = $parent_hash AND r.name = $filename
-        RETURN labels(c) AS labels, c.hash AS hash
-      `;
+        RETURN c
+        `;
         const finalResult = await session.run(finalQuery, {
             parent_hash: currentParentHash,
             filename: lastPart,
         });
-        const [finalNode] = finalResult.records.map((record) => ({
-            label: record.get("labels")[0],
-            hash: record.get("hash"),
-        }));
-
-        if (!finalNode) {
-            throw new Error(
-                "FileNotFoundError: No such file or directory " + lastPart
-            );
+        // retrieve the hash and throw an error if no node found
+        const [node] = finalResult.records.map((record) => record.get("c"));
+        if (!node) {
+            throw new Error("FileNotFoundError: No such file " + lastPart);
         }
 
-        return finalNode; // Return the properties of the node
+        return node.properties.hash;
     } catch (error) {
         console.error("Error fetching path entry:", error);
         throw error;

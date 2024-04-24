@@ -95,8 +95,8 @@ type Query {
     ): DiffResult!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
-    # get Tree hash at path
-    getTreeAtPath(commit_hash: String!, path: String!): String
+    # given a node hash, traverse the children nodes following the path
+    traversePath(tree_hash: String!, path: String!): String
     # get all the possibile data labels associated with an os
     getCommitExtractedDataLabels(commit_hash: String!): [String!]!
 }
