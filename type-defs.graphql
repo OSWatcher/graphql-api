@@ -41,6 +41,30 @@ type Branch {
     tracks: Commit @relationship(type: "TRACKS_COMMIT", direction: OUT)
 }
 
+# Plugins types
+## Registry
+type WinRegValue implements Hashable {
+    hash: String! @unique
+    type: String!
+    value: String!
+}
+
+type WinRegKey implements Hashable {
+    hash: String! @unique
+    child_values: [WinRegValue!]!
+        @relationship(
+            type: "HAS_CHILD"
+            direction: OUT
+            properties: "HasFilenameRel"
+        )
+    child_keys: [WinRegKey!]!
+        @relationship(
+            type: "HAS_CHILD"
+            direction: OUT
+            properties: "HasFilenameRel"
+        )
+}
+
 # custom Mutations
 type Mutation {
     mergeTree(input: TreeCreateInput!): String!
