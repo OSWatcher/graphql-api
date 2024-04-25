@@ -6,6 +6,7 @@ interface Hashable {
 
 type Blob implements Hashable {
     hash: String! @unique
+    has_winreg: WinRegKey @relationship(type: "HAS_WINREG", direction: OUT)
 }
 
 type HasFilenameRel @relationshipProperties {
