@@ -50,9 +50,12 @@ async function get_commit_capabilities(
     const session = driver.session();
 
     try {
+        // get all labels of the commit node
+        // also prevent the commit from traversing the other commits through HAS_PREVIOUS
         const query = `
-            MATCH (c:Commit {hash: $commit_hash})-[*]->(n)
-            WITH labels(n) AS labels_list
+            MATCH path=(c:Commit {hash: $commit_hash})-[*]->(n)
+            WHERE NONE(rel IN relationships(path) WHERE type(rel) = 'HAS_PREVIOUS')
+            WITH n, labels(n) AS labels_list
             UNWIND labels_list AS label
             RETURN COLLECT(DISTINCT label) AS uniqueLabels
         `;
