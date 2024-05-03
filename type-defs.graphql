@@ -6,6 +6,7 @@ interface Hashable {
 
 type Blob implements Hashable {
     hash: String! @unique
+    has_winreg: WinRegKey @relationship(type: "HAS_WINREG", direction: OUT)
 }
 
 type HasFilenameRel @relationshipProperties {
@@ -41,6 +42,30 @@ type Branch {
     tracks: Commit @relationship(type: "TRACKS_COMMIT", direction: OUT)
 }
 
+# Plugins types
+## Registry
+type WinRegValue implements Hashable {
+    hash: String! @unique
+    type: String!
+    value: String!
+}
+
+type WinRegKey implements Hashable {
+    hash: String! @unique
+    child_values: [WinRegValue!]!
+        @relationship(
+            type: "HAS_CHILD"
+            direction: OUT
+            properties: "HasFilenameRel"
+        )
+    child_keys: [WinRegKey!]!
+        @relationship(
+            type: "HAS_CHILD"
+            direction: OUT
+            properties: "HasFilenameRel"
+        )
+}
+
 # custom Mutations
 type Mutation {
     mergeTree(input: TreeCreateInput!): String!
@@ -71,8 +96,8 @@ type Query {
     ): DiffResult!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
-    # get Tree hash at path
-    getTreeAtPath(commit_hash: String!, path: String!): String
+    # given a node hash, traverse the children nodes following the path
+    traversePath(tree_hash: String!, path: String!): String
     # get all the possibile data labels associated with an os
     getCommitExtractedDataLabels(commit_hash: String!): [String!]!
 }
