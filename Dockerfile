@@ -15,4 +15,5 @@ RUN npm run build
 
 EXPOSE 4000
 
+# ENV DEBUG=@neo4j/graphql:execution
 CMD ["npm", "run", "serve_from_build"]
