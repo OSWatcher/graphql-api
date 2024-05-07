@@ -8,7 +8,6 @@ type Blob implements Hashable {
     hash: String! @unique
     has_winreg: WinRegKey @relationship(type: "HAS_WINREG", direction: OUT)
     has_symbol: [Symbol!]! @relationship(type: "HAS_SYMBOL", direction: OUT, properties: "HasSymbolAddressRel")
-    has_enum: [Enum!]! @relationship(type: "HAS_ENUM", direction: OUT)
     has_struct: [WinStruct!]! @relationship(type: "HAS_STRUCT", direction: OUT)
 }
 
@@ -77,19 +76,6 @@ type Symbol {
 
 type HasSymbolAddressRel @relationshipProperties {
     address: String!
-}
-
-type Enum implements Hashable {
-    hash: String! @unique
-    name: String!
-    members: [EnumMember!]!
-        @relationship(type: "HAS_MEMBER", direction: OUT)
-}
-
-type EnumMember implements Hashable {
-    hash: String! @unique
-    name: String!
-    value: String!
 }
 
 type WinStruct implements Hashable {
