@@ -72,6 +72,7 @@ type WinRegKey implements Hashable {
 ## PDBs
 type Symbol {
     name: String!
+    blob: Blob! @relationship(type: "HAS_SYMBOL", direction: IN, properties: "HasSymbolAddressRel")
 }
 
 type HasSymbolAddressRel @relationshipProperties {
