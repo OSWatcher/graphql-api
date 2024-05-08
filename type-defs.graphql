@@ -85,14 +85,26 @@ type WinStruct implements Hashable {
     kind: String!
     fields: [WinStructField!]!
         @relationship(type: "HAS_FIELD", direction: OUT)
+    blob: Blob! @relationship(type: "HAS_STRUCT", direction: IN)
 }
 
 type WinStructField implements Hashable {
     hash: String! @unique
     name: String!
     offset: Int!
-    type: String!
+    type: WinDataType! @relationship(type: "HAS_DATA_TYPE", direction: OUT)
 }
+
+type WinDataType implements Hashable {
+    hash: String! @unique
+    type: String!
+    name: String
+    array_counter: Int
+    bit_position: Int
+    bit_length: Int
+    has_data_type: WinDataType @relationship(type: "HAS_DATA_TYPE", direction: OUT)
+}
+
 
 # custom Mutations
 type Mutation {
