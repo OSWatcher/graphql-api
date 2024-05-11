@@ -7,6 +7,8 @@ interface Hashable {
 type Blob implements Hashable {
     hash: String! @unique
     has_winreg: WinRegKey @relationship(type: "HAS_WINREG", direction: OUT)
+    has_symbol: [Symbol!]! @relationship(type: "HAS_SYMBOL", direction: OUT, properties: "HasSymbolAddressRel")
+    has_struct: [WinStruct!]! @relationship(type: "HAS_STRUCT", direction: OUT)
 }
 
 type HasFilenameRel @relationshipProperties {
@@ -65,6 +67,44 @@ type WinRegKey implements Hashable {
             properties: "HasFilenameRel"
         )
 }
+
+## PDBs
+type Symbol {
+    name: String!
+    blob: Blob! @relationship(type: "HAS_SYMBOL", direction: IN, properties: "HasSymbolAddressRel")
+}
+
+type HasSymbolAddressRel @relationshipProperties {
+    address: String!
+}
+
+type WinStruct implements Hashable {
+    hash: String! @unique
+    name: String!
+    size: Int!
+    kind: String!
+    fields: [WinStructField!]!
+        @relationship(type: "HAS_FIELD", direction: OUT)
+    blob: Blob! @relationship(type: "HAS_STRUCT", direction: IN)
+}
+
+type WinStructField implements Hashable {
+    hash: String! @unique
+    name: String!
+    offset: Int!
+    type: WinDataType! @relationship(type: "HAS_DATA_TYPE", direction: OUT)
+}
+
+type WinDataType implements Hashable {
+    hash: String! @unique
+    type: String!
+    name: String
+    array_counter: Int
+    bit_position: Int
+    bit_length: Int
+    has_data_type: WinDataType @relationship(type: "HAS_DATA_TYPE", direction: OUT)
+}
+
 
 # custom Mutations
 type Mutation {
