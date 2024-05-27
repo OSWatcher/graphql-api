@@ -43,37 +43,13 @@ const resolvers = {
         },
         async diffCommits(_source, { base_commit_hash, diffee_commit_hash }) {
             // find Commits based on hash
-            const Commit = ogm.model("Commit");
             try {
-                const arr_commit = await Promise.all(
-                    [base_commit_hash, diffee_commit_hash].map(async (hash) => {
-                        // select filesystem relationship and get the root Tree hash
-                        const selectionSet = `
-                        {
-                        hash
-                        filesystem {
-                            hash
-                        }
-                        }`;
-                        return Commit.find({
-                            selectionSet,
-                            where: {
-                                hash,
-                            },
-                        }).then((result) => {
-                            if (!result) {
-                                throw new Error(
-                                    `Commit hash ${hash} doesn't exists !`
-                                );
-                            }
-                            return result[0];
-                        });
-                    })
-                );
-                // get root trees hash
-                const [base_root_hash, diffee_root_hash] = arr_commit.map(
-                    (com) => com["filesystem"]["hash"]
-                );
+                // Get the tree hashes for both commits
+                const [base_root_hash, diffee_root_hash] = await Promise.all([
+                    getTreeHashFromCommit(base_commit_hash),
+                    getTreeHashFromCommit(diffee_commit_hash),
+                ]);
+
                 // TODO: diff them recursively
                 const diff_result = await diffTreesRecursive(
                     driver,
