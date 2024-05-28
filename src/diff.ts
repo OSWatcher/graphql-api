@@ -102,6 +102,7 @@ RETURN [r IN relationships(path) | r.name] as path_parts, b.hash as blob_hash
 async function fetchRecusiveBlobs(
     driver: Driver,
     parent_tree_hash: string,
+    parent_filename: string,
     status: DiffStatus
 ): Promise<DiffObj[]> {
     const session = driver.session();
@@ -129,7 +130,7 @@ async function fetchRecusiveBlobs(
             const blob_hash: string = current.get("blob_hash");
             const diff_obj: DiffObj = {
                 status: status,
-                path: path.join(...path_parts),
+                path: path.join(parent_filename, ...path_parts),
                 type: NodeType.Blob,
                 old_hash: status == DiffStatus.DEL ? blob_hash : undefined,
                 new_hash: status == DiffStatus.NEW ? blob_hash : undefined,
@@ -246,7 +247,12 @@ async function diffTreesRecursive(
     // process new subtrees and get their blobs recursively
     const new_subblobs_arr: DiffObj[][] = await Promise.all(
         new_diff_trees.map((diff_obj) =>
-            fetchRecusiveBlobs(driver, diff_obj.new_hash!, DiffStatus.NEW)
+            fetchRecusiveBlobs(
+                driver,
+                diff_obj.new_hash!,
+                diff_obj.path,
+                DiffStatus.NEW
+            )
         )
     );
     for (const arr of new_subblobs_arr) {
@@ -268,7 +274,12 @@ async function diffTreesRecursive(
     // process subtrees
     const del_subblobs_arr: DiffObj[][] = await Promise.all(
         del_diff_trees_arr.map((diff_obj) =>
-            fetchRecusiveBlobs(driver, diff_obj.old_hash!, DiffStatus.DEL)
+            fetchRecusiveBlobs(
+                driver,
+                diff_obj.old_hash!,
+                diff_obj.path,
+                DiffStatus.DEL
+            )
         )
     );
     for (const arr of del_subblobs_arr) {
