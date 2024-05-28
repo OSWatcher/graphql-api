@@ -104,34 +104,41 @@ async function fetchRecusiveBlobs(
     parent_tree_hash: string,
     status: DiffStatus
 ): Promise<DiffObj[]> {
-    const result = await driver.session().executeRead((tx) => {
-        return tx.run(RECURSIVE_BLOBS_QUERY, { parent_hash: parent_tree_hash });
-    });
-    /*
-    results looks like this:
-        path_parts	                                        blob_hash
-    1   ["src", "main", "resources", "Unlicense"]           f6067df486cbdbb0aac026b799b26261c92734a3
-    2   ["src", "main", "resources", "BSD License"]         d50f85b2ba155047d15ba915158350a18e76b710
+    const session = driver.session();
+    try {
+        const result = await session.executeRead((tx) => {
+            return tx.run(RECURSIVE_BLOBS_QUERY, {
+                parent_hash: parent_tree_hash,
+            });
+        });
+        /*
+        results looks like this:
+            path_parts	                                        blob_hash
+        1   ["src", "main", "resources", "Unlicense"]           f6067df486cbdbb0aac026b799b26261c92734a3
+        2   ["src", "main", "resources", "BSD License"]         d50f85b2ba155047d15ba915158350a18e76b710
 
-    return [
-        {
-            'rel_path': 'src/main/resources/Unlicense',
-            'hash': 'f6067df486cbdbb0aac026b799b26261c92734a3'
-        }
-    ]
-    */
-    return result.records.map((current) => {
-        const path_parts: Array<string> = current.get("path_parts");
-        const blob_hash: string = current.get("blob_hash");
-        const diff_obj: DiffObj = {
-            status: status,
-            path: path.join(...path_parts),
-            type: NodeType.Blob,
-            old_hash: status == DiffStatus.DEL ? blob_hash : undefined,
-            new_hash: status == DiffStatus.NEW ? blob_hash : undefined,
-        };
-        return diff_obj;
-    });
+        return [
+            {
+                'rel_path': 'src/main/resources/Unlicense',
+                'hash': 'f6067df486cbdbb0aac026b799b26261c92734a3'
+            }
+        ]
+        */
+        return result.records.map((current) => {
+            const path_parts: Array<string> = current.get("path_parts");
+            const blob_hash: string = current.get("blob_hash");
+            const diff_obj: DiffObj = {
+                status: status,
+                path: path.join(...path_parts),
+                type: NodeType.Blob,
+                old_hash: status == DiffStatus.DEL ? blob_hash : undefined,
+                new_hash: status == DiffStatus.NEW ? blob_hash : undefined,
+            };
+            return diff_obj;
+        });
+    } finally {
+        await session.close();
+    }
 }
 
 async function diffTrees(
