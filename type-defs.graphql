@@ -128,6 +128,13 @@ type User {
     name: String!
 }
 
+type SearchResult {
+    commit_name: String!
+    commit_hash: String!
+    hash: String!
+    path: String!
+}
+
 # custom Queries
 type Query {
     diffCommits(
@@ -140,4 +147,6 @@ type Query {
     traversePath(tree_hash: String!, path: String!): String
     # get all the possibile data labels associated with an os
     getCommitExtractedDataLabels(commit_hash: String!): [String!]!
+    # search
+    search(search_term: String!): [SearchResult!]!
 }
