@@ -36,7 +36,9 @@ export type Query = {
   __typename?: "Query";
   diffCommits: DiffResult;
   fetchCommitHistory: Array<Commit>;
-  getTreeAtPath?: Maybe<Scalars["String"]["output"]>;
+  traversePath?: Maybe<Scalars["String"]["output"]>;
+  getCommitExtractedDataLabels: Array<Scalars["String"]["output"]>;
+  search: Array<SearchResult>;
   hashables: Array<Hashable>;
   hashablesConnection: HashablesConnection;
   hashablesAggregate: HashableAggregateSelection;
@@ -52,6 +54,24 @@ export type Query = {
   branches: Array<Branch>;
   branchesConnection: BranchesConnection;
   branchesAggregate: BranchAggregateSelection;
+  winRegValues: Array<WinRegValue>;
+  winRegValuesConnection: WinRegValuesConnection;
+  winRegValuesAggregate: WinRegValueAggregateSelection;
+  winRegKeys: Array<WinRegKey>;
+  winRegKeysConnection: WinRegKeysConnection;
+  winRegKeysAggregate: WinRegKeyAggregateSelection;
+  symbols: Array<Symbol>;
+  symbolsConnection: SymbolsConnection;
+  symbolsAggregate: SymbolAggregateSelection;
+  winStructs: Array<WinStruct>;
+  winStructsConnection: WinStructsConnection;
+  winStructsAggregate: WinStructAggregateSelection;
+  winStructFields: Array<WinStructField>;
+  winStructFieldsConnection: WinStructFieldsConnection;
+  winStructFieldsAggregate: WinStructFieldAggregateSelection;
+  winDataTypes: Array<WinDataType>;
+  winDataTypesConnection: WinDataTypesConnection;
+  winDataTypesAggregate: WinDataTypeAggregateSelection;
   diffResults: Array<DiffResult>;
   diffResultsConnection: DiffResultsConnection;
   diffResultsAggregate: DiffResultAggregateSelection;
@@ -61,6 +81,9 @@ export type Query = {
   users: Array<User>;
   usersConnection: UsersConnection;
   usersAggregate: UserAggregateSelection;
+  searchResults: Array<SearchResult>;
+  searchResultsConnection: SearchResultsConnection;
+  searchResultsAggregate: SearchResultAggregateSelection;
 };
 
 export type QueryDiffCommitsArgs = {
@@ -72,9 +95,17 @@ export type QueryFetchCommitHistoryArgs = {
   branch_name: Scalars["String"]["input"];
 };
 
-export type QueryGetTreeAtPathArgs = {
-  commit_hash: Scalars["String"]["input"];
+export type QueryTraversePathArgs = {
+  tree_hash: Scalars["String"]["input"];
   path: Scalars["String"]["input"];
+};
+
+export type QueryGetCommitExtractedDataLabelsArgs = {
+  commit_hash: Scalars["String"]["input"];
+};
+
+export type QuerySearchArgs = {
+  search_term: Scalars["String"]["input"];
 };
 
 export type QueryHashablesArgs = {
@@ -157,6 +188,102 @@ export type QueryBranchesAggregateArgs = {
   where?: InputMaybe<BranchWhere>;
 };
 
+export type QueryWinRegValuesArgs = {
+  where?: InputMaybe<WinRegValueWhere>;
+  options?: InputMaybe<WinRegValueOptions>;
+};
+
+export type QueryWinRegValuesConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<WinRegValueWhere>;
+  sort?: InputMaybe<Array<InputMaybe<WinRegValueSort>>>;
+};
+
+export type QueryWinRegValuesAggregateArgs = {
+  where?: InputMaybe<WinRegValueWhere>;
+};
+
+export type QueryWinRegKeysArgs = {
+  where?: InputMaybe<WinRegKeyWhere>;
+  options?: InputMaybe<WinRegKeyOptions>;
+};
+
+export type QueryWinRegKeysConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<WinRegKeyWhere>;
+  sort?: InputMaybe<Array<InputMaybe<WinRegKeySort>>>;
+};
+
+export type QueryWinRegKeysAggregateArgs = {
+  where?: InputMaybe<WinRegKeyWhere>;
+};
+
+export type QuerySymbolsArgs = {
+  where?: InputMaybe<SymbolWhere>;
+  options?: InputMaybe<SymbolOptions>;
+};
+
+export type QuerySymbolsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<SymbolWhere>;
+  sort?: InputMaybe<Array<InputMaybe<SymbolSort>>>;
+};
+
+export type QuerySymbolsAggregateArgs = {
+  where?: InputMaybe<SymbolWhere>;
+};
+
+export type QueryWinStructsArgs = {
+  where?: InputMaybe<WinStructWhere>;
+  options?: InputMaybe<WinStructOptions>;
+};
+
+export type QueryWinStructsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<WinStructWhere>;
+  sort?: InputMaybe<Array<InputMaybe<WinStructSort>>>;
+};
+
+export type QueryWinStructsAggregateArgs = {
+  where?: InputMaybe<WinStructWhere>;
+};
+
+export type QueryWinStructFieldsArgs = {
+  where?: InputMaybe<WinStructFieldWhere>;
+  options?: InputMaybe<WinStructFieldOptions>;
+};
+
+export type QueryWinStructFieldsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<WinStructFieldWhere>;
+  sort?: InputMaybe<Array<InputMaybe<WinStructFieldSort>>>;
+};
+
+export type QueryWinStructFieldsAggregateArgs = {
+  where?: InputMaybe<WinStructFieldWhere>;
+};
+
+export type QueryWinDataTypesArgs = {
+  where?: InputMaybe<WinDataTypeWhere>;
+  options?: InputMaybe<WinDataTypeOptions>;
+};
+
+export type QueryWinDataTypesConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<WinDataTypeWhere>;
+  sort?: InputMaybe<Array<InputMaybe<WinDataTypeSort>>>;
+};
+
+export type QueryWinDataTypesAggregateArgs = {
+  where?: InputMaybe<WinDataTypeWhere>;
+};
+
 export type QueryDiffResultsArgs = {
   where?: InputMaybe<DiffResultWhere>;
   options?: InputMaybe<DiffResultOptions>;
@@ -204,6 +331,22 @@ export type QueryUsersAggregateArgs = {
   where?: InputMaybe<UserWhere>;
 };
 
+export type QuerySearchResultsArgs = {
+  where?: InputMaybe<SearchResultWhere>;
+  options?: InputMaybe<SearchResultOptions>;
+};
+
+export type QuerySearchResultsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<SearchResultWhere>;
+  sort?: InputMaybe<Array<InputMaybe<SearchResultSort>>>;
+};
+
+export type QuerySearchResultsAggregateArgs = {
+  where?: InputMaybe<SearchResultWhere>;
+};
+
 export type Mutation = {
   __typename?: "Mutation";
   mergeTree: Scalars["String"]["output"];
@@ -219,6 +362,24 @@ export type Mutation = {
   createBranches: CreateBranchesMutationResponse;
   deleteBranches: DeleteInfo;
   updateBranches: UpdateBranchesMutationResponse;
+  createWinRegValues: CreateWinRegValuesMutationResponse;
+  deleteWinRegValues: DeleteInfo;
+  updateWinRegValues: UpdateWinRegValuesMutationResponse;
+  createWinRegKeys: CreateWinRegKeysMutationResponse;
+  deleteWinRegKeys: DeleteInfo;
+  updateWinRegKeys: UpdateWinRegKeysMutationResponse;
+  createSymbols: CreateSymbolsMutationResponse;
+  deleteSymbols: DeleteInfo;
+  updateSymbols: UpdateSymbolsMutationResponse;
+  createWinStructs: CreateWinStructsMutationResponse;
+  deleteWinStructs: DeleteInfo;
+  updateWinStructs: UpdateWinStructsMutationResponse;
+  createWinStructFields: CreateWinStructFieldsMutationResponse;
+  deleteWinStructFields: DeleteInfo;
+  updateWinStructFields: UpdateWinStructFieldsMutationResponse;
+  createWinDataTypes: CreateWinDataTypesMutationResponse;
+  deleteWinDataTypes: DeleteInfo;
+  updateWinDataTypes: UpdateWinDataTypesMutationResponse;
   createDiffResults: CreateDiffResultsMutationResponse;
   deleteDiffResults: DeleteInfo;
   updateDiffResults: UpdateDiffResultsMutationResponse;
@@ -228,6 +389,9 @@ export type Mutation = {
   createUsers: CreateUsersMutationResponse;
   deleteUsers: DeleteInfo;
   updateUsers: UpdateUsersMutationResponse;
+  createSearchResults: CreateSearchResultsMutationResponse;
+  deleteSearchResults: DeleteInfo;
+  updateSearchResults: UpdateSearchResultsMutationResponse;
 };
 
 export type MutationMergeTreeArgs = {
@@ -240,11 +404,17 @@ export type MutationCreateBlobsArgs = {
 
 export type MutationDeleteBlobsArgs = {
   where?: InputMaybe<BlobWhere>;
+  delete?: InputMaybe<BlobDeleteInput>;
 };
 
 export type MutationUpdateBlobsArgs = {
   where?: InputMaybe<BlobWhere>;
   update?: InputMaybe<BlobUpdateInput>;
+  connect?: InputMaybe<BlobConnectInput>;
+  disconnect?: InputMaybe<BlobDisconnectInput>;
+  create?: InputMaybe<BlobRelationInput>;
+  delete?: InputMaybe<BlobDeleteInput>;
+  connectOrCreate?: InputMaybe<BlobConnectOrCreateInput>;
 };
 
 export type MutationCreateTreesArgs = {
@@ -304,6 +474,114 @@ export type MutationUpdateBranchesArgs = {
   connectOrCreate?: InputMaybe<BranchConnectOrCreateInput>;
 };
 
+export type MutationCreateWinRegValuesArgs = {
+  input: Array<WinRegValueCreateInput>;
+};
+
+export type MutationDeleteWinRegValuesArgs = {
+  where?: InputMaybe<WinRegValueWhere>;
+};
+
+export type MutationUpdateWinRegValuesArgs = {
+  where?: InputMaybe<WinRegValueWhere>;
+  update?: InputMaybe<WinRegValueUpdateInput>;
+};
+
+export type MutationCreateWinRegKeysArgs = {
+  input: Array<WinRegKeyCreateInput>;
+};
+
+export type MutationDeleteWinRegKeysArgs = {
+  where?: InputMaybe<WinRegKeyWhere>;
+  delete?: InputMaybe<WinRegKeyDeleteInput>;
+};
+
+export type MutationUpdateWinRegKeysArgs = {
+  where?: InputMaybe<WinRegKeyWhere>;
+  update?: InputMaybe<WinRegKeyUpdateInput>;
+  connect?: InputMaybe<WinRegKeyConnectInput>;
+  disconnect?: InputMaybe<WinRegKeyDisconnectInput>;
+  create?: InputMaybe<WinRegKeyRelationInput>;
+  delete?: InputMaybe<WinRegKeyDeleteInput>;
+  connectOrCreate?: InputMaybe<WinRegKeyConnectOrCreateInput>;
+};
+
+export type MutationCreateSymbolsArgs = {
+  input: Array<SymbolCreateInput>;
+};
+
+export type MutationDeleteSymbolsArgs = {
+  where?: InputMaybe<SymbolWhere>;
+  delete?: InputMaybe<SymbolDeleteInput>;
+};
+
+export type MutationUpdateSymbolsArgs = {
+  where?: InputMaybe<SymbolWhere>;
+  update?: InputMaybe<SymbolUpdateInput>;
+  connect?: InputMaybe<SymbolConnectInput>;
+  disconnect?: InputMaybe<SymbolDisconnectInput>;
+  create?: InputMaybe<SymbolRelationInput>;
+  delete?: InputMaybe<SymbolDeleteInput>;
+  connectOrCreate?: InputMaybe<SymbolConnectOrCreateInput>;
+};
+
+export type MutationCreateWinStructsArgs = {
+  input: Array<WinStructCreateInput>;
+};
+
+export type MutationDeleteWinStructsArgs = {
+  where?: InputMaybe<WinStructWhere>;
+  delete?: InputMaybe<WinStructDeleteInput>;
+};
+
+export type MutationUpdateWinStructsArgs = {
+  where?: InputMaybe<WinStructWhere>;
+  update?: InputMaybe<WinStructUpdateInput>;
+  connect?: InputMaybe<WinStructConnectInput>;
+  disconnect?: InputMaybe<WinStructDisconnectInput>;
+  create?: InputMaybe<WinStructRelationInput>;
+  delete?: InputMaybe<WinStructDeleteInput>;
+  connectOrCreate?: InputMaybe<WinStructConnectOrCreateInput>;
+};
+
+export type MutationCreateWinStructFieldsArgs = {
+  input: Array<WinStructFieldCreateInput>;
+};
+
+export type MutationDeleteWinStructFieldsArgs = {
+  where?: InputMaybe<WinStructFieldWhere>;
+  delete?: InputMaybe<WinStructFieldDeleteInput>;
+};
+
+export type MutationUpdateWinStructFieldsArgs = {
+  where?: InputMaybe<WinStructFieldWhere>;
+  update?: InputMaybe<WinStructFieldUpdateInput>;
+  connect?: InputMaybe<WinStructFieldConnectInput>;
+  disconnect?: InputMaybe<WinStructFieldDisconnectInput>;
+  create?: InputMaybe<WinStructFieldRelationInput>;
+  delete?: InputMaybe<WinStructFieldDeleteInput>;
+  connectOrCreate?: InputMaybe<WinStructFieldConnectOrCreateInput>;
+};
+
+export type MutationCreateWinDataTypesArgs = {
+  input: Array<WinDataTypeCreateInput>;
+};
+
+export type MutationDeleteWinDataTypesArgs = {
+  where?: InputMaybe<WinDataTypeWhere>;
+  delete?: InputMaybe<WinDataTypeDeleteInput>;
+};
+
+export type MutationUpdateWinDataTypesArgs = {
+  where?: InputMaybe<WinDataTypeWhere>;
+  update?: InputMaybe<WinDataTypeUpdateInput>;
+  connect?: InputMaybe<WinDataTypeConnectInput>;
+  disconnect?: InputMaybe<WinDataTypeDisconnectInput>;
+  create?: InputMaybe<WinDataTypeRelationInput>;
+  delete?: InputMaybe<WinDataTypeDeleteInput>;
+  connectOrCreate?: InputMaybe<WinDataTypeConnectOrCreateInput>;
+};
+
 export type MutationCreateDiffResultsArgs = {
   input: Array<DiffResultCreateInput>;
 };
@@ -343,10 +621,28 @@ export type MutationUpdateUsersArgs = {
   update?: InputMaybe<UserUpdateInput>;
 };
 
+export type MutationCreateSearchResultsArgs = {
+  input: Array<SearchResultCreateInput>;
+};
+
+export type MutationDeleteSearchResultsArgs = {
+  where?: InputMaybe<SearchResultWhere>;
+};
+
+export type MutationUpdateSearchResultsArgs = {
+  where?: InputMaybe<SearchResultWhere>;
+  update?: InputMaybe<SearchResultUpdateInput>;
+};
+
 export enum HashableImplementation {
   Blob = "Blob",
   Tree = "Tree",
   Commit = "Commit",
+  WinRegValue = "WinRegValue",
+  WinRegKey = "WinRegKey",
+  WinStruct = "WinStruct",
+  WinStructField = "WinStructField",
+  WinDataType = "WinDataType",
 }
 
 /** An enum for sorting in either ascending or descending order. */
@@ -364,6 +660,72 @@ export type Hashable = {
 export type Blob = Hashable & {
   __typename?: "Blob";
   hash: Scalars["String"]["output"];
+  has_winregAggregate?: Maybe<BlobWinRegKeyHas_WinregAggregationSelection>;
+  has_winreg?: Maybe<WinRegKey>;
+  has_winregConnection: BlobHas_WinregConnection;
+  has_symbolAggregate?: Maybe<BlobSymbolHas_SymbolAggregationSelection>;
+  has_symbol: Array<Symbol>;
+  has_symbolConnection: BlobHas_SymbolConnection;
+  has_structAggregate?: Maybe<BlobWinStructHas_StructAggregationSelection>;
+  has_struct: Array<WinStruct>;
+  has_structConnection: BlobHas_StructConnection;
+};
+
+export type BlobHas_WinregAggregateArgs = {
+  where?: InputMaybe<WinRegKeyWhere>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type BlobHas_WinregArgs = {
+  where?: InputMaybe<WinRegKeyWhere>;
+  options?: InputMaybe<WinRegKeyOptions>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type BlobHas_WinregConnectionArgs = {
+  where?: InputMaybe<BlobHas_WinregConnectionWhere>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sort?: InputMaybe<Array<BlobHas_WinregConnectionSort>>;
+};
+
+export type BlobHas_SymbolAggregateArgs = {
+  where?: InputMaybe<SymbolWhere>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type BlobHas_SymbolArgs = {
+  where?: InputMaybe<SymbolWhere>;
+  options?: InputMaybe<SymbolOptions>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type BlobHas_SymbolConnectionArgs = {
+  where?: InputMaybe<BlobHas_SymbolConnectionWhere>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sort?: InputMaybe<Array<BlobHas_SymbolConnectionSort>>;
+};
+
+export type BlobHas_StructAggregateArgs = {
+  where?: InputMaybe<WinStructWhere>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type BlobHas_StructArgs = {
+  where?: InputMaybe<WinStructWhere>;
+  options?: InputMaybe<WinStructOptions>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type BlobHas_StructConnectionArgs = {
+  where?: InputMaybe<BlobHas_StructConnectionWhere>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sort?: InputMaybe<Array<BlobHas_StructConnectionSort>>;
 };
 
 export type BlobAggregateSelection = {
@@ -378,11 +740,93 @@ export type BlobEdge = {
   node: Blob;
 };
 
+export type BlobHas_StructConnection = {
+  __typename?: "BlobHas_structConnection";
+  edges: Array<BlobHas_StructRelationship>;
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+};
+
+export type BlobHas_StructRelationship = {
+  __typename?: "BlobHas_structRelationship";
+  cursor: Scalars["String"]["output"];
+  node: WinStruct;
+};
+
+export type BlobHas_SymbolConnection = {
+  __typename?: "BlobHas_symbolConnection";
+  edges: Array<BlobHas_SymbolRelationship>;
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+};
+
+export type BlobHas_SymbolRelationship = {
+  __typename?: "BlobHas_symbolRelationship";
+  cursor: Scalars["String"]["output"];
+  node: Symbol;
+  properties: HasSymbolAddressRel;
+};
+
+export type BlobHas_WinregConnection = {
+  __typename?: "BlobHas_winregConnection";
+  edges: Array<BlobHas_WinregRelationship>;
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+};
+
+export type BlobHas_WinregRelationship = {
+  __typename?: "BlobHas_winregRelationship";
+  cursor: Scalars["String"]["output"];
+  node: WinRegKey;
+};
+
 export type BlobsConnection = {
   __typename?: "BlobsConnection";
   totalCount: Scalars["Int"]["output"];
   pageInfo: PageInfo;
   edges: Array<BlobEdge>;
+};
+
+export type BlobSymbolHas_SymbolAggregationSelection = {
+  __typename?: "BlobSymbolHas_symbolAggregationSelection";
+  count: Scalars["Int"]["output"];
+  node?: Maybe<BlobSymbolHas_SymbolNodeAggregateSelection>;
+  edge?: Maybe<BlobSymbolHas_SymbolEdgeAggregateSelection>;
+};
+
+export type BlobSymbolHas_SymbolEdgeAggregateSelection = {
+  __typename?: "BlobSymbolHas_symbolEdgeAggregateSelection";
+  address: StringAggregateSelection;
+};
+
+export type BlobSymbolHas_SymbolNodeAggregateSelection = {
+  __typename?: "BlobSymbolHas_symbolNodeAggregateSelection";
+  name: StringAggregateSelection;
+};
+
+export type BlobWinRegKeyHas_WinregAggregationSelection = {
+  __typename?: "BlobWinRegKeyHas_winregAggregationSelection";
+  count: Scalars["Int"]["output"];
+  node?: Maybe<BlobWinRegKeyHas_WinregNodeAggregateSelection>;
+};
+
+export type BlobWinRegKeyHas_WinregNodeAggregateSelection = {
+  __typename?: "BlobWinRegKeyHas_winregNodeAggregateSelection";
+  hash: StringAggregateSelection;
+};
+
+export type BlobWinStructHas_StructAggregationSelection = {
+  __typename?: "BlobWinStructHas_structAggregationSelection";
+  count: Scalars["Int"]["output"];
+  node?: Maybe<BlobWinStructHas_StructNodeAggregateSelection>;
+};
+
+export type BlobWinStructHas_StructNodeAggregateSelection = {
+  __typename?: "BlobWinStructHas_structNodeAggregateSelection";
+  hash: StringAggregateSelection;
+  name: StringAggregateSelection;
+  size: IntAggregateSelection;
+  kind: StringAggregateSelection;
 };
 
 export type Branch = {
@@ -618,6 +1062,18 @@ export type CreateInfo = {
   relationshipsCreated: Scalars["Int"]["output"];
 };
 
+export type CreateSearchResultsMutationResponse = {
+  __typename?: "CreateSearchResultsMutationResponse";
+  info: CreateInfo;
+  searchResults: Array<SearchResult>;
+};
+
+export type CreateSymbolsMutationResponse = {
+  __typename?: "CreateSymbolsMutationResponse";
+  info: CreateInfo;
+  symbols: Array<Symbol>;
+};
+
 export type CreateTreesMutationResponse = {
   __typename?: "CreateTreesMutationResponse";
   info: CreateInfo;
@@ -628,6 +1084,36 @@ export type CreateUsersMutationResponse = {
   __typename?: "CreateUsersMutationResponse";
   info: CreateInfo;
   users: Array<User>;
+};
+
+export type CreateWinDataTypesMutationResponse = {
+  __typename?: "CreateWinDataTypesMutationResponse";
+  info: CreateInfo;
+  winDataTypes: Array<WinDataType>;
+};
+
+export type CreateWinRegKeysMutationResponse = {
+  __typename?: "CreateWinRegKeysMutationResponse";
+  info: CreateInfo;
+  winRegKeys: Array<WinRegKey>;
+};
+
+export type CreateWinRegValuesMutationResponse = {
+  __typename?: "CreateWinRegValuesMutationResponse";
+  info: CreateInfo;
+  winRegValues: Array<WinRegValue>;
+};
+
+export type CreateWinStructFieldsMutationResponse = {
+  __typename?: "CreateWinStructFieldsMutationResponse";
+  info: CreateInfo;
+  winStructFields: Array<WinStructField>;
+};
+
+export type CreateWinStructsMutationResponse = {
+  __typename?: "CreateWinStructsMutationResponse";
+  info: CreateInfo;
+  winStructs: Array<WinStruct>;
 };
 
 /** Information about the number of nodes and relationships deleted during a delete mutation */
@@ -696,6 +1182,8 @@ export type DiffResultsConnection = {
  * The edge properties for the following fields:
  * * Tree.child_blobs
  * * Tree.child_trees
+ * * WinRegKey.child_values
+ * * WinRegKey.child_keys
  */
 export type HasFilenameRel = {
   __typename?: "HasFilenameRel";
@@ -721,6 +1209,24 @@ export type HashablesConnection = {
   edges: Array<HashableEdge>;
 };
 
+/**
+ * The edge properties for the following fields:
+ * * Blob.has_symbol
+ * * Symbol.blob
+ */
+export type HasSymbolAddressRel = {
+  __typename?: "HasSymbolAddressRel";
+  address: Scalars["String"]["output"];
+};
+
+export type IntAggregateSelection = {
+  __typename?: "IntAggregateSelection";
+  max?: Maybe<Scalars["Int"]["output"]>;
+  min?: Maybe<Scalars["Int"]["output"]>;
+  average?: Maybe<Scalars["Float"]["output"]>;
+  sum?: Maybe<Scalars["Int"]["output"]>;
+};
+
 /** Pagination information (Relay) */
 export type PageInfo = {
   __typename?: "PageInfo";
@@ -730,10 +1236,117 @@ export type PageInfo = {
   endCursor?: Maybe<Scalars["String"]["output"]>;
 };
 
+export type SearchResult = {
+  __typename?: "SearchResult";
+  commit_name: Scalars["String"]["output"];
+  commit_hash: Scalars["String"]["output"];
+  hash: Scalars["String"]["output"];
+  path: Scalars["String"]["output"];
+};
+
+export type SearchResultAggregateSelection = {
+  __typename?: "SearchResultAggregateSelection";
+  count: Scalars["Int"]["output"];
+  commit_name: StringAggregateSelection;
+  commit_hash: StringAggregateSelection;
+  hash: StringAggregateSelection;
+  path: StringAggregateSelection;
+};
+
+export type SearchResultEdge = {
+  __typename?: "SearchResultEdge";
+  cursor: Scalars["String"]["output"];
+  node: SearchResult;
+};
+
+export type SearchResultsConnection = {
+  __typename?: "SearchResultsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<SearchResultEdge>;
+};
+
 export type StringAggregateSelection = {
   __typename?: "StringAggregateSelection";
   shortest?: Maybe<Scalars["String"]["output"]>;
   longest?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type Symbol = {
+  __typename?: "Symbol";
+  name: Scalars["String"]["output"];
+  blobAggregate?: Maybe<SymbolBlobBlobAggregationSelection>;
+  blob: Blob;
+  blobConnection: SymbolBlobConnection;
+};
+
+export type SymbolBlobAggregateArgs = {
+  where?: InputMaybe<BlobWhere>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type SymbolBlobArgs = {
+  where?: InputMaybe<BlobWhere>;
+  options?: InputMaybe<BlobOptions>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type SymbolBlobConnectionArgs = {
+  where?: InputMaybe<SymbolBlobConnectionWhere>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sort?: InputMaybe<Array<SymbolBlobConnectionSort>>;
+};
+
+export type SymbolAggregateSelection = {
+  __typename?: "SymbolAggregateSelection";
+  count: Scalars["Int"]["output"];
+  name: StringAggregateSelection;
+};
+
+export type SymbolBlobBlobAggregationSelection = {
+  __typename?: "SymbolBlobBlobAggregationSelection";
+  count: Scalars["Int"]["output"];
+  node?: Maybe<SymbolBlobBlobNodeAggregateSelection>;
+  edge?: Maybe<SymbolBlobBlobEdgeAggregateSelection>;
+};
+
+export type SymbolBlobBlobEdgeAggregateSelection = {
+  __typename?: "SymbolBlobBlobEdgeAggregateSelection";
+  address: StringAggregateSelection;
+};
+
+export type SymbolBlobBlobNodeAggregateSelection = {
+  __typename?: "SymbolBlobBlobNodeAggregateSelection";
+  hash: StringAggregateSelection;
+};
+
+export type SymbolBlobConnection = {
+  __typename?: "SymbolBlobConnection";
+  edges: Array<SymbolBlobRelationship>;
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+};
+
+export type SymbolBlobRelationship = {
+  __typename?: "SymbolBlobRelationship";
+  cursor: Scalars["String"]["output"];
+  node: Blob;
+  properties: HasSymbolAddressRel;
+};
+
+export type SymbolEdge = {
+  __typename?: "SymbolEdge";
+  cursor: Scalars["String"]["output"];
+  node: Symbol;
+};
+
+export type SymbolsConnection = {
+  __typename?: "SymbolsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<SymbolEdge>;
 };
 
 export type Tree = Hashable & {
@@ -907,6 +1520,18 @@ export type UpdateInfo = {
   relationshipsDeleted: Scalars["Int"]["output"];
 };
 
+export type UpdateSearchResultsMutationResponse = {
+  __typename?: "UpdateSearchResultsMutationResponse";
+  info: UpdateInfo;
+  searchResults: Array<SearchResult>;
+};
+
+export type UpdateSymbolsMutationResponse = {
+  __typename?: "UpdateSymbolsMutationResponse";
+  info: UpdateInfo;
+  symbols: Array<Symbol>;
+};
+
 export type UpdateTreesMutationResponse = {
   __typename?: "UpdateTreesMutationResponse";
   info: UpdateInfo;
@@ -917,6 +1542,36 @@ export type UpdateUsersMutationResponse = {
   __typename?: "UpdateUsersMutationResponse";
   info: UpdateInfo;
   users: Array<User>;
+};
+
+export type UpdateWinDataTypesMutationResponse = {
+  __typename?: "UpdateWinDataTypesMutationResponse";
+  info: UpdateInfo;
+  winDataTypes: Array<WinDataType>;
+};
+
+export type UpdateWinRegKeysMutationResponse = {
+  __typename?: "UpdateWinRegKeysMutationResponse";
+  info: UpdateInfo;
+  winRegKeys: Array<WinRegKey>;
+};
+
+export type UpdateWinRegValuesMutationResponse = {
+  __typename?: "UpdateWinRegValuesMutationResponse";
+  info: UpdateInfo;
+  winRegValues: Array<WinRegValue>;
+};
+
+export type UpdateWinStructFieldsMutationResponse = {
+  __typename?: "UpdateWinStructFieldsMutationResponse";
+  info: UpdateInfo;
+  winStructFields: Array<WinStructField>;
+};
+
+export type UpdateWinStructsMutationResponse = {
+  __typename?: "UpdateWinStructsMutationResponse";
+  info: UpdateInfo;
+  winStructs: Array<WinStruct>;
 };
 
 export type User = {
@@ -943,6 +1598,458 @@ export type UsersConnection = {
   edges: Array<UserEdge>;
 };
 
+export type WinDataType = Hashable & {
+  __typename?: "WinDataType";
+  hash: Scalars["String"]["output"];
+  type: Scalars["String"]["output"];
+  name?: Maybe<Scalars["String"]["output"]>;
+  array_counter?: Maybe<Scalars["Int"]["output"]>;
+  bit_position?: Maybe<Scalars["Int"]["output"]>;
+  bit_length?: Maybe<Scalars["Int"]["output"]>;
+  has_data_typeAggregate?: Maybe<WinDataTypeWinDataTypeHas_Data_TypeAggregationSelection>;
+  has_data_type?: Maybe<WinDataType>;
+  has_data_typeConnection: WinDataTypeHas_Data_TypeConnection;
+};
+
+export type WinDataTypeHas_Data_TypeAggregateArgs = {
+  where?: InputMaybe<WinDataTypeWhere>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinDataTypeHas_Data_TypeArgs = {
+  where?: InputMaybe<WinDataTypeWhere>;
+  options?: InputMaybe<WinDataTypeOptions>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinDataTypeHas_Data_TypeConnectionArgs = {
+  where?: InputMaybe<WinDataTypeHas_Data_TypeConnectionWhere>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sort?: InputMaybe<Array<WinDataTypeHas_Data_TypeConnectionSort>>;
+};
+
+export type WinDataTypeAggregateSelection = {
+  __typename?: "WinDataTypeAggregateSelection";
+  count: Scalars["Int"]["output"];
+  hash: StringAggregateSelection;
+  type: StringAggregateSelection;
+  name: StringAggregateSelection;
+  array_counter: IntAggregateSelection;
+  bit_position: IntAggregateSelection;
+  bit_length: IntAggregateSelection;
+};
+
+export type WinDataTypeEdge = {
+  __typename?: "WinDataTypeEdge";
+  cursor: Scalars["String"]["output"];
+  node: WinDataType;
+};
+
+export type WinDataTypeHas_Data_TypeConnection = {
+  __typename?: "WinDataTypeHas_data_typeConnection";
+  edges: Array<WinDataTypeHas_Data_TypeRelationship>;
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+};
+
+export type WinDataTypeHas_Data_TypeRelationship = {
+  __typename?: "WinDataTypeHas_data_typeRelationship";
+  cursor: Scalars["String"]["output"];
+  node: WinDataType;
+};
+
+export type WinDataTypesConnection = {
+  __typename?: "WinDataTypesConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<WinDataTypeEdge>;
+};
+
+export type WinDataTypeWinDataTypeHas_Data_TypeAggregationSelection = {
+  __typename?: "WinDataTypeWinDataTypeHas_data_typeAggregationSelection";
+  count: Scalars["Int"]["output"];
+  node?: Maybe<WinDataTypeWinDataTypeHas_Data_TypeNodeAggregateSelection>;
+};
+
+export type WinDataTypeWinDataTypeHas_Data_TypeNodeAggregateSelection = {
+  __typename?: "WinDataTypeWinDataTypeHas_data_typeNodeAggregateSelection";
+  hash: StringAggregateSelection;
+  type: StringAggregateSelection;
+  name: StringAggregateSelection;
+  array_counter: IntAggregateSelection;
+  bit_position: IntAggregateSelection;
+  bit_length: IntAggregateSelection;
+};
+
+export type WinRegKey = Hashable & {
+  __typename?: "WinRegKey";
+  hash: Scalars["String"]["output"];
+  child_valuesAggregate?: Maybe<WinRegKeyWinRegValueChild_ValuesAggregationSelection>;
+  child_values: Array<WinRegValue>;
+  child_valuesConnection: WinRegKeyChild_ValuesConnection;
+  child_keysAggregate?: Maybe<WinRegKeyWinRegKeyChild_KeysAggregationSelection>;
+  child_keys: Array<WinRegKey>;
+  child_keysConnection: WinRegKeyChild_KeysConnection;
+};
+
+export type WinRegKeyChild_ValuesAggregateArgs = {
+  where?: InputMaybe<WinRegValueWhere>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinRegKeyChild_ValuesArgs = {
+  where?: InputMaybe<WinRegValueWhere>;
+  options?: InputMaybe<WinRegValueOptions>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinRegKeyChild_ValuesConnectionArgs = {
+  where?: InputMaybe<WinRegKeyChild_ValuesConnectionWhere>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sort?: InputMaybe<Array<WinRegKeyChild_ValuesConnectionSort>>;
+};
+
+export type WinRegKeyChild_KeysAggregateArgs = {
+  where?: InputMaybe<WinRegKeyWhere>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinRegKeyChild_KeysArgs = {
+  where?: InputMaybe<WinRegKeyWhere>;
+  options?: InputMaybe<WinRegKeyOptions>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinRegKeyChild_KeysConnectionArgs = {
+  where?: InputMaybe<WinRegKeyChild_KeysConnectionWhere>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sort?: InputMaybe<Array<WinRegKeyChild_KeysConnectionSort>>;
+};
+
+export type WinRegKeyAggregateSelection = {
+  __typename?: "WinRegKeyAggregateSelection";
+  count: Scalars["Int"]["output"];
+  hash: StringAggregateSelection;
+};
+
+export type WinRegKeyChild_KeysConnection = {
+  __typename?: "WinRegKeyChild_keysConnection";
+  edges: Array<WinRegKeyChild_KeysRelationship>;
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+};
+
+export type WinRegKeyChild_KeysRelationship = {
+  __typename?: "WinRegKeyChild_keysRelationship";
+  cursor: Scalars["String"]["output"];
+  node: WinRegKey;
+  properties: HasFilenameRel;
+};
+
+export type WinRegKeyChild_ValuesConnection = {
+  __typename?: "WinRegKeyChild_valuesConnection";
+  edges: Array<WinRegKeyChild_ValuesRelationship>;
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+};
+
+export type WinRegKeyChild_ValuesRelationship = {
+  __typename?: "WinRegKeyChild_valuesRelationship";
+  cursor: Scalars["String"]["output"];
+  node: WinRegValue;
+  properties: HasFilenameRel;
+};
+
+export type WinRegKeyEdge = {
+  __typename?: "WinRegKeyEdge";
+  cursor: Scalars["String"]["output"];
+  node: WinRegKey;
+};
+
+export type WinRegKeysConnection = {
+  __typename?: "WinRegKeysConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<WinRegKeyEdge>;
+};
+
+export type WinRegKeyWinRegKeyChild_KeysAggregationSelection = {
+  __typename?: "WinRegKeyWinRegKeyChild_keysAggregationSelection";
+  count: Scalars["Int"]["output"];
+  node?: Maybe<WinRegKeyWinRegKeyChild_KeysNodeAggregateSelection>;
+  edge?: Maybe<WinRegKeyWinRegKeyChild_KeysEdgeAggregateSelection>;
+};
+
+export type WinRegKeyWinRegKeyChild_KeysEdgeAggregateSelection = {
+  __typename?: "WinRegKeyWinRegKeyChild_keysEdgeAggregateSelection";
+  name: StringAggregateSelection;
+};
+
+export type WinRegKeyWinRegKeyChild_KeysNodeAggregateSelection = {
+  __typename?: "WinRegKeyWinRegKeyChild_keysNodeAggregateSelection";
+  hash: StringAggregateSelection;
+};
+
+export type WinRegKeyWinRegValueChild_ValuesAggregationSelection = {
+  __typename?: "WinRegKeyWinRegValueChild_valuesAggregationSelection";
+  count: Scalars["Int"]["output"];
+  node?: Maybe<WinRegKeyWinRegValueChild_ValuesNodeAggregateSelection>;
+  edge?: Maybe<WinRegKeyWinRegValueChild_ValuesEdgeAggregateSelection>;
+};
+
+export type WinRegKeyWinRegValueChild_ValuesEdgeAggregateSelection = {
+  __typename?: "WinRegKeyWinRegValueChild_valuesEdgeAggregateSelection";
+  name: StringAggregateSelection;
+};
+
+export type WinRegKeyWinRegValueChild_ValuesNodeAggregateSelection = {
+  __typename?: "WinRegKeyWinRegValueChild_valuesNodeAggregateSelection";
+  hash: StringAggregateSelection;
+  type: StringAggregateSelection;
+  value: StringAggregateSelection;
+};
+
+export type WinRegValue = Hashable & {
+  __typename?: "WinRegValue";
+  hash: Scalars["String"]["output"];
+  type: Scalars["String"]["output"];
+  value: Scalars["String"]["output"];
+};
+
+export type WinRegValueAggregateSelection = {
+  __typename?: "WinRegValueAggregateSelection";
+  count: Scalars["Int"]["output"];
+  hash: StringAggregateSelection;
+  type: StringAggregateSelection;
+  value: StringAggregateSelection;
+};
+
+export type WinRegValueEdge = {
+  __typename?: "WinRegValueEdge";
+  cursor: Scalars["String"]["output"];
+  node: WinRegValue;
+};
+
+export type WinRegValuesConnection = {
+  __typename?: "WinRegValuesConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<WinRegValueEdge>;
+};
+
+export type WinStruct = Hashable & {
+  __typename?: "WinStruct";
+  hash: Scalars["String"]["output"];
+  name: Scalars["String"]["output"];
+  size: Scalars["Int"]["output"];
+  kind: Scalars["String"]["output"];
+  fieldsAggregate?: Maybe<WinStructWinStructFieldFieldsAggregationSelection>;
+  fields: Array<WinStructField>;
+  fieldsConnection: WinStructFieldsConnection;
+  blobAggregate?: Maybe<WinStructBlobBlobAggregationSelection>;
+  blob: Blob;
+  blobConnection: WinStructBlobConnection;
+};
+
+export type WinStructFieldsAggregateArgs = {
+  where?: InputMaybe<WinStructFieldWhere>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinStructFieldsArgs = {
+  where?: InputMaybe<WinStructFieldWhere>;
+  options?: InputMaybe<WinStructFieldOptions>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinStructFieldsConnectionArgs = {
+  where?: InputMaybe<WinStructFieldsConnectionWhere>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sort?: InputMaybe<Array<WinStructFieldsConnectionSort>>;
+};
+
+export type WinStructBlobAggregateArgs = {
+  where?: InputMaybe<BlobWhere>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinStructBlobArgs = {
+  where?: InputMaybe<BlobWhere>;
+  options?: InputMaybe<BlobOptions>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinStructBlobConnectionArgs = {
+  where?: InputMaybe<WinStructBlobConnectionWhere>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sort?: InputMaybe<Array<WinStructBlobConnectionSort>>;
+};
+
+export type WinStructAggregateSelection = {
+  __typename?: "WinStructAggregateSelection";
+  count: Scalars["Int"]["output"];
+  hash: StringAggregateSelection;
+  name: StringAggregateSelection;
+  size: IntAggregateSelection;
+  kind: StringAggregateSelection;
+};
+
+export type WinStructBlobBlobAggregationSelection = {
+  __typename?: "WinStructBlobBlobAggregationSelection";
+  count: Scalars["Int"]["output"];
+  node?: Maybe<WinStructBlobBlobNodeAggregateSelection>;
+};
+
+export type WinStructBlobBlobNodeAggregateSelection = {
+  __typename?: "WinStructBlobBlobNodeAggregateSelection";
+  hash: StringAggregateSelection;
+};
+
+export type WinStructBlobConnection = {
+  __typename?: "WinStructBlobConnection";
+  edges: Array<WinStructBlobRelationship>;
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+};
+
+export type WinStructBlobRelationship = {
+  __typename?: "WinStructBlobRelationship";
+  cursor: Scalars["String"]["output"];
+  node: Blob;
+};
+
+export type WinStructEdge = {
+  __typename?: "WinStructEdge";
+  cursor: Scalars["String"]["output"];
+  node: WinStruct;
+};
+
+export type WinStructField = Hashable & {
+  __typename?: "WinStructField";
+  hash: Scalars["String"]["output"];
+  name: Scalars["String"]["output"];
+  offset: Scalars["Int"]["output"];
+  typeAggregate?: Maybe<WinStructFieldWinDataTypeTypeAggregationSelection>;
+  type: WinDataType;
+  typeConnection: WinStructFieldTypeConnection;
+};
+
+export type WinStructFieldTypeAggregateArgs = {
+  where?: InputMaybe<WinDataTypeWhere>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinStructFieldTypeArgs = {
+  where?: InputMaybe<WinDataTypeWhere>;
+  options?: InputMaybe<WinDataTypeOptions>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type WinStructFieldTypeConnectionArgs = {
+  where?: InputMaybe<WinStructFieldTypeConnectionWhere>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sort?: InputMaybe<Array<WinStructFieldTypeConnectionSort>>;
+};
+
+export type WinStructFieldAggregateSelection = {
+  __typename?: "WinStructFieldAggregateSelection";
+  count: Scalars["Int"]["output"];
+  hash: StringAggregateSelection;
+  name: StringAggregateSelection;
+  offset: IntAggregateSelection;
+};
+
+export type WinStructFieldEdge = {
+  __typename?: "WinStructFieldEdge";
+  cursor: Scalars["String"]["output"];
+  node: WinStructField;
+};
+
+export type WinStructFieldsConnection = {
+  __typename?: "WinStructFieldsConnection";
+  edges: Array<WinStructFieldsRelationship>;
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+};
+
+export type WinStructFieldsRelationship = {
+  __typename?: "WinStructFieldsRelationship";
+  cursor: Scalars["String"]["output"];
+  node: WinStructField;
+};
+
+export type WinStructFieldTypeConnection = {
+  __typename?: "WinStructFieldTypeConnection";
+  edges: Array<WinStructFieldTypeRelationship>;
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+};
+
+export type WinStructFieldTypeRelationship = {
+  __typename?: "WinStructFieldTypeRelationship";
+  cursor: Scalars["String"]["output"];
+  node: WinDataType;
+};
+
+export type WinStructFieldWinDataTypeTypeAggregationSelection = {
+  __typename?: "WinStructFieldWinDataTypeTypeAggregationSelection";
+  count: Scalars["Int"]["output"];
+  node?: Maybe<WinStructFieldWinDataTypeTypeNodeAggregateSelection>;
+};
+
+export type WinStructFieldWinDataTypeTypeNodeAggregateSelection = {
+  __typename?: "WinStructFieldWinDataTypeTypeNodeAggregateSelection";
+  hash: StringAggregateSelection;
+  type: StringAggregateSelection;
+  name: StringAggregateSelection;
+  array_counter: IntAggregateSelection;
+  bit_position: IntAggregateSelection;
+  bit_length: IntAggregateSelection;
+};
+
+export type WinStructsConnection = {
+  __typename?: "WinStructsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<WinStructEdge>;
+};
+
+export type WinStructWinStructFieldFieldsAggregationSelection = {
+  __typename?: "WinStructWinStructFieldFieldsAggregationSelection";
+  count: Scalars["Int"]["output"];
+  node?: Maybe<WinStructWinStructFieldFieldsNodeAggregateSelection>;
+};
+
+export type WinStructWinStructFieldFieldsNodeAggregateSelection = {
+  __typename?: "WinStructWinStructFieldFieldsNodeAggregateSelection";
+  hash: StringAggregateSelection;
+  name: StringAggregateSelection;
+  offset: IntAggregateSelection;
+};
+
+export type BlobConnectInput = {
+  has_winreg?: InputMaybe<BlobHas_WinregConnectFieldInput>;
+  has_symbol?: InputMaybe<Array<BlobHas_SymbolConnectFieldInput>>;
+  has_struct?: InputMaybe<Array<BlobHas_StructConnectFieldInput>>;
+};
+
+export type BlobConnectOrCreateInput = {
+  has_winreg?: InputMaybe<BlobHas_WinregConnectOrCreateFieldInput>;
+  has_struct?: InputMaybe<Array<BlobHas_StructConnectOrCreateFieldInput>>;
+};
+
 export type BlobConnectOrCreateWhere = {
   node: BlobUniqueWhere;
 };
@@ -953,6 +2060,566 @@ export type BlobConnectWhere = {
 
 export type BlobCreateInput = {
   hash: Scalars["String"]["input"];
+  has_winreg?: InputMaybe<BlobHas_WinregFieldInput>;
+  has_symbol?: InputMaybe<BlobHas_SymbolFieldInput>;
+  has_struct?: InputMaybe<BlobHas_StructFieldInput>;
+};
+
+export type BlobDeleteInput = {
+  has_winreg?: InputMaybe<BlobHas_WinregDeleteFieldInput>;
+  has_symbol?: InputMaybe<Array<BlobHas_SymbolDeleteFieldInput>>;
+  has_struct?: InputMaybe<Array<BlobHas_StructDeleteFieldInput>>;
+};
+
+export type BlobDisconnectInput = {
+  has_winreg?: InputMaybe<BlobHas_WinregDisconnectFieldInput>;
+  has_symbol?: InputMaybe<Array<BlobHas_SymbolDisconnectFieldInput>>;
+  has_struct?: InputMaybe<Array<BlobHas_StructDisconnectFieldInput>>;
+};
+
+export type BlobHas_StructAggregateInput = {
+  count?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  AND?: InputMaybe<Array<BlobHas_StructAggregateInput>>;
+  OR?: InputMaybe<Array<BlobHas_StructAggregateInput>>;
+  NOT?: InputMaybe<BlobHas_StructAggregateInput>;
+  node?: InputMaybe<BlobHas_StructNodeAggregationWhereInput>;
+};
+
+export type BlobHas_StructConnectFieldInput = {
+  where?: InputMaybe<WinStructConnectWhere>;
+  /** Whether or not to overwrite any matching relationship with the new properties. */
+  overwrite?: Scalars["Boolean"]["input"];
+  connect?: InputMaybe<Array<WinStructConnectInput>>;
+};
+
+export type BlobHas_StructConnectionSort = {
+  node?: InputMaybe<WinStructSort>;
+};
+
+export type BlobHas_StructConnectionWhere = {
+  AND?: InputMaybe<Array<BlobHas_StructConnectionWhere>>;
+  OR?: InputMaybe<Array<BlobHas_StructConnectionWhere>>;
+  NOT?: InputMaybe<BlobHas_StructConnectionWhere>;
+  node?: InputMaybe<WinStructWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_NOT?: InputMaybe<WinStructWhere>;
+};
+
+export type BlobHas_StructConnectOrCreateFieldInput = {
+  where: WinStructConnectOrCreateWhere;
+  onCreate: BlobHas_StructConnectOrCreateFieldInputOnCreate;
+};
+
+export type BlobHas_StructConnectOrCreateFieldInputOnCreate = {
+  node: WinStructOnCreateInput;
+};
+
+export type BlobHas_StructCreateFieldInput = {
+  node: WinStructCreateInput;
+};
+
+export type BlobHas_StructDeleteFieldInput = {
+  where?: InputMaybe<BlobHas_StructConnectionWhere>;
+  delete?: InputMaybe<WinStructDeleteInput>;
+};
+
+export type BlobHas_StructDisconnectFieldInput = {
+  where?: InputMaybe<BlobHas_StructConnectionWhere>;
+  disconnect?: InputMaybe<WinStructDisconnectInput>;
+};
+
+export type BlobHas_StructFieldInput = {
+  connectOrCreate?: InputMaybe<Array<BlobHas_StructConnectOrCreateFieldInput>>;
+  connect?: InputMaybe<Array<BlobHas_StructConnectFieldInput>>;
+  create?: InputMaybe<Array<BlobHas_StructCreateFieldInput>>;
+};
+
+export type BlobHas_StructNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<BlobHas_StructNodeAggregationWhereInput>>;
+  OR?: InputMaybe<Array<BlobHas_StructNodeAggregationWhereInput>>;
+  NOT?: InputMaybe<BlobHas_StructNodeAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  size_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  size_MIN_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  size_MAX_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  size_SUM_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  size_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  size_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_MIN_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_MAX_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_SUM_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  size_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  size_MIN_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  size_MAX_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  size_SUM_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  size_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  size_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_MIN_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_MAX_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_SUM_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  size_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  size_MIN_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  size_MAX_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  size_SUM_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  size_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  kind_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  kind_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  kind_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  kind_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  kind_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  kind_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  kind_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  kind_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  kind_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  kind_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  kind_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  kind_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  kind_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  kind_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  kind_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  kind_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  kind_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  kind_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  kind_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  kind_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  kind_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type BlobHas_StructUpdateConnectionInput = {
+  node?: InputMaybe<WinStructUpdateInput>;
+};
+
+export type BlobHas_StructUpdateFieldInput = {
+  where?: InputMaybe<BlobHas_StructConnectionWhere>;
+  connectOrCreate?: InputMaybe<Array<BlobHas_StructConnectOrCreateFieldInput>>;
+  connect?: InputMaybe<Array<BlobHas_StructConnectFieldInput>>;
+  disconnect?: InputMaybe<Array<BlobHas_StructDisconnectFieldInput>>;
+  create?: InputMaybe<Array<BlobHas_StructCreateFieldInput>>;
+  update?: InputMaybe<BlobHas_StructUpdateConnectionInput>;
+  delete?: InputMaybe<Array<BlobHas_StructDeleteFieldInput>>;
+};
+
+export type BlobHas_SymbolAggregateInput = {
+  count?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  AND?: InputMaybe<Array<BlobHas_SymbolAggregateInput>>;
+  OR?: InputMaybe<Array<BlobHas_SymbolAggregateInput>>;
+  NOT?: InputMaybe<BlobHas_SymbolAggregateInput>;
+  node?: InputMaybe<BlobHas_SymbolNodeAggregationWhereInput>;
+  edge?: InputMaybe<HasSymbolAddressRelAggregationWhereInput>;
+};
+
+export type BlobHas_SymbolConnectFieldInput = {
+  edge: HasSymbolAddressRelCreateInput;
+  where?: InputMaybe<SymbolConnectWhere>;
+  /** Whether or not to overwrite any matching relationship with the new properties. */
+  overwrite?: Scalars["Boolean"]["input"];
+  connect?: InputMaybe<Array<SymbolConnectInput>>;
+};
+
+export type BlobHas_SymbolConnectionSort = {
+  node?: InputMaybe<SymbolSort>;
+  edge?: InputMaybe<HasSymbolAddressRelSort>;
+};
+
+export type BlobHas_SymbolConnectionWhere = {
+  AND?: InputMaybe<Array<BlobHas_SymbolConnectionWhere>>;
+  OR?: InputMaybe<Array<BlobHas_SymbolConnectionWhere>>;
+  NOT?: InputMaybe<BlobHas_SymbolConnectionWhere>;
+  node?: InputMaybe<SymbolWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_NOT?: InputMaybe<SymbolWhere>;
+  edge?: InputMaybe<HasSymbolAddressRelWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  edge_NOT?: InputMaybe<HasSymbolAddressRelWhere>;
+};
+
+export type BlobHas_SymbolCreateFieldInput = {
+  edge: HasSymbolAddressRelCreateInput;
+  node: SymbolCreateInput;
+};
+
+export type BlobHas_SymbolDeleteFieldInput = {
+  where?: InputMaybe<BlobHas_SymbolConnectionWhere>;
+  delete?: InputMaybe<SymbolDeleteInput>;
+};
+
+export type BlobHas_SymbolDisconnectFieldInput = {
+  where?: InputMaybe<BlobHas_SymbolConnectionWhere>;
+  disconnect?: InputMaybe<SymbolDisconnectInput>;
+};
+
+export type BlobHas_SymbolFieldInput = {
+  connect?: InputMaybe<Array<BlobHas_SymbolConnectFieldInput>>;
+  create?: InputMaybe<Array<BlobHas_SymbolCreateFieldInput>>;
+};
+
+export type BlobHas_SymbolNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<BlobHas_SymbolNodeAggregationWhereInput>>;
+  OR?: InputMaybe<Array<BlobHas_SymbolNodeAggregationWhereInput>>;
+  NOT?: InputMaybe<BlobHas_SymbolNodeAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type BlobHas_SymbolUpdateConnectionInput = {
+  node?: InputMaybe<SymbolUpdateInput>;
+  edge?: InputMaybe<HasSymbolAddressRelUpdateInput>;
+};
+
+export type BlobHas_SymbolUpdateFieldInput = {
+  where?: InputMaybe<BlobHas_SymbolConnectionWhere>;
+  connect?: InputMaybe<Array<BlobHas_SymbolConnectFieldInput>>;
+  disconnect?: InputMaybe<Array<BlobHas_SymbolDisconnectFieldInput>>;
+  create?: InputMaybe<Array<BlobHas_SymbolCreateFieldInput>>;
+  update?: InputMaybe<BlobHas_SymbolUpdateConnectionInput>;
+  delete?: InputMaybe<Array<BlobHas_SymbolDeleteFieldInput>>;
+};
+
+export type BlobHas_WinregAggregateInput = {
+  count?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  AND?: InputMaybe<Array<BlobHas_WinregAggregateInput>>;
+  OR?: InputMaybe<Array<BlobHas_WinregAggregateInput>>;
+  NOT?: InputMaybe<BlobHas_WinregAggregateInput>;
+  node?: InputMaybe<BlobHas_WinregNodeAggregationWhereInput>;
+};
+
+export type BlobHas_WinregConnectFieldInput = {
+  where?: InputMaybe<WinRegKeyConnectWhere>;
+  /** Whether or not to overwrite any matching relationship with the new properties. */
+  overwrite?: Scalars["Boolean"]["input"];
+  connect?: InputMaybe<WinRegKeyConnectInput>;
+};
+
+export type BlobHas_WinregConnectionSort = {
+  node?: InputMaybe<WinRegKeySort>;
+};
+
+export type BlobHas_WinregConnectionWhere = {
+  AND?: InputMaybe<Array<BlobHas_WinregConnectionWhere>>;
+  OR?: InputMaybe<Array<BlobHas_WinregConnectionWhere>>;
+  NOT?: InputMaybe<BlobHas_WinregConnectionWhere>;
+  node?: InputMaybe<WinRegKeyWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_NOT?: InputMaybe<WinRegKeyWhere>;
+};
+
+export type BlobHas_WinregConnectOrCreateFieldInput = {
+  where: WinRegKeyConnectOrCreateWhere;
+  onCreate: BlobHas_WinregConnectOrCreateFieldInputOnCreate;
+};
+
+export type BlobHas_WinregConnectOrCreateFieldInputOnCreate = {
+  node: WinRegKeyOnCreateInput;
+};
+
+export type BlobHas_WinregCreateFieldInput = {
+  node: WinRegKeyCreateInput;
+};
+
+export type BlobHas_WinregDeleteFieldInput = {
+  where?: InputMaybe<BlobHas_WinregConnectionWhere>;
+  delete?: InputMaybe<WinRegKeyDeleteInput>;
+};
+
+export type BlobHas_WinregDisconnectFieldInput = {
+  where?: InputMaybe<BlobHas_WinregConnectionWhere>;
+  disconnect?: InputMaybe<WinRegKeyDisconnectInput>;
+};
+
+export type BlobHas_WinregFieldInput = {
+  connectOrCreate?: InputMaybe<BlobHas_WinregConnectOrCreateFieldInput>;
+  connect?: InputMaybe<BlobHas_WinregConnectFieldInput>;
+  create?: InputMaybe<BlobHas_WinregCreateFieldInput>;
+};
+
+export type BlobHas_WinregNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<BlobHas_WinregNodeAggregationWhereInput>>;
+  OR?: InputMaybe<Array<BlobHas_WinregNodeAggregationWhereInput>>;
+  NOT?: InputMaybe<BlobHas_WinregNodeAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type BlobHas_WinregUpdateConnectionInput = {
+  node?: InputMaybe<WinRegKeyUpdateInput>;
+};
+
+export type BlobHas_WinregUpdateFieldInput = {
+  where?: InputMaybe<BlobHas_WinregConnectionWhere>;
+  connectOrCreate?: InputMaybe<BlobHas_WinregConnectOrCreateFieldInput>;
+  connect?: InputMaybe<BlobHas_WinregConnectFieldInput>;
+  disconnect?: InputMaybe<BlobHas_WinregDisconnectFieldInput>;
+  create?: InputMaybe<BlobHas_WinregCreateFieldInput>;
+  update?: InputMaybe<BlobHas_WinregUpdateConnectionInput>;
+  delete?: InputMaybe<BlobHas_WinregDeleteFieldInput>;
 };
 
 export type BlobOnCreateInput = {
@@ -966,6 +2633,12 @@ export type BlobOptions = {
   sort?: InputMaybe<Array<BlobSort>>;
 };
 
+export type BlobRelationInput = {
+  has_winreg?: InputMaybe<BlobHas_WinregCreateFieldInput>;
+  has_symbol?: InputMaybe<Array<BlobHas_SymbolCreateFieldInput>>;
+  has_struct?: InputMaybe<Array<BlobHas_StructCreateFieldInput>>;
+};
+
 /** Fields to sort Blobs by. The order in which sorts are applied is not guaranteed when specifying many fields in one BlobSort object. */
 export type BlobSort = {
   hash?: InputMaybe<SortDirection>;
@@ -977,6 +2650,9 @@ export type BlobUniqueWhere = {
 
 export type BlobUpdateInput = {
   hash?: InputMaybe<Scalars["String"]["input"]>;
+  has_winreg?: InputMaybe<BlobHas_WinregUpdateFieldInput>;
+  has_symbol?: InputMaybe<Array<BlobHas_SymbolUpdateFieldInput>>;
+  has_struct?: InputMaybe<Array<BlobHas_StructUpdateFieldInput>>;
 };
 
 export type BlobWhere = {
@@ -998,6 +2674,61 @@ export type BlobWhere = {
   OR?: InputMaybe<Array<BlobWhere>>;
   AND?: InputMaybe<Array<BlobWhere>>;
   NOT?: InputMaybe<BlobWhere>;
+  has_winreg?: InputMaybe<WinRegKeyWhere>;
+  has_winreg_NOT?: InputMaybe<WinRegKeyWhere>;
+  has_winregConnection?: InputMaybe<BlobHas_WinregConnectionWhere>;
+  has_winregConnection_NOT?: InputMaybe<BlobHas_WinregConnectionWhere>;
+  has_winregAggregate?: InputMaybe<BlobHas_WinregAggregateInput>;
+  /** @deprecated Use `has_symbol_SOME` instead. */
+  has_symbol?: InputMaybe<SymbolWhere>;
+  /** @deprecated Use `has_symbol_NONE` instead. */
+  has_symbol_NOT?: InputMaybe<SymbolWhere>;
+  /** Return Blobs where all of the related Symbols match this filter */
+  has_symbol_ALL?: InputMaybe<SymbolWhere>;
+  /** Return Blobs where none of the related Symbols match this filter */
+  has_symbol_NONE?: InputMaybe<SymbolWhere>;
+  /** Return Blobs where one of the related Symbols match this filter */
+  has_symbol_SINGLE?: InputMaybe<SymbolWhere>;
+  /** Return Blobs where some of the related Symbols match this filter */
+  has_symbol_SOME?: InputMaybe<SymbolWhere>;
+  /** @deprecated Use `has_symbolConnection_SOME` instead. */
+  has_symbolConnection?: InputMaybe<BlobHas_SymbolConnectionWhere>;
+  /** @deprecated Use `has_symbolConnection_NONE` instead. */
+  has_symbolConnection_NOT?: InputMaybe<BlobHas_SymbolConnectionWhere>;
+  /** Return Blobs where all of the related BlobHas_symbolConnections match this filter */
+  has_symbolConnection_ALL?: InputMaybe<BlobHas_SymbolConnectionWhere>;
+  /** Return Blobs where none of the related BlobHas_symbolConnections match this filter */
+  has_symbolConnection_NONE?: InputMaybe<BlobHas_SymbolConnectionWhere>;
+  /** Return Blobs where one of the related BlobHas_symbolConnections match this filter */
+  has_symbolConnection_SINGLE?: InputMaybe<BlobHas_SymbolConnectionWhere>;
+  /** Return Blobs where some of the related BlobHas_symbolConnections match this filter */
+  has_symbolConnection_SOME?: InputMaybe<BlobHas_SymbolConnectionWhere>;
+  has_symbolAggregate?: InputMaybe<BlobHas_SymbolAggregateInput>;
+  /** @deprecated Use `has_struct_SOME` instead. */
+  has_struct?: InputMaybe<WinStructWhere>;
+  /** @deprecated Use `has_struct_NONE` instead. */
+  has_struct_NOT?: InputMaybe<WinStructWhere>;
+  /** Return Blobs where all of the related WinStructs match this filter */
+  has_struct_ALL?: InputMaybe<WinStructWhere>;
+  /** Return Blobs where none of the related WinStructs match this filter */
+  has_struct_NONE?: InputMaybe<WinStructWhere>;
+  /** Return Blobs where one of the related WinStructs match this filter */
+  has_struct_SINGLE?: InputMaybe<WinStructWhere>;
+  /** Return Blobs where some of the related WinStructs match this filter */
+  has_struct_SOME?: InputMaybe<WinStructWhere>;
+  /** @deprecated Use `has_structConnection_SOME` instead. */
+  has_structConnection?: InputMaybe<BlobHas_StructConnectionWhere>;
+  /** @deprecated Use `has_structConnection_NONE` instead. */
+  has_structConnection_NOT?: InputMaybe<BlobHas_StructConnectionWhere>;
+  /** Return Blobs where all of the related BlobHas_structConnections match this filter */
+  has_structConnection_ALL?: InputMaybe<BlobHas_StructConnectionWhere>;
+  /** Return Blobs where none of the related BlobHas_structConnections match this filter */
+  has_structConnection_NONE?: InputMaybe<BlobHas_StructConnectionWhere>;
+  /** Return Blobs where one of the related BlobHas_structConnections match this filter */
+  has_structConnection_SINGLE?: InputMaybe<BlobHas_StructConnectionWhere>;
+  /** Return Blobs where some of the related BlobHas_structConnections match this filter */
+  has_structConnection_SOME?: InputMaybe<BlobHas_StructConnectionWhere>;
+  has_structAggregate?: InputMaybe<BlobHas_StructAggregateInput>;
 };
 
 export type BranchConnectInput = {
@@ -2056,6 +3787,412 @@ export type HashableWhere = {
   typename_IN?: InputMaybe<Array<HashableImplementation>>;
 };
 
+export type HasSymbolAddressRelAggregationWhereInput = {
+  AND?: InputMaybe<Array<HasSymbolAddressRelAggregationWhereInput>>;
+  OR?: InputMaybe<Array<HasSymbolAddressRelAggregationWhereInput>>;
+  NOT?: InputMaybe<HasSymbolAddressRelAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  address_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  address_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  address_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  address_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  address_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  address_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  address_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  address_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  address_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  address_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  address_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  address_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  address_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  address_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  address_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  address_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  address_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  address_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  address_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  address_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  address_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type HasSymbolAddressRelCreateInput = {
+  address: Scalars["String"]["input"];
+};
+
+export type HasSymbolAddressRelSort = {
+  address?: InputMaybe<SortDirection>;
+};
+
+export type HasSymbolAddressRelUpdateInput = {
+  address?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type HasSymbolAddressRelWhere = {
+  address?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  address_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  address_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  address_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  address_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  address_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  address_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  address_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  address_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  address_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  OR?: InputMaybe<Array<HasSymbolAddressRelWhere>>;
+  AND?: InputMaybe<Array<HasSymbolAddressRelWhere>>;
+  NOT?: InputMaybe<HasSymbolAddressRelWhere>;
+};
+
+export type SearchResultCreateInput = {
+  commit_name: Scalars["String"]["input"];
+  commit_hash: Scalars["String"]["input"];
+  hash: Scalars["String"]["input"];
+  path: Scalars["String"]["input"];
+};
+
+export type SearchResultOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more SearchResultSort objects to sort SearchResults by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<SearchResultSort>>;
+};
+
+/** Fields to sort SearchResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one SearchResultSort object. */
+export type SearchResultSort = {
+  commit_name?: InputMaybe<SortDirection>;
+  commit_hash?: InputMaybe<SortDirection>;
+  hash?: InputMaybe<SortDirection>;
+  path?: InputMaybe<SortDirection>;
+};
+
+export type SearchResultUpdateInput = {
+  commit_name?: InputMaybe<Scalars["String"]["input"]>;
+  commit_hash?: InputMaybe<Scalars["String"]["input"]>;
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  path?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type SearchResultWhere = {
+  commit_name?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  commit_name_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  commit_name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  commit_name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  commit_name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  commit_name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  commit_name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  commit_name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  commit_name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  commit_name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  commit_hash?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  commit_hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  commit_hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  commit_hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  commit_hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  commit_hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  commit_hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  commit_hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  commit_hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  commit_hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  path?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  path_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  path_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  path_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  path_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  path_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  path_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  path_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  path_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  path_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  OR?: InputMaybe<Array<SearchResultWhere>>;
+  AND?: InputMaybe<Array<SearchResultWhere>>;
+  NOT?: InputMaybe<SearchResultWhere>;
+};
+
+export type SymbolBlobAggregateInput = {
+  count?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  AND?: InputMaybe<Array<SymbolBlobAggregateInput>>;
+  OR?: InputMaybe<Array<SymbolBlobAggregateInput>>;
+  NOT?: InputMaybe<SymbolBlobAggregateInput>;
+  node?: InputMaybe<SymbolBlobNodeAggregationWhereInput>;
+  edge?: InputMaybe<HasSymbolAddressRelAggregationWhereInput>;
+};
+
+export type SymbolBlobConnectFieldInput = {
+  edge: HasSymbolAddressRelCreateInput;
+  where?: InputMaybe<BlobConnectWhere>;
+  /** Whether or not to overwrite any matching relationship with the new properties. */
+  overwrite?: Scalars["Boolean"]["input"];
+  connect?: InputMaybe<BlobConnectInput>;
+};
+
+export type SymbolBlobConnectionSort = {
+  node?: InputMaybe<BlobSort>;
+  edge?: InputMaybe<HasSymbolAddressRelSort>;
+};
+
+export type SymbolBlobConnectionWhere = {
+  AND?: InputMaybe<Array<SymbolBlobConnectionWhere>>;
+  OR?: InputMaybe<Array<SymbolBlobConnectionWhere>>;
+  NOT?: InputMaybe<SymbolBlobConnectionWhere>;
+  node?: InputMaybe<BlobWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_NOT?: InputMaybe<BlobWhere>;
+  edge?: InputMaybe<HasSymbolAddressRelWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  edge_NOT?: InputMaybe<HasSymbolAddressRelWhere>;
+};
+
+export type SymbolBlobConnectOrCreateFieldInput = {
+  where: BlobConnectOrCreateWhere;
+  onCreate: SymbolBlobConnectOrCreateFieldInputOnCreate;
+};
+
+export type SymbolBlobConnectOrCreateFieldInputOnCreate = {
+  node: BlobOnCreateInput;
+  edge: HasSymbolAddressRelCreateInput;
+};
+
+export type SymbolBlobCreateFieldInput = {
+  edge: HasSymbolAddressRelCreateInput;
+  node: BlobCreateInput;
+};
+
+export type SymbolBlobDeleteFieldInput = {
+  where?: InputMaybe<SymbolBlobConnectionWhere>;
+  delete?: InputMaybe<BlobDeleteInput>;
+};
+
+export type SymbolBlobDisconnectFieldInput = {
+  where?: InputMaybe<SymbolBlobConnectionWhere>;
+  disconnect?: InputMaybe<BlobDisconnectInput>;
+};
+
+export type SymbolBlobFieldInput = {
+  connectOrCreate?: InputMaybe<SymbolBlobConnectOrCreateFieldInput>;
+  connect?: InputMaybe<SymbolBlobConnectFieldInput>;
+  create?: InputMaybe<SymbolBlobCreateFieldInput>;
+};
+
+export type SymbolBlobNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<SymbolBlobNodeAggregationWhereInput>>;
+  OR?: InputMaybe<Array<SymbolBlobNodeAggregationWhereInput>>;
+  NOT?: InputMaybe<SymbolBlobNodeAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type SymbolBlobUpdateConnectionInput = {
+  node?: InputMaybe<BlobUpdateInput>;
+  edge?: InputMaybe<HasSymbolAddressRelUpdateInput>;
+};
+
+export type SymbolBlobUpdateFieldInput = {
+  where?: InputMaybe<SymbolBlobConnectionWhere>;
+  connectOrCreate?: InputMaybe<SymbolBlobConnectOrCreateFieldInput>;
+  connect?: InputMaybe<SymbolBlobConnectFieldInput>;
+  disconnect?: InputMaybe<SymbolBlobDisconnectFieldInput>;
+  create?: InputMaybe<SymbolBlobCreateFieldInput>;
+  update?: InputMaybe<SymbolBlobUpdateConnectionInput>;
+  delete?: InputMaybe<SymbolBlobDeleteFieldInput>;
+};
+
+export type SymbolConnectInput = {
+  blob?: InputMaybe<SymbolBlobConnectFieldInput>;
+};
+
+export type SymbolConnectOrCreateInput = {
+  blob?: InputMaybe<SymbolBlobConnectOrCreateFieldInput>;
+};
+
+export type SymbolConnectWhere = {
+  node: SymbolWhere;
+};
+
+export type SymbolCreateInput = {
+  name: Scalars["String"]["input"];
+  blob?: InputMaybe<SymbolBlobFieldInput>;
+};
+
+export type SymbolDeleteInput = {
+  blob?: InputMaybe<SymbolBlobDeleteFieldInput>;
+};
+
+export type SymbolDisconnectInput = {
+  blob?: InputMaybe<SymbolBlobDisconnectFieldInput>;
+};
+
+export type SymbolOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more SymbolSort objects to sort Symbols by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<SymbolSort>>;
+};
+
+export type SymbolRelationInput = {
+  blob?: InputMaybe<SymbolBlobCreateFieldInput>;
+};
+
+/** Fields to sort Symbols by. The order in which sorts are applied is not guaranteed when specifying many fields in one SymbolSort object. */
+export type SymbolSort = {
+  name?: InputMaybe<SortDirection>;
+};
+
+export type SymbolUpdateInput = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  blob?: InputMaybe<SymbolBlobUpdateFieldInput>;
+};
+
+export type SymbolWhere = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  OR?: InputMaybe<Array<SymbolWhere>>;
+  AND?: InputMaybe<Array<SymbolWhere>>;
+  NOT?: InputMaybe<SymbolWhere>;
+  blob?: InputMaybe<BlobWhere>;
+  blob_NOT?: InputMaybe<BlobWhere>;
+  blobConnection?: InputMaybe<SymbolBlobConnectionWhere>;
+  blobConnection_NOT?: InputMaybe<SymbolBlobConnectionWhere>;
+  blobAggregate?: InputMaybe<SymbolBlobAggregateInput>;
+};
+
 export type TreeChild_BlobsAggregateInput = {
   count?: InputMaybe<Scalars["Int"]["input"]>;
   count_LT?: InputMaybe<Scalars["Int"]["input"]>;
@@ -2074,6 +4211,7 @@ export type TreeChild_BlobsConnectFieldInput = {
   where?: InputMaybe<BlobConnectWhere>;
   /** Whether or not to overwrite any matching relationship with the new properties. */
   overwrite?: Scalars["Boolean"]["input"];
+  connect?: InputMaybe<Array<BlobConnectInput>>;
 };
 
 export type TreeChild_BlobsConnectionSort = {
@@ -2110,10 +4248,12 @@ export type TreeChild_BlobsCreateFieldInput = {
 
 export type TreeChild_BlobsDeleteFieldInput = {
   where?: InputMaybe<TreeChild_BlobsConnectionWhere>;
+  delete?: InputMaybe<BlobDeleteInput>;
 };
 
 export type TreeChild_BlobsDisconnectFieldInput = {
   where?: InputMaybe<TreeChild_BlobsConnectionWhere>;
+  disconnect?: InputMaybe<BlobDisconnectInput>;
 };
 
 export type TreeChild_BlobsFieldInput = {
@@ -2520,6 +4660,2132 @@ export type UserWhere = {
   NOT?: InputMaybe<UserWhere>;
 };
 
+export type WinDataTypeConnectInput = {
+  has_data_type?: InputMaybe<WinDataTypeHas_Data_TypeConnectFieldInput>;
+};
+
+export type WinDataTypeConnectOrCreateInput = {
+  has_data_type?: InputMaybe<WinDataTypeHas_Data_TypeConnectOrCreateFieldInput>;
+};
+
+export type WinDataTypeConnectOrCreateWhere = {
+  node: WinDataTypeUniqueWhere;
+};
+
+export type WinDataTypeConnectWhere = {
+  node: WinDataTypeWhere;
+};
+
+export type WinDataTypeCreateInput = {
+  hash: Scalars["String"]["input"];
+  type: Scalars["String"]["input"];
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  array_counter?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length?: InputMaybe<Scalars["Int"]["input"]>;
+  has_data_type?: InputMaybe<WinDataTypeHas_Data_TypeFieldInput>;
+};
+
+export type WinDataTypeDeleteInput = {
+  has_data_type?: InputMaybe<WinDataTypeHas_Data_TypeDeleteFieldInput>;
+};
+
+export type WinDataTypeDisconnectInput = {
+  has_data_type?: InputMaybe<WinDataTypeHas_Data_TypeDisconnectFieldInput>;
+};
+
+export type WinDataTypeHas_Data_TypeAggregateInput = {
+  count?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  AND?: InputMaybe<Array<WinDataTypeHas_Data_TypeAggregateInput>>;
+  OR?: InputMaybe<Array<WinDataTypeHas_Data_TypeAggregateInput>>;
+  NOT?: InputMaybe<WinDataTypeHas_Data_TypeAggregateInput>;
+  node?: InputMaybe<WinDataTypeHas_Data_TypeNodeAggregationWhereInput>;
+};
+
+export type WinDataTypeHas_Data_TypeConnectFieldInput = {
+  where?: InputMaybe<WinDataTypeConnectWhere>;
+  /** Whether or not to overwrite any matching relationship with the new properties. */
+  overwrite?: Scalars["Boolean"]["input"];
+  connect?: InputMaybe<WinDataTypeConnectInput>;
+};
+
+export type WinDataTypeHas_Data_TypeConnectionSort = {
+  node?: InputMaybe<WinDataTypeSort>;
+};
+
+export type WinDataTypeHas_Data_TypeConnectionWhere = {
+  AND?: InputMaybe<Array<WinDataTypeHas_Data_TypeConnectionWhere>>;
+  OR?: InputMaybe<Array<WinDataTypeHas_Data_TypeConnectionWhere>>;
+  NOT?: InputMaybe<WinDataTypeHas_Data_TypeConnectionWhere>;
+  node?: InputMaybe<WinDataTypeWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_NOT?: InputMaybe<WinDataTypeWhere>;
+};
+
+export type WinDataTypeHas_Data_TypeConnectOrCreateFieldInput = {
+  where: WinDataTypeConnectOrCreateWhere;
+  onCreate: WinDataTypeHas_Data_TypeConnectOrCreateFieldInputOnCreate;
+};
+
+export type WinDataTypeHas_Data_TypeConnectOrCreateFieldInputOnCreate = {
+  node: WinDataTypeOnCreateInput;
+};
+
+export type WinDataTypeHas_Data_TypeCreateFieldInput = {
+  node: WinDataTypeCreateInput;
+};
+
+export type WinDataTypeHas_Data_TypeDeleteFieldInput = {
+  where?: InputMaybe<WinDataTypeHas_Data_TypeConnectionWhere>;
+  delete?: InputMaybe<WinDataTypeDeleteInput>;
+};
+
+export type WinDataTypeHas_Data_TypeDisconnectFieldInput = {
+  where?: InputMaybe<WinDataTypeHas_Data_TypeConnectionWhere>;
+  disconnect?: InputMaybe<WinDataTypeDisconnectInput>;
+};
+
+export type WinDataTypeHas_Data_TypeFieldInput = {
+  connectOrCreate?: InputMaybe<WinDataTypeHas_Data_TypeConnectOrCreateFieldInput>;
+  connect?: InputMaybe<WinDataTypeHas_Data_TypeConnectFieldInput>;
+  create?: InputMaybe<WinDataTypeHas_Data_TypeCreateFieldInput>;
+};
+
+export type WinDataTypeHas_Data_TypeNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<WinDataTypeHas_Data_TypeNodeAggregationWhereInput>>;
+  OR?: InputMaybe<Array<WinDataTypeHas_Data_TypeNodeAggregationWhereInput>>;
+  NOT?: InputMaybe<WinDataTypeHas_Data_TypeNodeAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  array_counter_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MIN_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MAX_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_SUM_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  array_counter_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MIN_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MAX_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_SUM_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  array_counter_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MIN_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MAX_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_SUM_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  array_counter_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MIN_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MAX_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_SUM_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  array_counter_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MIN_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MAX_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_SUM_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_position_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MIN_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MAX_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_SUM_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_position_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MIN_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MAX_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_SUM_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_position_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MIN_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MAX_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_SUM_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_position_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MIN_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MAX_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_SUM_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_position_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MIN_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MAX_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_SUM_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_length_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MIN_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MAX_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_SUM_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_length_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MIN_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MAX_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_SUM_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_length_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MIN_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MAX_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_SUM_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_length_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MIN_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MAX_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_SUM_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_length_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MIN_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MAX_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_SUM_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+};
+
+export type WinDataTypeHas_Data_TypeUpdateConnectionInput = {
+  node?: InputMaybe<WinDataTypeUpdateInput>;
+};
+
+export type WinDataTypeHas_Data_TypeUpdateFieldInput = {
+  where?: InputMaybe<WinDataTypeHas_Data_TypeConnectionWhere>;
+  connectOrCreate?: InputMaybe<WinDataTypeHas_Data_TypeConnectOrCreateFieldInput>;
+  connect?: InputMaybe<WinDataTypeHas_Data_TypeConnectFieldInput>;
+  disconnect?: InputMaybe<WinDataTypeHas_Data_TypeDisconnectFieldInput>;
+  create?: InputMaybe<WinDataTypeHas_Data_TypeCreateFieldInput>;
+  update?: InputMaybe<WinDataTypeHas_Data_TypeUpdateConnectionInput>;
+  delete?: InputMaybe<WinDataTypeHas_Data_TypeDeleteFieldInput>;
+};
+
+export type WinDataTypeOnCreateInput = {
+  hash: Scalars["String"]["input"];
+  type: Scalars["String"]["input"];
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  array_counter?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type WinDataTypeOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more WinDataTypeSort objects to sort WinDataTypes by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<WinDataTypeSort>>;
+};
+
+export type WinDataTypeRelationInput = {
+  has_data_type?: InputMaybe<WinDataTypeHas_Data_TypeCreateFieldInput>;
+};
+
+/** Fields to sort WinDataTypes by. The order in which sorts are applied is not guaranteed when specifying many fields in one WinDataTypeSort object. */
+export type WinDataTypeSort = {
+  hash?: InputMaybe<SortDirection>;
+  type?: InputMaybe<SortDirection>;
+  name?: InputMaybe<SortDirection>;
+  array_counter?: InputMaybe<SortDirection>;
+  bit_position?: InputMaybe<SortDirection>;
+  bit_length?: InputMaybe<SortDirection>;
+};
+
+export type WinDataTypeUniqueWhere = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type WinDataTypeUpdateInput = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  array_counter?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  has_data_type?: InputMaybe<WinDataTypeHas_Data_TypeUpdateFieldInput>;
+};
+
+export type WinDataTypeWhere = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  type_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  type_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  type_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  type_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  name_IN?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_IN?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
+  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  array_counter?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  array_counter_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_IN?: InputMaybe<Array<InputMaybe<Scalars["Int"]["input"]>>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  array_counter_NOT_IN?: InputMaybe<Array<InputMaybe<Scalars["Int"]["input"]>>>;
+  array_counter_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  bit_position_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_IN?: InputMaybe<Array<InputMaybe<Scalars["Int"]["input"]>>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  bit_position_NOT_IN?: InputMaybe<Array<InputMaybe<Scalars["Int"]["input"]>>>;
+  bit_position_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  bit_length_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_IN?: InputMaybe<Array<InputMaybe<Scalars["Int"]["input"]>>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  bit_length_NOT_IN?: InputMaybe<Array<InputMaybe<Scalars["Int"]["input"]>>>;
+  bit_length_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  OR?: InputMaybe<Array<WinDataTypeWhere>>;
+  AND?: InputMaybe<Array<WinDataTypeWhere>>;
+  NOT?: InputMaybe<WinDataTypeWhere>;
+  has_data_type?: InputMaybe<WinDataTypeWhere>;
+  has_data_type_NOT?: InputMaybe<WinDataTypeWhere>;
+  has_data_typeConnection?: InputMaybe<WinDataTypeHas_Data_TypeConnectionWhere>;
+  has_data_typeConnection_NOT?: InputMaybe<WinDataTypeHas_Data_TypeConnectionWhere>;
+  has_data_typeAggregate?: InputMaybe<WinDataTypeHas_Data_TypeAggregateInput>;
+};
+
+export type WinRegKeyChild_KeysAggregateInput = {
+  count?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  AND?: InputMaybe<Array<WinRegKeyChild_KeysAggregateInput>>;
+  OR?: InputMaybe<Array<WinRegKeyChild_KeysAggregateInput>>;
+  NOT?: InputMaybe<WinRegKeyChild_KeysAggregateInput>;
+  node?: InputMaybe<WinRegKeyChild_KeysNodeAggregationWhereInput>;
+  edge?: InputMaybe<HasFilenameRelAggregationWhereInput>;
+};
+
+export type WinRegKeyChild_KeysConnectFieldInput = {
+  edge: HasFilenameRelCreateInput;
+  where?: InputMaybe<WinRegKeyConnectWhere>;
+  /** Whether or not to overwrite any matching relationship with the new properties. */
+  overwrite?: Scalars["Boolean"]["input"];
+  connect?: InputMaybe<Array<WinRegKeyConnectInput>>;
+};
+
+export type WinRegKeyChild_KeysConnectionSort = {
+  node?: InputMaybe<WinRegKeySort>;
+  edge?: InputMaybe<HasFilenameRelSort>;
+};
+
+export type WinRegKeyChild_KeysConnectionWhere = {
+  AND?: InputMaybe<Array<WinRegKeyChild_KeysConnectionWhere>>;
+  OR?: InputMaybe<Array<WinRegKeyChild_KeysConnectionWhere>>;
+  NOT?: InputMaybe<WinRegKeyChild_KeysConnectionWhere>;
+  node?: InputMaybe<WinRegKeyWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_NOT?: InputMaybe<WinRegKeyWhere>;
+  edge?: InputMaybe<HasFilenameRelWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  edge_NOT?: InputMaybe<HasFilenameRelWhere>;
+};
+
+export type WinRegKeyChild_KeysConnectOrCreateFieldInput = {
+  where: WinRegKeyConnectOrCreateWhere;
+  onCreate: WinRegKeyChild_KeysConnectOrCreateFieldInputOnCreate;
+};
+
+export type WinRegKeyChild_KeysConnectOrCreateFieldInputOnCreate = {
+  node: WinRegKeyOnCreateInput;
+  edge: HasFilenameRelCreateInput;
+};
+
+export type WinRegKeyChild_KeysCreateFieldInput = {
+  edge: HasFilenameRelCreateInput;
+  node: WinRegKeyCreateInput;
+};
+
+export type WinRegKeyChild_KeysDeleteFieldInput = {
+  where?: InputMaybe<WinRegKeyChild_KeysConnectionWhere>;
+  delete?: InputMaybe<WinRegKeyDeleteInput>;
+};
+
+export type WinRegKeyChild_KeysDisconnectFieldInput = {
+  where?: InputMaybe<WinRegKeyChild_KeysConnectionWhere>;
+  disconnect?: InputMaybe<WinRegKeyDisconnectInput>;
+};
+
+export type WinRegKeyChild_KeysFieldInput = {
+  connectOrCreate?: InputMaybe<
+    Array<WinRegKeyChild_KeysConnectOrCreateFieldInput>
+  >;
+  connect?: InputMaybe<Array<WinRegKeyChild_KeysConnectFieldInput>>;
+  create?: InputMaybe<Array<WinRegKeyChild_KeysCreateFieldInput>>;
+};
+
+export type WinRegKeyChild_KeysNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<WinRegKeyChild_KeysNodeAggregationWhereInput>>;
+  OR?: InputMaybe<Array<WinRegKeyChild_KeysNodeAggregationWhereInput>>;
+  NOT?: InputMaybe<WinRegKeyChild_KeysNodeAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type WinRegKeyChild_KeysUpdateConnectionInput = {
+  node?: InputMaybe<WinRegKeyUpdateInput>;
+  edge?: InputMaybe<HasFilenameRelUpdateInput>;
+};
+
+export type WinRegKeyChild_KeysUpdateFieldInput = {
+  where?: InputMaybe<WinRegKeyChild_KeysConnectionWhere>;
+  connectOrCreate?: InputMaybe<
+    Array<WinRegKeyChild_KeysConnectOrCreateFieldInput>
+  >;
+  connect?: InputMaybe<Array<WinRegKeyChild_KeysConnectFieldInput>>;
+  disconnect?: InputMaybe<Array<WinRegKeyChild_KeysDisconnectFieldInput>>;
+  create?: InputMaybe<Array<WinRegKeyChild_KeysCreateFieldInput>>;
+  update?: InputMaybe<WinRegKeyChild_KeysUpdateConnectionInput>;
+  delete?: InputMaybe<Array<WinRegKeyChild_KeysDeleteFieldInput>>;
+};
+
+export type WinRegKeyChild_ValuesAggregateInput = {
+  count?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  AND?: InputMaybe<Array<WinRegKeyChild_ValuesAggregateInput>>;
+  OR?: InputMaybe<Array<WinRegKeyChild_ValuesAggregateInput>>;
+  NOT?: InputMaybe<WinRegKeyChild_ValuesAggregateInput>;
+  node?: InputMaybe<WinRegKeyChild_ValuesNodeAggregationWhereInput>;
+  edge?: InputMaybe<HasFilenameRelAggregationWhereInput>;
+};
+
+export type WinRegKeyChild_ValuesConnectFieldInput = {
+  edge: HasFilenameRelCreateInput;
+  where?: InputMaybe<WinRegValueConnectWhere>;
+  /** Whether or not to overwrite any matching relationship with the new properties. */
+  overwrite?: Scalars["Boolean"]["input"];
+};
+
+export type WinRegKeyChild_ValuesConnectionSort = {
+  node?: InputMaybe<WinRegValueSort>;
+  edge?: InputMaybe<HasFilenameRelSort>;
+};
+
+export type WinRegKeyChild_ValuesConnectionWhere = {
+  AND?: InputMaybe<Array<WinRegKeyChild_ValuesConnectionWhere>>;
+  OR?: InputMaybe<Array<WinRegKeyChild_ValuesConnectionWhere>>;
+  NOT?: InputMaybe<WinRegKeyChild_ValuesConnectionWhere>;
+  node?: InputMaybe<WinRegValueWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_NOT?: InputMaybe<WinRegValueWhere>;
+  edge?: InputMaybe<HasFilenameRelWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  edge_NOT?: InputMaybe<HasFilenameRelWhere>;
+};
+
+export type WinRegKeyChild_ValuesConnectOrCreateFieldInput = {
+  where: WinRegValueConnectOrCreateWhere;
+  onCreate: WinRegKeyChild_ValuesConnectOrCreateFieldInputOnCreate;
+};
+
+export type WinRegKeyChild_ValuesConnectOrCreateFieldInputOnCreate = {
+  node: WinRegValueOnCreateInput;
+  edge: HasFilenameRelCreateInput;
+};
+
+export type WinRegKeyChild_ValuesCreateFieldInput = {
+  edge: HasFilenameRelCreateInput;
+  node: WinRegValueCreateInput;
+};
+
+export type WinRegKeyChild_ValuesDeleteFieldInput = {
+  where?: InputMaybe<WinRegKeyChild_ValuesConnectionWhere>;
+};
+
+export type WinRegKeyChild_ValuesDisconnectFieldInput = {
+  where?: InputMaybe<WinRegKeyChild_ValuesConnectionWhere>;
+};
+
+export type WinRegKeyChild_ValuesFieldInput = {
+  connectOrCreate?: InputMaybe<
+    Array<WinRegKeyChild_ValuesConnectOrCreateFieldInput>
+  >;
+  connect?: InputMaybe<Array<WinRegKeyChild_ValuesConnectFieldInput>>;
+  create?: InputMaybe<Array<WinRegKeyChild_ValuesCreateFieldInput>>;
+};
+
+export type WinRegKeyChild_ValuesNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<WinRegKeyChild_ValuesNodeAggregationWhereInput>>;
+  OR?: InputMaybe<Array<WinRegKeyChild_ValuesNodeAggregationWhereInput>>;
+  NOT?: InputMaybe<WinRegKeyChild_ValuesNodeAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  value_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  value_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  value_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  value_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  value_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  value_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  value_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  value_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  value_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  value_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  value_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  value_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  value_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  value_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  value_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  value_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  value_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  value_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  value_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  value_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  value_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type WinRegKeyChild_ValuesUpdateConnectionInput = {
+  node?: InputMaybe<WinRegValueUpdateInput>;
+  edge?: InputMaybe<HasFilenameRelUpdateInput>;
+};
+
+export type WinRegKeyChild_ValuesUpdateFieldInput = {
+  where?: InputMaybe<WinRegKeyChild_ValuesConnectionWhere>;
+  connectOrCreate?: InputMaybe<
+    Array<WinRegKeyChild_ValuesConnectOrCreateFieldInput>
+  >;
+  connect?: InputMaybe<Array<WinRegKeyChild_ValuesConnectFieldInput>>;
+  disconnect?: InputMaybe<Array<WinRegKeyChild_ValuesDisconnectFieldInput>>;
+  create?: InputMaybe<Array<WinRegKeyChild_ValuesCreateFieldInput>>;
+  update?: InputMaybe<WinRegKeyChild_ValuesUpdateConnectionInput>;
+  delete?: InputMaybe<Array<WinRegKeyChild_ValuesDeleteFieldInput>>;
+};
+
+export type WinRegKeyConnectInput = {
+  child_values?: InputMaybe<Array<WinRegKeyChild_ValuesConnectFieldInput>>;
+  child_keys?: InputMaybe<Array<WinRegKeyChild_KeysConnectFieldInput>>;
+};
+
+export type WinRegKeyConnectOrCreateInput = {
+  child_values?: InputMaybe<
+    Array<WinRegKeyChild_ValuesConnectOrCreateFieldInput>
+  >;
+  child_keys?: InputMaybe<Array<WinRegKeyChild_KeysConnectOrCreateFieldInput>>;
+};
+
+export type WinRegKeyConnectOrCreateWhere = {
+  node: WinRegKeyUniqueWhere;
+};
+
+export type WinRegKeyConnectWhere = {
+  node: WinRegKeyWhere;
+};
+
+export type WinRegKeyCreateInput = {
+  hash: Scalars["String"]["input"];
+  child_values?: InputMaybe<WinRegKeyChild_ValuesFieldInput>;
+  child_keys?: InputMaybe<WinRegKeyChild_KeysFieldInput>;
+};
+
+export type WinRegKeyDeleteInput = {
+  child_values?: InputMaybe<Array<WinRegKeyChild_ValuesDeleteFieldInput>>;
+  child_keys?: InputMaybe<Array<WinRegKeyChild_KeysDeleteFieldInput>>;
+};
+
+export type WinRegKeyDisconnectInput = {
+  child_values?: InputMaybe<Array<WinRegKeyChild_ValuesDisconnectFieldInput>>;
+  child_keys?: InputMaybe<Array<WinRegKeyChild_KeysDisconnectFieldInput>>;
+};
+
+export type WinRegKeyOnCreateInput = {
+  hash: Scalars["String"]["input"];
+};
+
+export type WinRegKeyOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more WinRegKeySort objects to sort WinRegKeys by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<WinRegKeySort>>;
+};
+
+export type WinRegKeyRelationInput = {
+  child_values?: InputMaybe<Array<WinRegKeyChild_ValuesCreateFieldInput>>;
+  child_keys?: InputMaybe<Array<WinRegKeyChild_KeysCreateFieldInput>>;
+};
+
+/** Fields to sort WinRegKeys by. The order in which sorts are applied is not guaranteed when specifying many fields in one WinRegKeySort object. */
+export type WinRegKeySort = {
+  hash?: InputMaybe<SortDirection>;
+};
+
+export type WinRegKeyUniqueWhere = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type WinRegKeyUpdateInput = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  child_values?: InputMaybe<Array<WinRegKeyChild_ValuesUpdateFieldInput>>;
+  child_keys?: InputMaybe<Array<WinRegKeyChild_KeysUpdateFieldInput>>;
+};
+
+export type WinRegKeyWhere = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  OR?: InputMaybe<Array<WinRegKeyWhere>>;
+  AND?: InputMaybe<Array<WinRegKeyWhere>>;
+  NOT?: InputMaybe<WinRegKeyWhere>;
+  /** @deprecated Use `child_values_SOME` instead. */
+  child_values?: InputMaybe<WinRegValueWhere>;
+  /** @deprecated Use `child_values_NONE` instead. */
+  child_values_NOT?: InputMaybe<WinRegValueWhere>;
+  /** Return WinRegKeys where all of the related WinRegValues match this filter */
+  child_values_ALL?: InputMaybe<WinRegValueWhere>;
+  /** Return WinRegKeys where none of the related WinRegValues match this filter */
+  child_values_NONE?: InputMaybe<WinRegValueWhere>;
+  /** Return WinRegKeys where one of the related WinRegValues match this filter */
+  child_values_SINGLE?: InputMaybe<WinRegValueWhere>;
+  /** Return WinRegKeys where some of the related WinRegValues match this filter */
+  child_values_SOME?: InputMaybe<WinRegValueWhere>;
+  /** @deprecated Use `child_valuesConnection_SOME` instead. */
+  child_valuesConnection?: InputMaybe<WinRegKeyChild_ValuesConnectionWhere>;
+  /** @deprecated Use `child_valuesConnection_NONE` instead. */
+  child_valuesConnection_NOT?: InputMaybe<WinRegKeyChild_ValuesConnectionWhere>;
+  /** Return WinRegKeys where all of the related WinRegKeyChild_valuesConnections match this filter */
+  child_valuesConnection_ALL?: InputMaybe<WinRegKeyChild_ValuesConnectionWhere>;
+  /** Return WinRegKeys where none of the related WinRegKeyChild_valuesConnections match this filter */
+  child_valuesConnection_NONE?: InputMaybe<WinRegKeyChild_ValuesConnectionWhere>;
+  /** Return WinRegKeys where one of the related WinRegKeyChild_valuesConnections match this filter */
+  child_valuesConnection_SINGLE?: InputMaybe<WinRegKeyChild_ValuesConnectionWhere>;
+  /** Return WinRegKeys where some of the related WinRegKeyChild_valuesConnections match this filter */
+  child_valuesConnection_SOME?: InputMaybe<WinRegKeyChild_ValuesConnectionWhere>;
+  child_valuesAggregate?: InputMaybe<WinRegKeyChild_ValuesAggregateInput>;
+  /** @deprecated Use `child_keys_SOME` instead. */
+  child_keys?: InputMaybe<WinRegKeyWhere>;
+  /** @deprecated Use `child_keys_NONE` instead. */
+  child_keys_NOT?: InputMaybe<WinRegKeyWhere>;
+  /** Return WinRegKeys where all of the related WinRegKeys match this filter */
+  child_keys_ALL?: InputMaybe<WinRegKeyWhere>;
+  /** Return WinRegKeys where none of the related WinRegKeys match this filter */
+  child_keys_NONE?: InputMaybe<WinRegKeyWhere>;
+  /** Return WinRegKeys where one of the related WinRegKeys match this filter */
+  child_keys_SINGLE?: InputMaybe<WinRegKeyWhere>;
+  /** Return WinRegKeys where some of the related WinRegKeys match this filter */
+  child_keys_SOME?: InputMaybe<WinRegKeyWhere>;
+  /** @deprecated Use `child_keysConnection_SOME` instead. */
+  child_keysConnection?: InputMaybe<WinRegKeyChild_KeysConnectionWhere>;
+  /** @deprecated Use `child_keysConnection_NONE` instead. */
+  child_keysConnection_NOT?: InputMaybe<WinRegKeyChild_KeysConnectionWhere>;
+  /** Return WinRegKeys where all of the related WinRegKeyChild_keysConnections match this filter */
+  child_keysConnection_ALL?: InputMaybe<WinRegKeyChild_KeysConnectionWhere>;
+  /** Return WinRegKeys where none of the related WinRegKeyChild_keysConnections match this filter */
+  child_keysConnection_NONE?: InputMaybe<WinRegKeyChild_KeysConnectionWhere>;
+  /** Return WinRegKeys where one of the related WinRegKeyChild_keysConnections match this filter */
+  child_keysConnection_SINGLE?: InputMaybe<WinRegKeyChild_KeysConnectionWhere>;
+  /** Return WinRegKeys where some of the related WinRegKeyChild_keysConnections match this filter */
+  child_keysConnection_SOME?: InputMaybe<WinRegKeyChild_KeysConnectionWhere>;
+  child_keysAggregate?: InputMaybe<WinRegKeyChild_KeysAggregateInput>;
+};
+
+export type WinRegValueConnectOrCreateWhere = {
+  node: WinRegValueUniqueWhere;
+};
+
+export type WinRegValueConnectWhere = {
+  node: WinRegValueWhere;
+};
+
+export type WinRegValueCreateInput = {
+  hash: Scalars["String"]["input"];
+  type: Scalars["String"]["input"];
+  value: Scalars["String"]["input"];
+};
+
+export type WinRegValueOnCreateInput = {
+  hash: Scalars["String"]["input"];
+  type: Scalars["String"]["input"];
+  value: Scalars["String"]["input"];
+};
+
+export type WinRegValueOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more WinRegValueSort objects to sort WinRegValues by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<WinRegValueSort>>;
+};
+
+/** Fields to sort WinRegValues by. The order in which sorts are applied is not guaranteed when specifying many fields in one WinRegValueSort object. */
+export type WinRegValueSort = {
+  hash?: InputMaybe<SortDirection>;
+  type?: InputMaybe<SortDirection>;
+  value?: InputMaybe<SortDirection>;
+};
+
+export type WinRegValueUniqueWhere = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type WinRegValueUpdateInput = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+  value?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type WinRegValueWhere = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  type_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  type_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  type_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  type_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  value?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  value_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  value_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  value_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  value_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  value_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  value_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  value_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  value_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  value_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  OR?: InputMaybe<Array<WinRegValueWhere>>;
+  AND?: InputMaybe<Array<WinRegValueWhere>>;
+  NOT?: InputMaybe<WinRegValueWhere>;
+};
+
+export type WinStructBlobAggregateInput = {
+  count?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  AND?: InputMaybe<Array<WinStructBlobAggregateInput>>;
+  OR?: InputMaybe<Array<WinStructBlobAggregateInput>>;
+  NOT?: InputMaybe<WinStructBlobAggregateInput>;
+  node?: InputMaybe<WinStructBlobNodeAggregationWhereInput>;
+};
+
+export type WinStructBlobConnectFieldInput = {
+  where?: InputMaybe<BlobConnectWhere>;
+  /** Whether or not to overwrite any matching relationship with the new properties. */
+  overwrite?: Scalars["Boolean"]["input"];
+  connect?: InputMaybe<BlobConnectInput>;
+};
+
+export type WinStructBlobConnectionSort = {
+  node?: InputMaybe<BlobSort>;
+};
+
+export type WinStructBlobConnectionWhere = {
+  AND?: InputMaybe<Array<WinStructBlobConnectionWhere>>;
+  OR?: InputMaybe<Array<WinStructBlobConnectionWhere>>;
+  NOT?: InputMaybe<WinStructBlobConnectionWhere>;
+  node?: InputMaybe<BlobWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_NOT?: InputMaybe<BlobWhere>;
+};
+
+export type WinStructBlobConnectOrCreateFieldInput = {
+  where: BlobConnectOrCreateWhere;
+  onCreate: WinStructBlobConnectOrCreateFieldInputOnCreate;
+};
+
+export type WinStructBlobConnectOrCreateFieldInputOnCreate = {
+  node: BlobOnCreateInput;
+};
+
+export type WinStructBlobCreateFieldInput = {
+  node: BlobCreateInput;
+};
+
+export type WinStructBlobDeleteFieldInput = {
+  where?: InputMaybe<WinStructBlobConnectionWhere>;
+  delete?: InputMaybe<BlobDeleteInput>;
+};
+
+export type WinStructBlobDisconnectFieldInput = {
+  where?: InputMaybe<WinStructBlobConnectionWhere>;
+  disconnect?: InputMaybe<BlobDisconnectInput>;
+};
+
+export type WinStructBlobFieldInput = {
+  connectOrCreate?: InputMaybe<WinStructBlobConnectOrCreateFieldInput>;
+  connect?: InputMaybe<WinStructBlobConnectFieldInput>;
+  create?: InputMaybe<WinStructBlobCreateFieldInput>;
+};
+
+export type WinStructBlobNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<WinStructBlobNodeAggregationWhereInput>>;
+  OR?: InputMaybe<Array<WinStructBlobNodeAggregationWhereInput>>;
+  NOT?: InputMaybe<WinStructBlobNodeAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type WinStructBlobUpdateConnectionInput = {
+  node?: InputMaybe<BlobUpdateInput>;
+};
+
+export type WinStructBlobUpdateFieldInput = {
+  where?: InputMaybe<WinStructBlobConnectionWhere>;
+  connectOrCreate?: InputMaybe<WinStructBlobConnectOrCreateFieldInput>;
+  connect?: InputMaybe<WinStructBlobConnectFieldInput>;
+  disconnect?: InputMaybe<WinStructBlobDisconnectFieldInput>;
+  create?: InputMaybe<WinStructBlobCreateFieldInput>;
+  update?: InputMaybe<WinStructBlobUpdateConnectionInput>;
+  delete?: InputMaybe<WinStructBlobDeleteFieldInput>;
+};
+
+export type WinStructConnectInput = {
+  fields?: InputMaybe<Array<WinStructFieldsConnectFieldInput>>;
+  blob?: InputMaybe<WinStructBlobConnectFieldInput>;
+};
+
+export type WinStructConnectOrCreateInput = {
+  fields?: InputMaybe<Array<WinStructFieldsConnectOrCreateFieldInput>>;
+  blob?: InputMaybe<WinStructBlobConnectOrCreateFieldInput>;
+};
+
+export type WinStructConnectOrCreateWhere = {
+  node: WinStructUniqueWhere;
+};
+
+export type WinStructConnectWhere = {
+  node: WinStructWhere;
+};
+
+export type WinStructCreateInput = {
+  hash: Scalars["String"]["input"];
+  name: Scalars["String"]["input"];
+  size: Scalars["Int"]["input"];
+  kind: Scalars["String"]["input"];
+  fields?: InputMaybe<WinStructFieldsFieldInput>;
+  blob?: InputMaybe<WinStructBlobFieldInput>;
+};
+
+export type WinStructDeleteInput = {
+  fields?: InputMaybe<Array<WinStructFieldsDeleteFieldInput>>;
+  blob?: InputMaybe<WinStructBlobDeleteFieldInput>;
+};
+
+export type WinStructDisconnectInput = {
+  fields?: InputMaybe<Array<WinStructFieldsDisconnectFieldInput>>;
+  blob?: InputMaybe<WinStructBlobDisconnectFieldInput>;
+};
+
+export type WinStructFieldConnectInput = {
+  type?: InputMaybe<WinStructFieldTypeConnectFieldInput>;
+};
+
+export type WinStructFieldConnectOrCreateInput = {
+  type?: InputMaybe<WinStructFieldTypeConnectOrCreateFieldInput>;
+};
+
+export type WinStructFieldConnectOrCreateWhere = {
+  node: WinStructFieldUniqueWhere;
+};
+
+export type WinStructFieldConnectWhere = {
+  node: WinStructFieldWhere;
+};
+
+export type WinStructFieldCreateInput = {
+  hash: Scalars["String"]["input"];
+  name: Scalars["String"]["input"];
+  offset: Scalars["Int"]["input"];
+  type?: InputMaybe<WinStructFieldTypeFieldInput>;
+};
+
+export type WinStructFieldDeleteInput = {
+  type?: InputMaybe<WinStructFieldTypeDeleteFieldInput>;
+};
+
+export type WinStructFieldDisconnectInput = {
+  type?: InputMaybe<WinStructFieldTypeDisconnectFieldInput>;
+};
+
+export type WinStructFieldOnCreateInput = {
+  hash: Scalars["String"]["input"];
+  name: Scalars["String"]["input"];
+  offset: Scalars["Int"]["input"];
+};
+
+export type WinStructFieldOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more WinStructFieldSort objects to sort WinStructFields by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<WinStructFieldSort>>;
+};
+
+export type WinStructFieldRelationInput = {
+  type?: InputMaybe<WinStructFieldTypeCreateFieldInput>;
+};
+
+export type WinStructFieldsAggregateInput = {
+  count?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  AND?: InputMaybe<Array<WinStructFieldsAggregateInput>>;
+  OR?: InputMaybe<Array<WinStructFieldsAggregateInput>>;
+  NOT?: InputMaybe<WinStructFieldsAggregateInput>;
+  node?: InputMaybe<WinStructFieldsNodeAggregationWhereInput>;
+};
+
+export type WinStructFieldsConnectFieldInput = {
+  where?: InputMaybe<WinStructFieldConnectWhere>;
+  /** Whether or not to overwrite any matching relationship with the new properties. */
+  overwrite?: Scalars["Boolean"]["input"];
+  connect?: InputMaybe<Array<WinStructFieldConnectInput>>;
+};
+
+export type WinStructFieldsConnectionSort = {
+  node?: InputMaybe<WinStructFieldSort>;
+};
+
+export type WinStructFieldsConnectionWhere = {
+  AND?: InputMaybe<Array<WinStructFieldsConnectionWhere>>;
+  OR?: InputMaybe<Array<WinStructFieldsConnectionWhere>>;
+  NOT?: InputMaybe<WinStructFieldsConnectionWhere>;
+  node?: InputMaybe<WinStructFieldWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_NOT?: InputMaybe<WinStructFieldWhere>;
+};
+
+export type WinStructFieldsConnectOrCreateFieldInput = {
+  where: WinStructFieldConnectOrCreateWhere;
+  onCreate: WinStructFieldsConnectOrCreateFieldInputOnCreate;
+};
+
+export type WinStructFieldsConnectOrCreateFieldInputOnCreate = {
+  node: WinStructFieldOnCreateInput;
+};
+
+export type WinStructFieldsCreateFieldInput = {
+  node: WinStructFieldCreateInput;
+};
+
+export type WinStructFieldsDeleteFieldInput = {
+  where?: InputMaybe<WinStructFieldsConnectionWhere>;
+  delete?: InputMaybe<WinStructFieldDeleteInput>;
+};
+
+export type WinStructFieldsDisconnectFieldInput = {
+  where?: InputMaybe<WinStructFieldsConnectionWhere>;
+  disconnect?: InputMaybe<WinStructFieldDisconnectInput>;
+};
+
+export type WinStructFieldsFieldInput = {
+  connectOrCreate?: InputMaybe<Array<WinStructFieldsConnectOrCreateFieldInput>>;
+  connect?: InputMaybe<Array<WinStructFieldsConnectFieldInput>>;
+  create?: InputMaybe<Array<WinStructFieldsCreateFieldInput>>;
+};
+
+export type WinStructFieldsNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<WinStructFieldsNodeAggregationWhereInput>>;
+  OR?: InputMaybe<Array<WinStructFieldsNodeAggregationWhereInput>>;
+  NOT?: InputMaybe<WinStructFieldsNodeAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  offset_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_MIN_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_MAX_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_SUM_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  offset_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_MIN_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_MAX_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_SUM_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  offset_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_MIN_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_MAX_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_SUM_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  offset_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_MIN_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_MAX_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_SUM_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  offset_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_MIN_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_MAX_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_SUM_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+};
+
+/** Fields to sort WinStructFields by. The order in which sorts are applied is not guaranteed when specifying many fields in one WinStructFieldSort object. */
+export type WinStructFieldSort = {
+  hash?: InputMaybe<SortDirection>;
+  name?: InputMaybe<SortDirection>;
+  offset?: InputMaybe<SortDirection>;
+};
+
+export type WinStructFieldsUpdateConnectionInput = {
+  node?: InputMaybe<WinStructFieldUpdateInput>;
+};
+
+export type WinStructFieldsUpdateFieldInput = {
+  where?: InputMaybe<WinStructFieldsConnectionWhere>;
+  connectOrCreate?: InputMaybe<Array<WinStructFieldsConnectOrCreateFieldInput>>;
+  connect?: InputMaybe<Array<WinStructFieldsConnectFieldInput>>;
+  disconnect?: InputMaybe<Array<WinStructFieldsDisconnectFieldInput>>;
+  create?: InputMaybe<Array<WinStructFieldsCreateFieldInput>>;
+  update?: InputMaybe<WinStructFieldsUpdateConnectionInput>;
+  delete?: InputMaybe<Array<WinStructFieldsDeleteFieldInput>>;
+};
+
+export type WinStructFieldTypeAggregateInput = {
+  count?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  AND?: InputMaybe<Array<WinStructFieldTypeAggregateInput>>;
+  OR?: InputMaybe<Array<WinStructFieldTypeAggregateInput>>;
+  NOT?: InputMaybe<WinStructFieldTypeAggregateInput>;
+  node?: InputMaybe<WinStructFieldTypeNodeAggregationWhereInput>;
+};
+
+export type WinStructFieldTypeConnectFieldInput = {
+  where?: InputMaybe<WinDataTypeConnectWhere>;
+  /** Whether or not to overwrite any matching relationship with the new properties. */
+  overwrite?: Scalars["Boolean"]["input"];
+  connect?: InputMaybe<WinDataTypeConnectInput>;
+};
+
+export type WinStructFieldTypeConnectionSort = {
+  node?: InputMaybe<WinDataTypeSort>;
+};
+
+export type WinStructFieldTypeConnectionWhere = {
+  AND?: InputMaybe<Array<WinStructFieldTypeConnectionWhere>>;
+  OR?: InputMaybe<Array<WinStructFieldTypeConnectionWhere>>;
+  NOT?: InputMaybe<WinStructFieldTypeConnectionWhere>;
+  node?: InputMaybe<WinDataTypeWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_NOT?: InputMaybe<WinDataTypeWhere>;
+};
+
+export type WinStructFieldTypeConnectOrCreateFieldInput = {
+  where: WinDataTypeConnectOrCreateWhere;
+  onCreate: WinStructFieldTypeConnectOrCreateFieldInputOnCreate;
+};
+
+export type WinStructFieldTypeConnectOrCreateFieldInputOnCreate = {
+  node: WinDataTypeOnCreateInput;
+};
+
+export type WinStructFieldTypeCreateFieldInput = {
+  node: WinDataTypeCreateInput;
+};
+
+export type WinStructFieldTypeDeleteFieldInput = {
+  where?: InputMaybe<WinStructFieldTypeConnectionWhere>;
+  delete?: InputMaybe<WinDataTypeDeleteInput>;
+};
+
+export type WinStructFieldTypeDisconnectFieldInput = {
+  where?: InputMaybe<WinStructFieldTypeConnectionWhere>;
+  disconnect?: InputMaybe<WinDataTypeDisconnectInput>;
+};
+
+export type WinStructFieldTypeFieldInput = {
+  connectOrCreate?: InputMaybe<WinStructFieldTypeConnectOrCreateFieldInput>;
+  connect?: InputMaybe<WinStructFieldTypeConnectFieldInput>;
+  create?: InputMaybe<WinStructFieldTypeCreateFieldInput>;
+};
+
+export type WinStructFieldTypeNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<WinStructFieldTypeNodeAggregationWhereInput>>;
+  OR?: InputMaybe<Array<WinStructFieldTypeNodeAggregationWhereInput>>;
+  NOT?: InputMaybe<WinStructFieldTypeNodeAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  type_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  type_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  type_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  type_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  array_counter_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MIN_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MAX_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_SUM_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  array_counter_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MIN_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MAX_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_SUM_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  array_counter_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MIN_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MAX_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_SUM_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  array_counter_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MIN_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MAX_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_SUM_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  array_counter_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MIN_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_MAX_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_SUM_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  array_counter_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_position_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MIN_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MAX_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_SUM_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_position_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MIN_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MAX_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_SUM_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_position_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MIN_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MAX_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_SUM_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_position_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MIN_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MAX_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_SUM_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_position_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MIN_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_MAX_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_SUM_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_position_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_length_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MIN_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MAX_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_SUM_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_length_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MIN_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MAX_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_SUM_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_length_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MIN_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MAX_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_SUM_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_length_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MIN_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MAX_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_SUM_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  bit_length_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MIN_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_MAX_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_SUM_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  bit_length_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+};
+
+export type WinStructFieldTypeUpdateConnectionInput = {
+  node?: InputMaybe<WinDataTypeUpdateInput>;
+};
+
+export type WinStructFieldTypeUpdateFieldInput = {
+  where?: InputMaybe<WinStructFieldTypeConnectionWhere>;
+  connectOrCreate?: InputMaybe<WinStructFieldTypeConnectOrCreateFieldInput>;
+  connect?: InputMaybe<WinStructFieldTypeConnectFieldInput>;
+  disconnect?: InputMaybe<WinStructFieldTypeDisconnectFieldInput>;
+  create?: InputMaybe<WinStructFieldTypeCreateFieldInput>;
+  update?: InputMaybe<WinStructFieldTypeUpdateConnectionInput>;
+  delete?: InputMaybe<WinStructFieldTypeDeleteFieldInput>;
+};
+
+export type WinStructFieldUniqueWhere = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type WinStructFieldUpdateInput = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  type?: InputMaybe<WinStructFieldTypeUpdateFieldInput>;
+};
+
+export type WinStructFieldWhere = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  offset_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  offset_NOT_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  offset_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  OR?: InputMaybe<Array<WinStructFieldWhere>>;
+  AND?: InputMaybe<Array<WinStructFieldWhere>>;
+  NOT?: InputMaybe<WinStructFieldWhere>;
+  type?: InputMaybe<WinDataTypeWhere>;
+  type_NOT?: InputMaybe<WinDataTypeWhere>;
+  typeConnection?: InputMaybe<WinStructFieldTypeConnectionWhere>;
+  typeConnection_NOT?: InputMaybe<WinStructFieldTypeConnectionWhere>;
+  typeAggregate?: InputMaybe<WinStructFieldTypeAggregateInput>;
+};
+
+export type WinStructOnCreateInput = {
+  hash: Scalars["String"]["input"];
+  name: Scalars["String"]["input"];
+  size: Scalars["Int"]["input"];
+  kind: Scalars["String"]["input"];
+};
+
+export type WinStructOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more WinStructSort objects to sort WinStructs by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<WinStructSort>>;
+};
+
+export type WinStructRelationInput = {
+  fields?: InputMaybe<Array<WinStructFieldsCreateFieldInput>>;
+  blob?: InputMaybe<WinStructBlobCreateFieldInput>;
+};
+
+/** Fields to sort WinStructs by. The order in which sorts are applied is not guaranteed when specifying many fields in one WinStructSort object. */
+export type WinStructSort = {
+  hash?: InputMaybe<SortDirection>;
+  name?: InputMaybe<SortDirection>;
+  size?: InputMaybe<SortDirection>;
+  kind?: InputMaybe<SortDirection>;
+};
+
+export type WinStructUniqueWhere = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type WinStructUpdateInput = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  size?: InputMaybe<Scalars["Int"]["input"]>;
+  size_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  kind?: InputMaybe<Scalars["String"]["input"]>;
+  fields?: InputMaybe<Array<WinStructFieldsUpdateFieldInput>>;
+  blob?: InputMaybe<WinStructBlobUpdateFieldInput>;
+};
+
+export type WinStructWhere = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  size?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  size_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  size_NOT_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  size_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  size_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  kind?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  kind_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  kind_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  kind_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  kind_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  OR?: InputMaybe<Array<WinStructWhere>>;
+  AND?: InputMaybe<Array<WinStructWhere>>;
+  NOT?: InputMaybe<WinStructWhere>;
+  /** @deprecated Use `fields_SOME` instead. */
+  fields?: InputMaybe<WinStructFieldWhere>;
+  /** @deprecated Use `fields_NONE` instead. */
+  fields_NOT?: InputMaybe<WinStructFieldWhere>;
+  /** Return WinStructs where all of the related WinStructFields match this filter */
+  fields_ALL?: InputMaybe<WinStructFieldWhere>;
+  /** Return WinStructs where none of the related WinStructFields match this filter */
+  fields_NONE?: InputMaybe<WinStructFieldWhere>;
+  /** Return WinStructs where one of the related WinStructFields match this filter */
+  fields_SINGLE?: InputMaybe<WinStructFieldWhere>;
+  /** Return WinStructs where some of the related WinStructFields match this filter */
+  fields_SOME?: InputMaybe<WinStructFieldWhere>;
+  /** @deprecated Use `fieldsConnection_SOME` instead. */
+  fieldsConnection?: InputMaybe<WinStructFieldsConnectionWhere>;
+  /** @deprecated Use `fieldsConnection_NONE` instead. */
+  fieldsConnection_NOT?: InputMaybe<WinStructFieldsConnectionWhere>;
+  /** Return WinStructs where all of the related WinStructFieldsConnections match this filter */
+  fieldsConnection_ALL?: InputMaybe<WinStructFieldsConnectionWhere>;
+  /** Return WinStructs where none of the related WinStructFieldsConnections match this filter */
+  fieldsConnection_NONE?: InputMaybe<WinStructFieldsConnectionWhere>;
+  /** Return WinStructs where one of the related WinStructFieldsConnections match this filter */
+  fieldsConnection_SINGLE?: InputMaybe<WinStructFieldsConnectionWhere>;
+  /** Return WinStructs where some of the related WinStructFieldsConnections match this filter */
+  fieldsConnection_SOME?: InputMaybe<WinStructFieldsConnectionWhere>;
+  fieldsAggregate?: InputMaybe<WinStructFieldsAggregateInput>;
+  blob?: InputMaybe<BlobWhere>;
+  blob_NOT?: InputMaybe<BlobWhere>;
+  blobConnection?: InputMaybe<WinStructBlobConnectionWhere>;
+  blobConnection_NOT?: InputMaybe<WinStructBlobConnectionWhere>;
+  blobAggregate?: InputMaybe<WinStructBlobAggregateInput>;
+};
+
 export interface BlobAggregateSelectionInput {
   count?: boolean;
   hash?: boolean;
@@ -2545,7 +6811,10 @@ export declare class BlobModel {
   public update(args: {
     where?: BlobWhere;
     update?: BlobUpdateInput;
-
+    connect?: BlobConnectInput;
+    disconnect?: BlobDisconnectInput;
+    create?: BlobCreateInput;
+    connectOrCreate?: BlobConnectOrCreateInput;
     selectionSet?: string | DocumentNode | SelectionSetNode;
     args?: any;
     context?: any;
@@ -2553,7 +6822,7 @@ export declare class BlobModel {
   }): Promise<UpdateBlobsMutationResponse>;
   public delete(args: {
     where?: BlobWhere;
-
+    delete?: BlobDeleteInput;
     context?: any;
     rootValue?: any;
   }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
@@ -2715,6 +6984,309 @@ export declare class BranchModel {
   }): Promise<BranchAggregateSelection>;
 }
 
+export interface WinRegValueAggregateSelectionInput {
+  count?: boolean;
+  hash?: boolean;
+  type?: boolean;
+  value?: boolean;
+}
+
+export declare class WinRegValueModel {
+  public find(args?: {
+    where?: WinRegValueWhere;
+
+    options?: WinRegValueOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinRegValue[]>;
+  public create(args: {
+    input: WinRegValueCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateWinRegValuesMutationResponse>;
+  public update(args: {
+    where?: WinRegValueWhere;
+    update?: WinRegValueUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateWinRegValuesMutationResponse>;
+  public delete(args: {
+    where?: WinRegValueWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: WinRegValueWhere;
+
+    aggregate: WinRegValueAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinRegValueAggregateSelection>;
+}
+
+export interface WinRegKeyAggregateSelectionInput {
+  count?: boolean;
+  hash?: boolean;
+}
+
+export declare class WinRegKeyModel {
+  public find(args?: {
+    where?: WinRegKeyWhere;
+
+    options?: WinRegKeyOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinRegKey[]>;
+  public create(args: {
+    input: WinRegKeyCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateWinRegKeysMutationResponse>;
+  public update(args: {
+    where?: WinRegKeyWhere;
+    update?: WinRegKeyUpdateInput;
+    connect?: WinRegKeyConnectInput;
+    disconnect?: WinRegKeyDisconnectInput;
+    create?: WinRegKeyCreateInput;
+    connectOrCreate?: WinRegKeyConnectOrCreateInput;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateWinRegKeysMutationResponse>;
+  public delete(args: {
+    where?: WinRegKeyWhere;
+    delete?: WinRegKeyDeleteInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: WinRegKeyWhere;
+
+    aggregate: WinRegKeyAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinRegKeyAggregateSelection>;
+}
+
+export interface SymbolAggregateSelectionInput {
+  count?: boolean;
+  name?: boolean;
+}
+
+export declare class SymbolModel {
+  public find(args?: {
+    where?: SymbolWhere;
+
+    options?: SymbolOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<Symbol[]>;
+  public create(args: {
+    input: SymbolCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateSymbolsMutationResponse>;
+  public update(args: {
+    where?: SymbolWhere;
+    update?: SymbolUpdateInput;
+    connect?: SymbolConnectInput;
+    disconnect?: SymbolDisconnectInput;
+    create?: SymbolCreateInput;
+    connectOrCreate?: SymbolConnectOrCreateInput;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateSymbolsMutationResponse>;
+  public delete(args: {
+    where?: SymbolWhere;
+    delete?: SymbolDeleteInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: SymbolWhere;
+
+    aggregate: SymbolAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<SymbolAggregateSelection>;
+}
+
+export interface WinStructAggregateSelectionInput {
+  count?: boolean;
+  hash?: boolean;
+  name?: boolean;
+  size?: boolean;
+  kind?: boolean;
+}
+
+export declare class WinStructModel {
+  public find(args?: {
+    where?: WinStructWhere;
+
+    options?: WinStructOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinStruct[]>;
+  public create(args: {
+    input: WinStructCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateWinStructsMutationResponse>;
+  public update(args: {
+    where?: WinStructWhere;
+    update?: WinStructUpdateInput;
+    connect?: WinStructConnectInput;
+    disconnect?: WinStructDisconnectInput;
+    create?: WinStructCreateInput;
+    connectOrCreate?: WinStructConnectOrCreateInput;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateWinStructsMutationResponse>;
+  public delete(args: {
+    where?: WinStructWhere;
+    delete?: WinStructDeleteInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: WinStructWhere;
+
+    aggregate: WinStructAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinStructAggregateSelection>;
+}
+
+export interface WinStructFieldAggregateSelectionInput {
+  count?: boolean;
+  hash?: boolean;
+  name?: boolean;
+  offset?: boolean;
+}
+
+export declare class WinStructFieldModel {
+  public find(args?: {
+    where?: WinStructFieldWhere;
+
+    options?: WinStructFieldOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinStructField[]>;
+  public create(args: {
+    input: WinStructFieldCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateWinStructFieldsMutationResponse>;
+  public update(args: {
+    where?: WinStructFieldWhere;
+    update?: WinStructFieldUpdateInput;
+    connect?: WinStructFieldConnectInput;
+    disconnect?: WinStructFieldDisconnectInput;
+    create?: WinStructFieldCreateInput;
+    connectOrCreate?: WinStructFieldConnectOrCreateInput;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateWinStructFieldsMutationResponse>;
+  public delete(args: {
+    where?: WinStructFieldWhere;
+    delete?: WinStructFieldDeleteInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: WinStructFieldWhere;
+
+    aggregate: WinStructFieldAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinStructFieldAggregateSelection>;
+}
+
+export interface WinDataTypeAggregateSelectionInput {
+  count?: boolean;
+  hash?: boolean;
+  type?: boolean;
+  name?: boolean;
+  array_counter?: boolean;
+  bit_position?: boolean;
+  bit_length?: boolean;
+}
+
+export declare class WinDataTypeModel {
+  public find(args?: {
+    where?: WinDataTypeWhere;
+
+    options?: WinDataTypeOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinDataType[]>;
+  public create(args: {
+    input: WinDataTypeCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateWinDataTypesMutationResponse>;
+  public update(args: {
+    where?: WinDataTypeWhere;
+    update?: WinDataTypeUpdateInput;
+    connect?: WinDataTypeConnectInput;
+    disconnect?: WinDataTypeDisconnectInput;
+    create?: WinDataTypeCreateInput;
+    connectOrCreate?: WinDataTypeConnectOrCreateInput;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateWinDataTypesMutationResponse>;
+  public delete(args: {
+    where?: WinDataTypeWhere;
+    delete?: WinDataTypeDeleteInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: WinDataTypeWhere;
+
+    aggregate: WinDataTypeAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinDataTypeAggregateSelection>;
+}
+
 export interface DiffResultAggregateSelectionInput {
   count?: boolean;
 }
@@ -2854,12 +7426,68 @@ export declare class UserModel {
   }): Promise<UserAggregateSelection>;
 }
 
+export interface SearchResultAggregateSelectionInput {
+  count?: boolean;
+  commit_name?: boolean;
+  commit_hash?: boolean;
+  hash?: boolean;
+  path?: boolean;
+}
+
+export declare class SearchResultModel {
+  public find(args?: {
+    where?: SearchResultWhere;
+
+    options?: SearchResultOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<SearchResult[]>;
+  public create(args: {
+    input: SearchResultCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateSearchResultsMutationResponse>;
+  public update(args: {
+    where?: SearchResultWhere;
+    update?: SearchResultUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateSearchResultsMutationResponse>;
+  public delete(args: {
+    where?: SearchResultWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: SearchResultWhere;
+
+    aggregate: SearchResultAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<SearchResultAggregateSelection>;
+}
+
 export interface ModelMap {
   Blob: BlobModel;
   Tree: TreeModel;
   Commit: CommitModel;
   Branch: BranchModel;
+  WinRegValue: WinRegValueModel;
+  WinRegKey: WinRegKeyModel;
+  Symbol: SymbolModel;
+  WinStruct: WinStructModel;
+  WinStructField: WinStructFieldModel;
+  WinDataType: WinDataTypeModel;
   DiffResult: DiffResultModel;
   DiffItem: DiffItemModel;
   User: UserModel;
+  SearchResult: SearchResultModel;
 }

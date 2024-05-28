@@ -1,8 +1,9 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
 import { diffTreesRecursive } from "./diff.js";
 import { driver, ogm } from "./index.js";
-import { Commit } from "./ogm-types.js";
+import { Commit, SearchResult } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
+import { FSSearchResult, search_fs_fullpath } from "./search.js";
 
 // utils functions
 async function getTreeHashFromCommit(commitHash) {
@@ -43,37 +44,13 @@ const resolvers = {
         },
         async diffCommits(_source, { base_commit_hash, diffee_commit_hash }) {
             // find Commits based on hash
-            const Commit = ogm.model("Commit");
             try {
-                const arr_commit = await Promise.all(
-                    [base_commit_hash, diffee_commit_hash].map(async (hash) => {
-                        // select filesystem relationship and get the root Tree hash
-                        const selectionSet = `
-                        {
-                        hash
-                        filesystem {
-                            hash
-                        }
-                        }`;
-                        return Commit.find({
-                            selectionSet,
-                            where: {
-                                hash,
-                            },
-                        }).then((result) => {
-                            if (!result) {
-                                throw new Error(
-                                    `Commit hash ${hash} doesn't exists !`
-                                );
-                            }
-                            return result[0];
-                        });
-                    })
-                );
-                // get root trees hash
-                const [base_root_hash, diffee_root_hash] = arr_commit.map(
-                    (com) => com["filesystem"]["hash"]
-                );
+                // Get the tree hashes for both commits
+                const [base_root_hash, diffee_root_hash] = await Promise.all([
+                    getTreeHashFromCommit(base_commit_hash),
+                    getTreeHashFromCommit(diffee_commit_hash),
+                ]);
+
                 // TODO: diff them recursively
                 const diff_result = await diffTreesRecursive(
                     driver,
@@ -99,6 +76,21 @@ const resolvers = {
         },
         async traversePath(_source, { tree_hash, path }) {
             return await get_path_entry(driver, tree_hash, path);
+        },
+        async search(_source, { search_term }) {
+            const results: SearchResult[] = [];
+            for await (const result of search_fs_fullpath(
+                driver,
+                search_term
+            ) as AsyncGenerator<FSSearchResult>) {
+                results.push({
+                    commit_name: result.commit_name,
+                    commit_hash: result.commit_hash,
+                    hash: result.blob_hash,
+                    path: result.full_path,
+                });
+            }
+            return results;
         },
     },
     Mutation: {
