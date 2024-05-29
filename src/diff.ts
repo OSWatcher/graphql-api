@@ -238,7 +238,6 @@ async function diffTreesRecursive(
 
     // process NEW
     //      partition newitems between blobs and trees
-
     const [new_diff_blobs_arr, new_diff_trees] = partition_blobs(
         diff_result.get(DiffStatus.NEW)!
     );
@@ -262,7 +261,6 @@ async function diffTreesRecursive(
     for (const new_blob of diff_rec_result["newitems_path"]) {
         // update full path
         new_blob.path = path.join(current_path, new_blob.path);
-        // console.debug(`NEW: ${new_blob.path}`);
     }
 
     // process DEL
@@ -289,7 +287,6 @@ async function diffTreesRecursive(
     for (const del_blob of diff_rec_result["delitems_path"]) {
         // update full path
         del_blob.path = path.join(current_path, del_blob.path);
-        // console.debug(`DEL: ${del_blob.path}`);
     }
 
     // process MOD
@@ -321,11 +318,21 @@ async function diffTreesRecursive(
             ...sub_diff_result["moditems_path"]
         );
     });
+    for (const new_blob of diff_rec_result["newitems_path"]) {
+        // update full path
+        new_blob.path = path.join(current_path, new_blob.path);
+        // console.debug(`NEW: ${new_blob.path}`);
+    }
     // update all objects to set the path
     for (const mod_blob of diff_rec_result["moditems_path"]) {
         // update full path
         mod_blob.path = path.join(current_path, mod_blob.path);
         // console.debug(`MOD: ${mod_blob.path}`);
+    }
+    for (const del_blob of diff_rec_result["delitems_path"]) {
+        // update full path
+        del_blob.path = path.join(current_path, del_blob.path);
+        // console.debug(`DEL: ${del_blob.path}`);
     }
     return diff_rec_result;
 }
