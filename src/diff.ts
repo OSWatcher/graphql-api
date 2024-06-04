@@ -85,6 +85,8 @@ function* computeDifferences(
     }
 }
 
+// Note: return a list instead of a map of parent_hash -> child_hash
+// since Cypher doesn't support dynamic keys in map projections
 const DIFF_QUERY = `
 MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
 WHERE t.hash = $base
@@ -144,9 +146,14 @@ async function fetchRecusiveBlobs(
 
 async function diffTrees(
     session: Session,
-    base_hash: string,
-    diffee_hash: string
+    base_hash: string | null,
+    diffee_hash: string | null
 ): Promise<Map<DiffStatus, DiffObj[]>> {
+    // assert that at least one of the hashes is not null
+    if (base_hash == null && diffee_hash == null) {
+        throw new Error("At least one of the hashes should be not null");
+    }
+
     const result = await session.executeRead((tx) => {
         return tx.run(DIFF_QUERY, { base: base_hash, diffee: diffee_hash });
     });
@@ -162,18 +169,20 @@ async function diffTrees(
     //      }
     //
     // }
-    const map_records: Record<string, ComputeDiffMapType> = {
-        [base_hash]: {},
-        [diffee_hash]: {},
-    };
+    const map_records: Record<string, ComputeDiffMapType> = {};
 
-    // base_hash == parent_hash
-
+    // Note: if the parent_hash has no children
+    // map_records[parent_hash] will be undefined
     result.records.forEach((record) => {
         const parent_hash = record.get("parent_hash");
         const name = record.get("name");
         const rel = record.get("type");
         const child_hash = record.get("child_hash");
+
+        // Initialize the parent_hash entry if it doesn't exist
+        if (!map_records[parent_hash]) {
+            map_records[parent_hash] = {};
+        }
 
         map_records[parent_hash][name] = {
             type: getNodeTypeFromRel(rel),
@@ -181,14 +190,17 @@ async function diffTrees(
         };
     });
 
-    const map_base = map_records[base_hash];
-    const map_diffee = map_records[diffee_hash];
     // compute diff
     const diff_tree_result = new Map<DiffStatus, DiffObj[]>([
         [DiffStatus.NEW, []],
         [DiffStatus.MOD, []],
         [DiffStatus.DEL, []],
     ]);
+    // Initialize `map_base` as an empty object if `base_hash` is null or if `map_records` does not have an entry for `base_hash`.
+    const map_base: ComputeDiffMapType =
+        base_hash !== null ? map_records[base_hash] || {} : {};
+    const map_diffee: ComputeDiffMapType =
+        diffee_hash !== null ? map_records[diffee_hash] || {} : {};
 
     const new_iter = computeDifferences(map_diffee, map_base, DiffStatus.NEW);
     const del_iter = computeDifferences(map_base, map_diffee, DiffStatus.DEL);
@@ -213,11 +225,17 @@ function partition_blobs(diff_result: DiffObj[]): [DiffObj[], DiffObj[]] {
     );
 }
 
+/*
+    Given a base and diffee hash, diff the trees and blobs recursively
+    and return the result in a structured format
+
+    base_hash and diffee_hash can be null, but noth both at the same time
+*/
 async function diffTreesRecursive(
-    driver,
-    current_path: string,
-    base_hash: string,
-    diffee_hash: string
+    driver: Driver,
+    base_path: string,
+    base_hash: string | null,
+    diffee_hash: string | null
 ) {
     // result
     const diff_rec_result: {
@@ -260,7 +278,7 @@ async function diffTreesRecursive(
     // update all objects to set the path
     for (const new_blob of diff_rec_result["newitems_path"]) {
         // update full path
-        new_blob.path = path.join(current_path, new_blob.path);
+        new_blob.path = path.join(base_path, new_blob.path);
     }
 
     // process DEL
@@ -286,7 +304,7 @@ async function diffTreesRecursive(
     // update all objects to set the path
     for (const del_blob of diff_rec_result["delitems_path"]) {
         // update full path
-        del_blob.path = path.join(current_path, del_blob.path);
+        del_blob.path = path.join(base_path, del_blob.path);
     }
 
     // process MOD
@@ -320,18 +338,18 @@ async function diffTreesRecursive(
     });
     for (const new_blob of diff_rec_result["newitems_path"]) {
         // update full path
-        new_blob.path = path.join(current_path, new_blob.path);
+        new_blob.path = path.join(base_path, new_blob.path);
         // console.debug(`NEW: ${new_blob.path}`);
     }
     // update all objects to set the path
     for (const mod_blob of diff_rec_result["moditems_path"]) {
         // update full path
-        mod_blob.path = path.join(current_path, mod_blob.path);
+        mod_blob.path = path.join(base_path, mod_blob.path);
         // console.debug(`MOD: ${mod_blob.path}`);
     }
     for (const del_blob of diff_rec_result["delitems_path"]) {
         // update full path
-        del_blob.path = path.join(current_path, del_blob.path);
+        del_blob.path = path.join(base_path, del_blob.path);
         // console.debug(`DEL: ${del_blob.path}`);
     }
     return diff_rec_result;
