@@ -137,9 +137,10 @@ type SearchResult {
 
 # custom Queries
 type Query {
-    diffCommits(
+    diffCommitsAt(
         base_commit_hash: String!
         diffee_commit_hash: String!
+        path: String!
     ): DiffResult!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
