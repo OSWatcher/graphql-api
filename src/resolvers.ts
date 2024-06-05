@@ -48,12 +48,17 @@ const resolvers = {
                 base_commit_hash,
                 diffee_commit_hash,
                 path,
+                max_depth,
             }: {
                 base_commit_hash: string;
                 diffee_commit_hash: string;
                 path: string;
+                max_depth: number | null;
             }
         ) {
+            if (max_depth && max_depth < 0) {
+                throw new Error("Max depth should be a positive integer");
+            }
             // find Commits based on hash
             try {
                 // filesystem root hash from commits
@@ -72,7 +77,8 @@ const resolvers = {
                     driver,
                     path,
                     base_entry_at,
-                    diffee_entry_at
+                    diffee_entry_at,
+                    max_depth
                 );
 
                 return {
