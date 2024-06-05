@@ -125,6 +125,7 @@ type DiffResult {
 
 type DiffItem {
     path: String!
+    type: FsNodeType!
     old_hash: String
     new_hash: String
 }
