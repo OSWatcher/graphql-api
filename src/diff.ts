@@ -94,19 +94,30 @@ WHERE t.hash = $base
 RETURN t.hash as parent_hash, type(r) as type, r.name as name, c.hash as child_hash
 `;
 
-// recursive query to fetch all sub blobs under a given Tree
-const RECURSIVE_BLOBS_QUERY = `
-MATCH path = (t:Tree)-[:HAS_CHILD_BLOB|HAS_CHILD_TREE*]->(b:Blob)
-WHERE t.hash = $parent_hash
-RETURN [r IN relationships(path) | r.name] as path_parts, b.hash as blob_hash
-`;
-
 async function fetchRecusiveBlobs(
     driver: Driver,
     parent_tree_hash: string,
     parent_filename: string,
-    status: DiffStatus
+    status: DiffStatus,
+    max_depth: number | null = null
 ): Promise<DiffObj[]> {
+    if (max_depth != null) {
+        if (max_depth == 0) {
+            // 0 = current level only
+            // however for Cypher we need to traverse at least one relationship
+            max_depth = 1;
+        } else if (max_depth < 0) {
+            return [];
+        }
+    }
+    const var_length = max_depth != null ? `*1..${max_depth}` : "*";
+    // recursive query to fetch all sub blobs under a given Tree
+    // *1..n -> between 1 and n iterations
+    const RECURSIVE_BLOBS_QUERY = `
+MATCH path = (t:Tree)-[:HAS_CHILD_BLOB|HAS_CHILD_TREE${var_length}]->(b:Blob)
+WHERE t.hash = $parent_hash
+RETURN [r IN relationships(path) | r.name] as path_parts, b.hash as blob_hash
+`;
     const session = driver.session();
     try {
         const result = await session.executeRead((tx) => {
@@ -119,7 +130,7 @@ async function fetchRecusiveBlobs(
             path_parts	                                        blob_hash
         1   ["src", "main", "resources", "Unlicense"]           f6067df486cbdbb0aac026b799b26261c92734a3
         2   ["src", "main", "resources", "BSD License"]         d50f85b2ba155047d15ba915158350a18e76b710
-
+ 
         return [
             {
                 'rel_path': 'src/main/resources/Unlicense',
@@ -228,14 +239,15 @@ function partition_blobs(diff_result: DiffObj[]): [DiffObj[], DiffObj[]] {
 /*
     Given a base and diffee hash, diff the trees and blobs recursively
     and return the result in a structured format
-
+ 
     base_hash and diffee_hash can be null, but noth both at the same time
 */
 async function diffTreesRecursive(
     driver: Driver,
     base_path: string,
     base_hash: string | null,
-    diffee_hash: string | null
+    diffee_hash: string | null,
+    max_depth: number | null = null
 ) {
     // result
     const diff_rec_result: {
@@ -247,6 +259,10 @@ async function diffTreesRecursive(
         delitems_path: [],
         moditems_path: [],
     };
+    if (max_depth != null && max_depth < 0) {
+        // max depth reached
+        return diff_rec_result;
+    }
     // one transaction per session is allowed
     // so we need one session per diffTreesRecursive call
     const session = driver.session();
@@ -268,7 +284,8 @@ async function diffTreesRecursive(
                 driver,
                 diff_obj.new_hash!,
                 diff_obj.path,
-                DiffStatus.NEW
+                DiffStatus.NEW,
+                max_depth != null ? max_depth - 1 : null
             )
         )
     );
@@ -289,7 +306,8 @@ async function diffTreesRecursive(
                 driver,
                 diff_obj.old_hash!,
                 diff_obj.path,
-                DiffStatus.DEL
+                DiffStatus.DEL,
+                max_depth != null ? max_depth - 1 : null
             )
         )
     );
@@ -309,7 +327,8 @@ async function diffTreesRecursive(
                 driver,
                 diff_obj.path,
                 diff_obj.old_hash!,
-                diff_obj.new_hash!
+                diff_obj.new_hash!,
+                max_depth != null ? max_depth - 1 : null
             )
         )
     );
