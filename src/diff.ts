@@ -12,8 +12,8 @@ type DiffObj = {
     // NEW: new_hash is defined
     // DEL: old_hash is defined
     // MOD: both hashes are defined
-    old_hash: undefined | string;
-    new_hash: undefined | string;
+    old_hash: null | string;
+    new_hash: null | string;
 };
 
 enum NodeType {
@@ -73,11 +73,11 @@ function* computeDifferences(
                     old_hash:
                         status == DiffStatus.DEL
                             ? (value["hash"] as string)
-                            : undefined,
+                            : null,
                     new_hash:
                         status == DiffStatus.NEW
                             ? (value["hash"] as string)
-                            : undefined,
+                            : null,
                 };
                 yield diff_obj;
             }
@@ -134,8 +134,8 @@ async function fetchRecusiveBlobs(
                 status: status,
                 path: path.join(parent_filename, ...path_parts),
                 type: NodeType.Blob,
-                old_hash: status == DiffStatus.DEL ? blob_hash : undefined,
-                new_hash: status == DiffStatus.NEW ? blob_hash : undefined,
+                old_hash: status == DiffStatus.DEL ? blob_hash : null,
+                new_hash: status == DiffStatus.NEW ? blob_hash : null,
             };
             return diff_obj;
         });
