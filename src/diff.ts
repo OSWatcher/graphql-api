@@ -275,11 +275,6 @@ async function diffTreesRecursive(
     for (const arr of new_subblobs_arr) {
         diff_rec_result["newitems_path"].push(...arr);
     }
-    // update all objects to set the path
-    for (const new_blob of diff_rec_result["newitems_path"]) {
-        // update full path
-        new_blob.path = path.join(base_path, new_blob.path);
-    }
 
     // process DEL
     //      partition newitems between blobs and trees
@@ -300,11 +295,6 @@ async function diffTreesRecursive(
     );
     for (const arr of del_subblobs_arr) {
         diff_rec_result["delitems_path"].push(...arr);
-    }
-    // update all objects to set the path
-    for (const del_blob of diff_rec_result["delitems_path"]) {
-        // update full path
-        del_blob.path = path.join(base_path, del_blob.path);
     }
 
     // process MOD
