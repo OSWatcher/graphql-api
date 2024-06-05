@@ -42,21 +42,37 @@ const resolvers = {
             }
             return results;
         },
-        async diffCommits(_source, { base_commit_hash, diffee_commit_hash }) {
+        async diffCommitsAt(
+            _source,
+            {
+                base_commit_hash,
+                diffee_commit_hash,
+                path,
+            }: {
+                base_commit_hash: string;
+                diffee_commit_hash: string;
+                path: string;
+            }
+        ) {
             // find Commits based on hash
             try {
-                // Get the tree hashes for both commits
+                // filesystem root hash from commits
                 const [base_root_hash, diffee_root_hash] = await Promise.all([
                     getTreeHashFromCommit(base_commit_hash),
                     getTreeHashFromCommit(diffee_commit_hash),
                 ]);
 
-                // TODO: diff them recursively
+                // traverse the given path on both filesystems with get_path_entry()
+                const [base_entry_at, diffee_entry_at] = await Promise.all([
+                    get_path_entry(driver, base_root_hash, path),
+                    get_path_entry(driver, diffee_root_hash, path),
+                ]);
+
                 const diff_result = await diffTreesRecursive(
                     driver,
-                    "/",
-                    base_root_hash,
-                    diffee_root_hash
+                    path,
+                    base_entry_at,
+                    diffee_entry_at
                 );
 
                 return {
