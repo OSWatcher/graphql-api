@@ -1,5 +1,5 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
-import { diffTreesRecursive } from "./diff.js";
+import { diffTreesRecursive, NodeType } from "./diff.js";
 import { driver, ogm } from "./index.js";
 import { Commit, SearchResult } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
@@ -28,6 +28,19 @@ async function getTreeHashFromCommit(commitHash) {
     }
 
     return result[0].filesystem.hash;
+}
+
+const FsNodeTypeMapping = {
+    [NodeType.Blob]: "BLOB",
+    [NodeType.Tree]: "TREE",
+};
+
+function convertToFsNodeType(type) {
+    const fsNodeType = FsNodeTypeMapping[type];
+    if (!fsNodeType) {
+        throw new Error("Invalid NodeType");
+    }
+    return fsNodeType;
 }
 
 const resolvers = {
@@ -82,9 +95,24 @@ const resolvers = {
                 );
 
                 return {
-                    newitems: diff_result["newitems_path"],
-                    delitems: diff_result["delitems_path"],
-                    moditems: diff_result["moditems_path"],
+                    newitems: diff_result["newitems_path"].map((item) => {
+                        return {
+                            ...item,
+                            type: convertToFsNodeType(item.type),
+                        };
+                    }),
+                    delitems: diff_result["delitems_path"].map((item) => {
+                        return {
+                            ...item,
+                            type: convertToFsNodeType(item.type),
+                        };
+                    }),
+                    moditems: diff_result["moditems_path"].map((item) => {
+                        return {
+                            ...item,
+                            type: convertToFsNodeType(item.type),
+                        };
+                    }),
                 };
             } catch (error) {
                 console.error("Error in diffCommits: ", error);
