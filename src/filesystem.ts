@@ -4,7 +4,7 @@ async function get_path_entry(
     driver: Driver,
     root_fs_hash: string,
     path: string
-) {
+): Promise<string | null> {
     // path should be absolute
     if (!path.startsWith("/")) {
         throw new Error("Path should be absolute");
@@ -56,7 +56,7 @@ async function get_path_entry(
         // retrieve the hash and throw an error if no node found
         const [node] = finalResult.records.map((record) => record.get("c"));
         if (!node) {
-            throw new Error("FileNotFoundError: No such file " + lastPart);
+            return null;
         }
 
         return node.properties.hash;
