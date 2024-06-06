@@ -4,6 +4,11 @@ interface Hashable {
     hash: String!
 }
 
+enum FsNodeType {
+    BLOB
+    TREE
+}
+
 type Blob implements Hashable {
     hash: String! @unique
     has_winreg: WinRegKey @relationship(type: "HAS_WINREG", direction: OUT)
@@ -120,6 +125,7 @@ type DiffResult {
 
 type DiffItem {
     path: String!
+    type: FsNodeType!
     old_hash: String
     new_hash: String
 }
@@ -137,9 +143,11 @@ type SearchResult {
 
 # custom Queries
 type Query {
-    diffCommits(
+    diffCommitsAt(
         base_commit_hash: String!
         diffee_commit_hash: String!
+        path: String!
+        max_depth: Int
     ): DiffResult!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
