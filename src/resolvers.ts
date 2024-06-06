@@ -1,5 +1,5 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
-import { diffTreesRecursive } from "./diff.js";
+import { diffTreesRecursive, NodeType } from "./diff.js";
 import { driver, ogm } from "./index.js";
 import { Commit, SearchResult } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
@@ -30,6 +30,19 @@ async function getTreeHashFromCommit(commitHash) {
     return result[0].filesystem.hash;
 }
 
+const FsNodeTypeMapping = {
+    [NodeType.Blob]: "BLOB",
+    [NodeType.Tree]: "TREE",
+};
+
+function convertToFsNodeType(type) {
+    const fsNodeType = FsNodeTypeMapping[type];
+    if (!fsNodeType) {
+        throw new Error("Invalid NodeType");
+    }
+    return fsNodeType;
+}
+
 const resolvers = {
     Query: {
         async fetchCommitHistory(_source, { branch_name }) {
@@ -42,27 +55,64 @@ const resolvers = {
             }
             return results;
         },
-        async diffCommits(_source, { base_commit_hash, diffee_commit_hash }) {
+        async diffCommitsAt(
+            _source,
+            {
+                base_commit_hash,
+                diffee_commit_hash,
+                path,
+                max_depth,
+            }: {
+                base_commit_hash: string;
+                diffee_commit_hash: string;
+                path: string;
+                max_depth: number | null;
+            }
+        ) {
+            if (max_depth && max_depth < 0) {
+                throw new Error("Max depth should be a positive integer");
+            }
             // find Commits based on hash
             try {
-                // Get the tree hashes for both commits
+                // filesystem root hash from commits
                 const [base_root_hash, diffee_root_hash] = await Promise.all([
                     getTreeHashFromCommit(base_commit_hash),
                     getTreeHashFromCommit(diffee_commit_hash),
                 ]);
 
-                // TODO: diff them recursively
+                // traverse the given path on both filesystems with get_path_entry()
+                const [base_entry_at, diffee_entry_at] = await Promise.all([
+                    get_path_entry(driver, base_root_hash, path),
+                    get_path_entry(driver, diffee_root_hash, path),
+                ]);
+
                 const diff_result = await diffTreesRecursive(
                     driver,
-                    "/",
-                    base_root_hash,
-                    diffee_root_hash
+                    path,
+                    base_entry_at,
+                    diffee_entry_at,
+                    max_depth
                 );
 
                 return {
-                    newitems: diff_result["newitems_path"],
-                    delitems: diff_result["delitems_path"],
-                    moditems: diff_result["moditems_path"],
+                    newitems: diff_result["newitems_path"].map((item) => {
+                        return {
+                            ...item,
+                            type: convertToFsNodeType(item.type),
+                        };
+                    }),
+                    delitems: diff_result["delitems_path"].map((item) => {
+                        return {
+                            ...item,
+                            type: convertToFsNodeType(item.type),
+                        };
+                    }),
+                    moditems: diff_result["moditems_path"].map((item) => {
+                        return {
+                            ...item,
+                            type: convertToFsNodeType(item.type),
+                        };
+                    }),
                 };
             } catch (error) {
                 console.error("Error in diffCommits: ", error);
