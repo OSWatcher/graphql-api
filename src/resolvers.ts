@@ -67,10 +67,13 @@ const resolvers = {
                 base_commit_hash: string;
                 diffee_commit_hash: string;
                 at_path: string;
-                max_depth: number | null;
+                max_depth: number | null | undefined;
             }
         ) {
-            if (max_depth && max_depth < 0) {
+            // max_depth undefined ?
+            if (max_depth === undefined) {
+                max_depth = null;
+            } else if (max_depth && max_depth < 0) {
                 throw new Error("Max depth should be a positive integer");
             }
             // find Commits based on hash
