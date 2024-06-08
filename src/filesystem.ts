@@ -37,7 +37,7 @@ async function get_path_entry(
             const [node] = result.records.map((record) => record.get("c"));
 
             if (!node) {
-                throw new Error("FileNotFoundError: No such directory " + part);
+                return null;
             }
             currentParentHash = node.properties.hash;
         }
