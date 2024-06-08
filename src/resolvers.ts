@@ -4,6 +4,7 @@ import { driver, ogm } from "./index.js";
 import { Commit, SearchResult } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
+import path from "path";
 
 // utils functions
 async function getTreeHashFromCommit(commitHash) {
@@ -60,16 +61,19 @@ const resolvers = {
             {
                 base_commit_hash,
                 diffee_commit_hash,
-                path,
+                at_path,
                 max_depth,
             }: {
                 base_commit_hash: string;
                 diffee_commit_hash: string;
-                path: string;
-                max_depth: number | null;
+                at_path: string;
+                max_depth: number | null | undefined;
             }
         ) {
-            if (max_depth && max_depth < 0) {
+            // max_depth undefined ?
+            if (max_depth === undefined) {
+                max_depth = null;
+            } else if (max_depth && max_depth < 0) {
                 throw new Error("Max depth should be a positive integer");
             }
             // find Commits based on hash
@@ -82,13 +86,13 @@ const resolvers = {
 
                 // traverse the given path on both filesystems with get_path_entry()
                 const [base_entry_at, diffee_entry_at] = await Promise.all([
-                    get_path_entry(driver, base_root_hash, path),
-                    get_path_entry(driver, diffee_root_hash, path),
+                    get_path_entry(driver, base_root_hash, at_path),
+                    get_path_entry(driver, diffee_root_hash, at_path),
                 ]);
 
                 const diff_result = await diffTreesRecursive(
                     driver,
-                    path,
+                    at_path,
                     base_entry_at,
                     diffee_entry_at,
                     max_depth
@@ -98,18 +102,21 @@ const resolvers = {
                     newitems: diff_result["newitems_path"].map((item) => {
                         return {
                             ...item,
+                            path: path.relative(at_path, item.path),
                             type: convertToFsNodeType(item.type),
                         };
                     }),
                     delitems: diff_result["delitems_path"].map((item) => {
                         return {
                             ...item,
+                            path: path.relative(at_path, item.path),
                             type: convertToFsNodeType(item.type),
                         };
                     }),
                     moditems: diff_result["moditems_path"].map((item) => {
                         return {
                             ...item,
+                            path: path.relative(at_path, item.path),
                             type: convertToFsNodeType(item.type),
                         };
                     }),
