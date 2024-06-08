@@ -277,7 +277,10 @@ async function diffTreesRecursive(
     );
     diff_rec_result["newitems_path"].push(...new_diff_blobs_arr);
 
-    if (max_depth != null && max_depth > 0) {
+    if (max_depth != null && max_depth == 0) {
+        // add new trees as is
+        diff_rec_result["newitems_path"].push(...new_diff_trees);
+    } else {
         // process new subtrees and get their blobs recursively
         const new_subblobs_arr: DiffObj[][] = await Promise.all(
             new_diff_trees.map((diff_obj) =>
@@ -293,11 +296,7 @@ async function diffTreesRecursive(
         for (const arr of new_subblobs_arr) {
             diff_rec_result["newitems_path"].push(...arr);
         }
-    } else {
-        // add new trees as is
-        diff_rec_result["newitems_path"].push(...new_diff_trees);
     }
-
     // process DEL
     //      partition newitems between blobs and trees
     const [del_diff_blobs_arr, del_diff_trees_arr] = partition_blobs(
@@ -305,7 +304,10 @@ async function diffTreesRecursive(
     );
     diff_rec_result["delitems_path"].push(...del_diff_blobs_arr);
 
-    if (max_depth != null && max_depth > 0) {
+    if (max_depth != null && max_depth == 0) {
+        // add del trees as is
+        diff_rec_result["delitems_path"].push(...del_diff_trees_arr);
+    } else {
         // process subtrees
         const del_subblobs_arr: DiffObj[][] = await Promise.all(
             del_diff_trees_arr.map((diff_obj) =>
@@ -321,9 +323,6 @@ async function diffTreesRecursive(
         for (const arr of del_subblobs_arr) {
             diff_rec_result["delitems_path"].push(...arr);
         }
-    } else {
-        // add del trees as is
-        diff_rec_result["delitems_path"].push(...del_diff_trees_arr);
     }
     // process MOD
     const [mod_diff_blobs_arr, mod_diff_trees_arr] = partition_blobs(
@@ -331,7 +330,10 @@ async function diffTreesRecursive(
     );
     diff_rec_result["moditems_path"].push(...mod_diff_blobs_arr);
 
-    if (max_depth != null && max_depth > 0) {
+    if (max_depth != null && max_depth == 0) {
+        // add mod trees as is
+        diff_rec_result["moditems_path"].push(...mod_diff_trees_arr);
+    } else {
         // process subtrees
         const sub_diff_result_arr = await Promise.all(
             mod_diff_trees_arr.map((diff_obj) =>
@@ -357,9 +359,6 @@ async function diffTreesRecursive(
                 ...sub_diff_result["moditems_path"]
             );
         });
-    } else {
-        // add mod trees as is
-        diff_rec_result["moditems_path"].push(...mod_diff_trees_arr);
     }
     for (const new_blob of diff_rec_result["newitems_path"]) {
         // update full path

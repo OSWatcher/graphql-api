@@ -146,7 +146,7 @@ type Query {
     diffCommitsAt(
         base_commit_hash: String!
         diffee_commit_hash: String!
-        path: String!
+        at_path: String!
         max_depth: Int
     ): DiffResult!
     # fetches the commit history of a branch
