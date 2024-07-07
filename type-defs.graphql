@@ -39,6 +39,7 @@ type Tree implements Hashable {
 type Commit implements Hashable {
     hash: String! @unique
     name: String!
+    description: String
     date: String!
     previous: Commit @relationship(type: "HAS_PREVIOUS", direction: OUT)
     filesystem: Tree @relationship(type: "OWNS_FILESYSTEM", direction: OUT)
