@@ -28,6 +28,7 @@ async function* fetch_commit_history(
             const commit: Commit = {
                 hash: commitProps.hash,
                 name: commitProps.name,
+                description: commitProps.description,
                 date: commitProps.date,
                 previousConnection: commitProps.previousConnection,
                 filesystem: commitProps.filesystem,
