@@ -269,7 +269,7 @@ async function* diffTreesParallel(
 }
 
 async function diffTrees(
-    session: Session,
+    driver: Driver,
     base_hash: string | null,
     diffee_hash: string | null
 ): Promise<Map<DiffStatus, DiffObj[]>> {
@@ -278,7 +278,7 @@ async function diffTrees(
         throw new Error("At least one of the hashes should be not null");
     }
 
-    const result = await session.executeRead((tx) => {
+    const result = await driver.session().executeRead((tx) => {
         return tx.run(DIFF_QUERY, { base: base_hash, diffee: diffee_hash });
     });
     // reduce records into a map
@@ -356,7 +356,7 @@ function* updateAndYieldDiffs(diffs: DiffObj[], base_path: string): Generator<Di
     }
 }
 
-async function* diffTreesIterative(
+async function* diffTreesIterativeParallel(
     driver: Driver,
     base_path: string,
     base_hash: string | null,
@@ -438,6 +438,83 @@ async function* diffTreesIterative(
         }
     }
 }
+
+
+async function* diffTreesIterative(
+    driver: Driver,
+    base_path: string,
+    base_hash: string | null,
+    diffee_hash: string | null,
+    max_depth: number | null = null
+): AsyncGenerator<DiffObj, void, void> {
+    const stack = [{ hash_diff: { base: base_hash, diffee: diffee_hash, path: base_path }, depth: 0 }];
+
+    while (stack.length > 0) {
+        const { hash_diff, depth } = stack.pop()!;
+
+        if (max_depth != null && depth < 0) {
+            // max depth reached
+            return;
+        }
+
+        const diff_result = await diffTrees(driver, hash_diff.base, hash_diff.diffee);
+
+        // partition trees and blobs
+        const [new_diff_blobs, new_diff_trees] = partition_blobs(diff_result.get(DiffStatus.NEW)!);
+        const [del_diff_blobs, del_diff_trees] = partition_blobs(diff_result.get(DiffStatus.DEL)!);
+        const [mod_diff_blobs, mod_diff_trees] = partition_blobs(diff_result.get(DiffStatus.MOD)!);
+
+        // yield current blobs
+        yield* updateAndYieldDiffs(new_diff_blobs, hash_diff.path!);
+        yield* updateAndYieldDiffs(del_diff_blobs, hash_diff.path!);
+        yield* updateAndYieldDiffs(mod_diff_blobs, hash_diff.path!);
+
+        // reached max depth ?
+        if (max_depth != null && depth >= max_depth) {
+            // yield trees as is
+            yield* updateAndYieldDiffs(new_diff_trees, hash_diff.path!);
+            yield* updateAndYieldDiffs(del_diff_trees, hash_diff.path!);
+            yield* updateAndYieldDiffs(mod_diff_trees, hash_diff.path!);
+        } else {
+            // NEW
+            const new_subblobs_arr: DiffObj[][] = await Promise.all(
+                new_diff_trees.map((diff_obj) =>
+                    fetchRecusiveBlobs(
+                        driver,
+                        diff_obj.new_hash!,
+                        diff_obj.path,
+                        DiffStatus.NEW,
+                        max_depth != null ? max_depth - depth : null
+                    )
+                )
+            );
+            for (const arr of new_subblobs_arr) {
+                yield* updateAndYieldDiffs(arr, hash_diff.path!);
+            }
+            // DEL
+            const del_subblobs_arr: DiffObj[][] = await Promise.all(
+                del_diff_trees.map((diff_obj) =>
+                    fetchRecusiveBlobs(
+                        driver,
+                        diff_obj.old_hash!,
+                        diff_obj.path,
+                        DiffStatus.DEL,
+                        max_depth != null ? max_depth - depth : null
+                    )
+                )
+            );
+            for (const arr of del_subblobs_arr) {
+                yield* updateAndYieldDiffs(arr, hash_diff.path!);
+            }
+            // MOD
+            // stack push
+            for (const diff_obj of mod_diff_trees) {
+                stack.push({ hash_diff: { base: diff_obj.old_hash, diffee: diff_obj.new_hash, path: path.join(hash_diff.path!, diff_obj.path) }, depth: depth + 1 })
+            }
+        }
+    }
+}
+
 /*
     Given a base and diffee hash, diff the trees and blobs recursively
     and return the result in a structured format
@@ -467,9 +544,7 @@ async function diffTreesRecursive(
     }
     // one transaction per session is allowed
     // so we need one session per diffTreesRecursive call
-    const session = driver.session();
-    const diff_result = await diffTrees(session, base_hash, diffee_hash);
-    session.close();
+    const diff_result = await diffTrees(driver, base_hash, diffee_hash);
     // we need to process Trees first since we need to run subqueries
 
     // process NEW
