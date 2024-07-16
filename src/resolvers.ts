@@ -1,5 +1,5 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
-import { diffTreesRecursive, NodeType } from "./diff.js";
+import { diffTreesIterative, NodeType, DiffObj } from "./diff.js";
 import { driver, ogm } from "./index.js";
 import { Commit, SearchResult } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
@@ -90,13 +90,19 @@ const resolvers = {
                     get_path_entry(driver, diffee_root_hash, at_path),
                 ]);
 
-                const diff_result = await diffTreesRecursive(
-                    driver,
-                    at_path,
-                    base_entry_at,
-                    diffee_entry_at,
-                    max_depth
-                );
+                for await (const diff_obj of diffTreesIterative(driver, at_path, base_entry_at, diffee_entry_at, max_depth)) {
+                    console.log(diff_obj);
+                }
+
+                const diff_result: {
+                    newitems_path: DiffObj[];
+                    delitems_path: DiffObj[];
+                    moditems_path: DiffObj[];
+                } = {
+                    newitems_path: [],
+                    delitems_path: [],
+                    moditems_path: [],
+                };
 
                 return {
                     newitems: diff_result["newitems_path"].map((item) => {
