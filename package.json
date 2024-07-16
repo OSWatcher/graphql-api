@@ -12,11 +12,12 @@
     "gentypes": "node gentypes.js",
     "build": "npx tsc",
     "serve": "npm run build && npm run serve_from_build",
-    "serve_from_build": "node dist/index.js",
+    "serve_from_build": "node dist/src/index.js",
     "format": "prettier --write 'src/*.ts'",
     "format-check": "prettier --check 'src/*.ts'",
     "lint": "npx eslint . --ext .ts",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "profile": "node --prof dist/src/index.js"
   },
   "keywords": [],
   "author": "Mathieu Tarral",
