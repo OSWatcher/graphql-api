@@ -656,4 +656,4 @@ async function diffTreesRecursive(
     return diff_rec_result;
 }
 
-export { diffTreesRecursive, diffTreesIterative, DiffObj, NodeType };
+export { diffTreesRecursive, diffTreesIterative, DiffObj, NodeType, DiffStatus };
