@@ -1,5 +1,5 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
-import { diffTreesIterative, diffTreesRecursive, NodeType, DiffObj, DiffStatus } from "./diff.js";
+import { diffTreesIterative, NodeType, DiffObj, DiffStatus } from "./diff.js";
 import { driver, ogm } from "./index.js";
 import { Commit, SearchResult } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
@@ -113,11 +113,6 @@ const resolvers = {
                             break
                     }
                 }
-
-                // const diff_result = await diffTreesRecursive(
-                //     driver, at_path, base_entry_at, diffee_entry_at, max_depth
-                // )
-
 
                 return {
                     newitems: diff_result["newitems_path"],
