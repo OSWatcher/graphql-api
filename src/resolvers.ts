@@ -100,24 +100,42 @@ const resolvers = {
                     moditems_path: [],
                 };
 
-                for await (const diff_obj of diffTreesIterative(driver, at_path, base_entry_at, diffee_entry_at, max_depth)) {
+                for await (const diff_obj of diffTreesIterative(
+                    driver,
+                    at_path,
+                    base_entry_at,
+                    diffee_entry_at,
+                    max_depth
+                )) {
                     switch (diff_obj.status) {
                         case DiffStatus.NEW:
-                            diff_result.newitems_path.push({ ...diff_obj, path: path.relative(at_path, diff_obj.path), type: convertToFsNodeType(diff_obj.type) })
+                            diff_result.newitems_path.push({
+                                ...diff_obj,
+                                path: path.relative(at_path, diff_obj.path),
+                                type: convertToFsNodeType(diff_obj.type),
+                            });
                             break;
                         case DiffStatus.DEL:
-                            diff_result.delitems_path.push({ ...diff_obj, path: path.relative(at_path, diff_obj.path), type: convertToFsNodeType(diff_obj.type) })
+                            diff_result.delitems_path.push({
+                                ...diff_obj,
+                                path: path.relative(at_path, diff_obj.path),
+                                type: convertToFsNodeType(diff_obj.type),
+                            });
                             break;
                         case DiffStatus.MOD:
-                            diff_result.moditems_path.push({ ...diff_obj, path: path.relative(at_path, diff_obj.path), type: convertToFsNodeType(diff_obj.type) })
-                            break
+                            diff_result.moditems_path.push({
+                                ...diff_obj,
+                                path: path.relative(at_path, diff_obj.path),
+                                type: convertToFsNodeType(diff_obj.type),
+                            });
+                            break;
                     }
                 }
 
                 return {
                     newitems: diff_result["newitems_path"],
                     delitems: diff_result["delitems_path"],
-                    moditems: diff_result["moditems_path"]
+                    moditems: diff_result["moditems_path"],
                 };
             } catch (error) {
                 console.error("Error in diffCommits: ", error);
