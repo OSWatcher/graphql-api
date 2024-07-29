@@ -1,4 +1,4 @@
-import { Driver, Session } from "neo4j-driver";
+import { Driver } from "neo4j-driver";
 import path from "path";
 
 type DiffObj = {
@@ -51,7 +51,7 @@ function* computeDifferences(
     mapA: ComputeDiffMapType,
     mapB: ComputeDiffMapType,
     status: DiffStatus
-): IterableIterator<DiffObj> {
+): Generator<DiffObj> {
     if (status == DiffStatus.MOD) {
         for (const [key, value] of Object.entries(mapA)) {
             if (key in mapB) {
@@ -221,17 +221,11 @@ function fromDiffTreeRecordIntoMapFilename(
     return map_records;
 }
 
-function computeDiffTree(
+function* computeDiffTreeGen(
     map_records: Record<string, ComputeDiffMapType>,
     base_hash: string | null,
     diffee_hash: string | null
-): Map<DiffStatus, DiffObj[]> {
-    // compute diff
-    const diff_tree_result = new Map<DiffStatus, DiffObj[]>([
-        [DiffStatus.NEW, []],
-        [DiffStatus.MOD, []],
-        [DiffStatus.DEL, []],
-    ]);
+): Generator<DiffObj> {
     // Initialize `map_base` as an empty object if `base_hash` is null or if `map_records` does not have an entry for `base_hash`.
     const map_base: ComputeDiffMapType =
         base_hash !== null ? map_records[base_hash] || {} : {};
@@ -239,14 +233,11 @@ function computeDiffTree(
         diffee_hash !== null ? map_records[diffee_hash] || {} : {};
 
     const new_iter = computeDifferences(map_diffee, map_base, DiffStatus.NEW);
+    yield* new_iter;
     const del_iter = computeDifferences(map_base, map_diffee, DiffStatus.DEL);
+    yield* del_iter;
     const mod_iter = computeDifferences(map_base, map_diffee, DiffStatus.MOD);
-
-    // push results
-    diff_tree_result.get(DiffStatus.NEW)!.push(...new_iter);
-    diff_tree_result.get(DiffStatus.DEL)!.push(...del_iter);
-    diff_tree_result.get(DiffStatus.MOD)!.push(...mod_iter);
-    return diff_tree_result;
+    yield* mod_iter;
 }
 
 async function* diffTreesParallel(
@@ -255,7 +246,7 @@ async function* diffTreesParallel(
 ): AsyncGenerator<[HashDiff, Map<DiffStatus, DiffObj[]>], void, void> {
     const session = driver.session();
     try {
-        const cursor = await driver.session().executeRead(async (tx) => {
+        const cursor = await session.executeRead(async (tx) => {
             return tx.run(DIFF_PARALLEL_QUERY, { hash_list: diff_hash_list });
         });
 
@@ -264,7 +255,18 @@ async function* diffTreesParallel(
             const base_hash = record.get("value")["base_hash"];
             const diffee_hash = record.get("value")["diffee_hash"];
             const base_path = record.get("value")["base_path"];
-            const diff = computeDiffTree(map_records, base_hash, diffee_hash);
+            const diff = new Map<DiffStatus, DiffObj[]>([
+                [DiffStatus.NEW, []],
+                [DiffStatus.MOD, []],
+                [DiffStatus.DEL, []],
+            ]);
+            for (const diff_obj of computeDiffTreeGen(
+                map_records,
+                base_hash,
+                diffee_hash
+            )) {
+                diff.get(diff_obj.status)!.push(diff_obj);
+            }
             const hashdiff = {
                 base: base_hash,
                 diffee: diffee_hash,
@@ -277,73 +279,58 @@ async function* diffTreesParallel(
     }
 }
 
-async function diffTrees(
+async function* diffTrees(
     driver: Driver,
     base_hash: string | null,
     diffee_hash: string | null
-): Promise<Map<DiffStatus, DiffObj[]>> {
+): AsyncGenerator<DiffObj> {
     // assert that at least one of the hashes is not null
     if (base_hash == null && diffee_hash == null) {
         throw new Error("At least one of the hashes should be not null");
     }
 
-    const result = await driver.session().executeRead((tx) => {
-        return tx.run(DIFF_QUERY, { base: base_hash, diffee: diffee_hash });
-    });
-    // reduce records into a map
-    // {
-    //      base_hash: {
-    //          filename1: {
-    //              'type': ''HAS_CHILD_BLOB' | 'HASH_CHILD_TREE'
-    //              'hash': d86xxxxx
-    //            },
-    //      },
-    //      diffee_hash: {
-    //      }
-    //
-    // }
-    const map_records: Record<string, ComputeDiffMapType> = {};
+    const session = driver.session();
+    try {
+        const cursor = await session.executeRead(async (tx) => {
+            return tx.run(DIFF_QUERY, { base: base_hash, diffee: diffee_hash });
+        });
 
-    // Note: if the parent_hash has no children
-    // map_records[parent_hash] will be undefined
-    result.records.forEach((record) => {
-        const parent_hash = record.get("parent_hash");
-        const name = record.get("name");
-        const rel = record.get("type");
-        const child_hash = record.get("child_hash");
+        // reduce records into a map
+        // {
+        //      base_hash: {
+        //          filename1: {
+        //              'type': ''HAS_CHILD_BLOB' | 'HASH_CHILD_TREE'
+        //              'hash': d86xxxxx
+        //            },
+        //      },
+        //      diffee_hash: {
+        //      }
+        //
+        // }
+        const map_records: Record<string, ComputeDiffMapType> = {};
 
-        // Initialize the parent_hash entry if it doesn't exist
-        if (!map_records[parent_hash]) {
-            map_records[parent_hash] = {};
+        // Note: if the parent_hash has no children
+        // map_records[parent_hash] will be undefined
+        for await (const record of cursor.records) {
+            const parent_hash = record.get("parent_hash");
+            const name = record.get("name");
+            const rel = record.get("type");
+            const child_hash = record.get("child_hash");
+
+            // Initialize the parent_hash entry if it doesn't exist
+            if (!map_records[parent_hash]) {
+                map_records[parent_hash] = {};
+            }
+
+            map_records[parent_hash][name] = {
+                type: getNodeTypeFromRel(rel),
+                hash: child_hash,
+            };
         }
-
-        map_records[parent_hash][name] = {
-            type: getNodeTypeFromRel(rel),
-            hash: child_hash,
-        };
-    });
-
-    // compute diff
-    const diff_tree_result = new Map<DiffStatus, DiffObj[]>([
-        [DiffStatus.NEW, []],
-        [DiffStatus.MOD, []],
-        [DiffStatus.DEL, []],
-    ]);
-    // Initialize `map_base` as an empty object if `base_hash` is null or if `map_records` does not have an entry for `base_hash`.
-    const map_base: ComputeDiffMapType =
-        base_hash !== null ? map_records[base_hash] || {} : {};
-    const map_diffee: ComputeDiffMapType =
-        diffee_hash !== null ? map_records[diffee_hash] || {} : {};
-
-    const new_iter = computeDifferences(map_diffee, map_base, DiffStatus.NEW);
-    const del_iter = computeDifferences(map_base, map_diffee, DiffStatus.DEL);
-    const mod_iter = computeDifferences(map_base, map_diffee, DiffStatus.MOD);
-
-    // push results
-    diff_tree_result.get(DiffStatus.NEW)!.push(...new_iter);
-    diff_tree_result.get(DiffStatus.DEL)!.push(...del_iter);
-    diff_tree_result.get(DiffStatus.MOD)!.push(...mod_iter);
-    return diff_tree_result;
+        yield* computeDiffTreeGen(map_records, base_hash, diffee_hash);
+    } finally {
+        await session.close();
+    }
 }
 
 function partition_blobs(diff_result: DiffObj[]): [DiffObj[], DiffObj[]] {
@@ -495,38 +482,46 @@ async function* diffTreesIterative(
             return;
         }
 
-        const diff_result = await diffTrees(
+        const diff_trees = new Map<DiffStatus, DiffObj[]>([
+            [DiffStatus.NEW, []],
+            [DiffStatus.MOD, []],
+            [DiffStatus.DEL, []],
+        ]);
+
+        for await (const diff_obj of diffTrees(
             driver,
             hash_diff.base,
             hash_diff.diffee
-        );
-
-        // partition trees and blobs
-        const [new_diff_blobs, new_diff_trees] = partition_blobs(
-            diff_result.get(DiffStatus.NEW)!
-        );
-        const [del_diff_blobs, del_diff_trees] = partition_blobs(
-            diff_result.get(DiffStatus.DEL)!
-        );
-        const [mod_diff_blobs, mod_diff_trees] = partition_blobs(
-            diff_result.get(DiffStatus.MOD)!
-        );
-
-        // yield current blobs
-        yield* updateAndYieldDiffs(new_diff_blobs, hash_diff.path!);
-        yield* updateAndYieldDiffs(del_diff_blobs, hash_diff.path!);
-        yield* updateAndYieldDiffs(mod_diff_blobs, hash_diff.path!);
+        )) {
+            // blob ?
+            if (diff_obj.type == NodeType.Blob) {
+                diff_obj.path = path.join(hash_diff.path!, diff_obj.path);
+                yield diff_obj;
+                continue;
+            }
+            // tree
+            diff_trees.get(diff_obj.status)!.push(diff_obj);
+        }
 
         // reached max depth ?
         if (max_depth != null && depth >= max_depth) {
             // yield trees as is
-            yield* updateAndYieldDiffs(new_diff_trees, hash_diff.path!);
-            yield* updateAndYieldDiffs(del_diff_trees, hash_diff.path!);
-            yield* updateAndYieldDiffs(mod_diff_trees, hash_diff.path!);
+            yield* updateAndYieldDiffs(
+                diff_trees.get(DiffStatus.NEW)!,
+                hash_diff.path!
+            );
+            yield* updateAndYieldDiffs(
+                diff_trees.get(DiffStatus.DEL)!,
+                hash_diff.path!
+            );
+            yield* updateAndYieldDiffs(
+                diff_trees.get(DiffStatus.MOD)!,
+                hash_diff.path!
+            );
         } else {
             // NEW
             const new_subblobs_arr: DiffObj[][] = await Promise.all(
-                new_diff_trees.map((diff_obj) =>
+                diff_trees.get(DiffStatus.NEW)!.map((diff_obj) =>
                     fetchRecusiveBlobs(
                         driver,
                         diff_obj.new_hash!,
@@ -541,7 +536,7 @@ async function* diffTreesIterative(
             }
             // DEL
             const del_subblobs_arr: DiffObj[][] = await Promise.all(
-                del_diff_trees.map((diff_obj) =>
+                diff_trees.get(DiffStatus.DEL)!.map((diff_obj) =>
                     fetchRecusiveBlobs(
                         driver,
                         diff_obj.old_hash!,
@@ -556,7 +551,7 @@ async function* diffTreesIterative(
             }
             // MOD
             // stack push
-            for (const diff_obj of mod_diff_trees) {
+            for (const diff_obj of diff_trees.get(DiffStatus.MOD)!) {
                 stack.push({
                     hash_diff: {
                         base: diff_obj.old_hash,
