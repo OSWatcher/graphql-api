@@ -1,13 +1,13 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
-import { diffTreesIterative, NodeType, DiffObj, DiffStatus } from "./diff.js";
+import { diffTreesIterative, NodeType, DiffObj, DiffStatus, DiffResult } from "./diff.js";
 import { driver, ogm } from "./index.js";
-import { Commit, SearchResult } from "./ogm-types.js";
+import { Commit, FsNodeType, SearchResult } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
 import path from "path";
 
 // utils functions
-async function getTreeHashFromCommit(commitHash) {
+async function getTreeHashFromCommit(commitHash: string) {
     const Commit = ogm.model("Commit");
     const selectionSet = `
     {
@@ -36,7 +36,7 @@ const FsNodeTypeMapping = {
     [NodeType.Tree]: "TREE",
 };
 
-function convertToFsNodeType(type) {
+function convertToFsNodeType(type: NodeType): string {
     const fsNodeType = FsNodeTypeMapping[type];
     if (!fsNodeType) {
         throw new Error("Invalid NodeType: " + type);
@@ -46,7 +46,8 @@ function convertToFsNodeType(type) {
 
 const resolvers = {
     Query: {
-        async fetchCommitHistory(_source, { branch_name }) {
+        async fetchCommitHistory(_source: unknown, args: { branch_name: string }) {
+            const { branch_name } = args;
             const results: Commit[] = [];
             for await (const commit of fetch_commit_history(
                 driver,
@@ -57,7 +58,7 @@ const resolvers = {
             return results;
         },
         async diffCommitsAt(
-            _source,
+            _source: unknown,
             {
                 base_commit_hash,
                 diffee_commit_hash,
@@ -90,14 +91,10 @@ const resolvers = {
                     get_path_entry(driver, diffee_root_hash, at_path),
                 ]);
 
-                const diff_result: {
-                    newitems_path: DiffObj[];
-                    delitems_path: DiffObj[];
-                    moditems_path: DiffObj[];
-                } = {
-                    newitems_path: [],
-                    delitems_path: [],
-                    moditems_path: [],
+                const diff_result: DiffResult = {
+                    newitems: [],
+                    delitems: [],
+                    moditems: [],
                 };
 
                 for await (const diff_obj of diffTreesIterative(
@@ -109,34 +106,27 @@ const resolvers = {
                 )) {
                     switch (diff_obj.status) {
                         case DiffStatus.NEW:
-                            diff_result.newitems_path.push({
+                            diff_result.newitems.push({
                                 ...diff_obj,
                                 path: path.relative(at_path, diff_obj.path),
-                                type: convertToFsNodeType(diff_obj.type),
                             });
                             break;
                         case DiffStatus.DEL:
-                            diff_result.delitems_path.push({
+                            diff_result.delitems.push({
                                 ...diff_obj,
                                 path: path.relative(at_path, diff_obj.path),
-                                type: convertToFsNodeType(diff_obj.type),
                             });
                             break;
                         case DiffStatus.MOD:
-                            diff_result.moditems_path.push({
+                            diff_result.moditems.push({
                                 ...diff_obj,
                                 path: path.relative(at_path, diff_obj.path),
-                                type: convertToFsNodeType(diff_obj.type),
                             });
                             break;
                     }
                 }
 
-                return {
-                    newitems: diff_result["newitems_path"],
-                    delitems: diff_result["delitems_path"],
-                    moditems: diff_result["moditems_path"],
-                };
+                return diff_result
             } catch (error) {
                 console.error("Error in diffCommits: ", error);
                 throw new Error(
@@ -144,14 +134,17 @@ const resolvers = {
                 );
             }
         },
-        async getCommitExtractedDataLabels(_source, { commit_hash }) {
+        async getCommitExtractedDataLabels(_source: unknown, args: { commit_hash: string }) {
+            const { commit_hash } = args;
             return get_commit_capabilities(driver, commit_hash);
         },
-        async traversePath(_source, { tree_hash, path }) {
+        async traversePath(_source: unknown, args: { tree_hash: string, path: string }) {
+            const { tree_hash, path } = args;
             return await get_path_entry(driver, tree_hash, path);
         },
-        async search(_source, { search_term }) {
+        async search(_source: unknown, args: { search_term: string }) {
             const results: SearchResult[] = [];
+            const { search_term } = args;
             for await (const result of search_fs_fullpath(
                 driver,
                 search_term
@@ -167,8 +160,9 @@ const resolvers = {
         },
     },
     Mutation: {
-        async mergeTree(_source, { input }) {
+        async mergeTree(_source: unknown, args: { input: Record<string, any> }) {
             const session = driver.session();
+            const { input } = args;
             const prom = session.executeWrite((tx) => {
                 // merge parent tree
                 tx.run("MERGE (parent:Tree {hash: $hash})", {
@@ -218,13 +212,13 @@ const resolvers = {
         },
     },
     DiffResult: {
-        newitems: (parent, _args, _context) => {
+        newitems: (parent: DiffResult, _args: unknown, _context: unknown) => {
             return parent["newitems"];
         },
-        delitems: (parent, _args, _context) => {
+        delitems: (parent: DiffResult, _args: unknown, _context: unknown) => {
             return parent["delitems"];
         },
-        moditems: (parent, _args, _context) => {
+        moditems: (parent: DiffResult, _args: unknown, _context: unknown) => {
             return parent["moditems"];
         },
     },

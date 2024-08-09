@@ -23,14 +23,20 @@ type HashDiff = {
 };
 
 enum NodeType {
-    Blob,
-    Tree,
+    Blob = "BLOB",
+    Tree = "TREE",
 }
 
 enum DiffStatus {
-    NEW,
-    MOD,
-    DEL,
+    NEW = "NEW",
+    MOD = "MOD",
+    DEL = "DEL",
+}
+
+type DiffResult = {
+    newitems: DiffObj[];
+    delitems: DiffObj[];
+    moditems: DiffObj[];
 }
 
 // helpers
@@ -174,7 +180,7 @@ RETURN [r IN relationships(path) | r.name] as path_parts, b.hash as blob_hash
 }
 
 function fromDiffTreeRecordIntoMapFilename(
-    record
+    record: any
 ): Record<string, ComputeDiffMapType> {
     /*
         record is a Neo4j Record object like this
@@ -565,4 +571,4 @@ async function* diffTreesIterative(
     }
 }
 
-export { diffTreesIterative, DiffObj, NodeType, DiffStatus };
+export { diffTreesIterative, DiffObj, NodeType, DiffStatus, DiffResult };
