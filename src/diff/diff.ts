@@ -1,9 +1,9 @@
 import { Driver } from "neo4j-driver";
 import path from "path";
 import { DIFF_QUERY, RECURSIVE_BLOBS_QUERY } from "../queries.js";
-import { DiffObj, DiffStatus, NodeType, DiffQueryResult, DiffMap } from "./types.js";
-import { getNodeTypeFromRel, updateAndYieldDiffs } from "./utils.js";
-import { computeDiffTreeGen } from "./core.js";
+import { DiffObj, DiffStatus, NodeType, } from "./types.js";
+import { updateAndYieldDiffs } from "./utils.js";
+import { parseDiffQueryResultAsDiffMap, computeDiffTreeGen } from "./core.js";
 
 
 async function fetchRecusiveBlobs(
@@ -165,37 +165,7 @@ async function* diffTrees(
         const cursor = await session.executeRead(async (tx) => {
             return tx.run(DIFF_QUERY, { base: base_hash, diffee: diffee_hash });
         })
-
-        // reduce records into a map
-        // {
-        //      base_hash: {
-        //          filename1: {
-        //              'type': ''HAS_CHILD_BLOB' | 'HASH_CHILD_TREE'
-        //              'hash': d86xxxxx
-        //            },
-        //      },
-        //      diffee_hash: {
-        //      }
-        //
-        // }
-        const map_records: DiffMap = {};
-
-        // Note: if the parent_hash has no children
-        // map_records[parent_hash] will be undefined
-        for await (const record of cursor.records) {
-            const result = record.toObject() as DiffQueryResult;
-            const { parent_hash, name, type: rel, child_hash } = result;
-
-            // Initialize the parent_hash entry if it doesn't exist
-            if (!map_records[parent_hash]) {
-                map_records[parent_hash] = {};
-            }
-
-            map_records[parent_hash][name] = {
-                type: getNodeTypeFromRel(rel),
-                hash: child_hash,
-            };
-        }
+        const map_records = await parseDiffQueryResultAsDiffMap(base_hash, diffee_hash, cursor);
         yield* computeDiffTreeGen(map_records, base_hash, diffee_hash);
     } finally {
         await session.close();

@@ -1,4 +1,45 @@
-import { DiffMap, DiffObj, DiffStatus, NodeType, DirectoryContentsMap } from "./types.js";
+import { QueryResult, RecordShape } from "neo4j-driver";
+import { DiffMap, DiffObj, DiffStatus, NodeType, DirectoryContentsMap, DiffQueryResult } from "./types.js";
+import { getNodeTypeFromRel } from "./utils.js";
+
+export async function parseDiffQueryResultAsDiffMap(
+    base_hash: string | null,
+    diffee_hash: string | null,
+    cursor: QueryResult<RecordShape>
+): Promise<DiffMap> {
+    // reduce records into a map
+    // {
+    //      base_hash: {
+    //          filename1: {
+    //              'type': ''HAS_CHILD_BLOB' | 'HASH_CHILD_TREE'
+    //              'hash': d86xxxxx
+    //            },
+    //      },
+    //      diffee_hash: {
+    //      }
+    //
+    // }
+    const map_records: DiffMap = {}
+    if (base_hash !== null) {
+        map_records[base_hash] = {};
+    }
+    if (diffee_hash !== null) {
+        map_records[diffee_hash] = {};
+    }
+
+    // Note: if the parent_hash has no children
+    // map_records[parent_hash] will be undefined
+    for await (const record of cursor.records) {
+        const result = record.toObject() as DiffQueryResult;
+        const { parent_hash, name, type: rel, child_hash } = result;
+
+        map_records[parent_hash][name] = {
+            type: getNodeTypeFromRel(rel),
+            hash: child_hash,
+        };
+    }
+    return map_records;
+}
 
 function* computeDifferences(
     mapA: DirectoryContentsMap,
