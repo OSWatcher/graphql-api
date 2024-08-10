@@ -5,7 +5,7 @@ import {
     DiffResult,
     NodeType,
     DiffObj,
-} from "./diff.js";
+} from "./diff/diff.js";
 import {
     Commit,
     SearchResult,

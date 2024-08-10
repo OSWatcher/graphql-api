@@ -1,58 +1,9 @@
 import { Driver } from "neo4j-driver";
 import path from "path";
-import { DIFF_QUERY, RECURSIVE_BLOBS_QUERY } from "./queries.js";
+import { DIFF_QUERY, RECURSIVE_BLOBS_QUERY } from "../queries.js";
+import { ComputeDiffMapType, DiffObj, DiffStatus, NodeType, DiffResult } from "./types.js";
+import { getNodeTypeFromRel } from "./utils.js";
 
-type DiffObj = {
-    // status of the diff (NEW / MOD / DEL)
-    status: DiffStatus;
-    type: NodeType;
-    // object path. If relative the it refer to the filename only
-    path: string;
-    // old and new hash values, defined depending on the DiffStatus
-    // depends on status
-    // NEW: new_hash is defined
-    // DEL: old_hash is defined
-    // MOD: both hashes are defined
-    old_hash: null | string;
-    new_hash: null | string;
-};
-
-// type HashDiff = {
-//     base: string | null;
-//     diffee: string | null;
-//     path: string | null;
-// };
-
-enum NodeType {
-    Blob,
-    Tree,
-}
-
-enum DiffStatus {
-    NEW,
-    MOD,
-    DEL,
-}
-
-type DiffResult = {
-    newitems: DiffObj[];
-    delitems: DiffObj[];
-    moditems: DiffObj[];
-};
-
-// helpers
-function getNodeTypeFromRel(relationship: string): NodeType {
-    switch (relationship) {
-        case "HAS_CHILD_BLOB":
-            return NodeType.Blob;
-        case "HAS_CHILD_TREE":
-            return NodeType.Tree;
-        default:
-            throw Error(`Unexpected relationship ${relationship}`);
-    }
-}
-
-type ComputeDiffMapType = Record<string, Record<string, NodeType | string>>;
 
 function* computeDifferences(
     mapA: ComputeDiffMapType,
@@ -285,7 +236,7 @@ async function* diffTrees(
     try {
         const cursor = await session.executeRead(async (tx) => {
             return tx.run(DIFF_QUERY, { base: base_hash, diffee: diffee_hash });
-        });
+        })
 
         // reduce records into a map
         // {
