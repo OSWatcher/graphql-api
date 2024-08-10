@@ -1,7 +1,7 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
-import { diffTreesIterative, NodeType, DiffObj, DiffStatus, DiffResult } from "./diff.js";
+import { diffTreesIterative, DiffStatus, DiffResult } from "./diff.js";
 import { driver, ogm } from "./index.js";
-import { Commit, FsNodeType, SearchResult } from "./ogm-types.js";
+import { Commit, SearchResult } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
 import path from "path";
@@ -29,19 +29,6 @@ async function getTreeHashFromCommit(commitHash: string) {
     }
 
     return result[0].filesystem.hash;
-}
-
-const FsNodeTypeMapping = {
-    [NodeType.Blob]: "BLOB",
-    [NodeType.Tree]: "TREE",
-};
-
-function convertToFsNodeType(type: NodeType): string {
-    const fsNodeType = FsNodeTypeMapping[type];
-    if (!fsNodeType) {
-        throw new Error("Invalid NodeType: " + type);
-    }
-    return fsNodeType;
 }
 
 const resolvers = {
@@ -160,7 +147,7 @@ const resolvers = {
         },
     },
     Mutation: {
-        async mergeTree(_source: unknown, args: { input: Record<string, any> }) {
+        async mergeTree(_source: unknown, args: { input: Record<string, unknown> }) {
             const session = driver.session();
             const { input } = args;
             const prom = session.executeWrite((tx) => {
