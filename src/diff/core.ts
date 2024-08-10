@@ -1,8 +1,8 @@
-import { ComputeDiffMapType, DiffObj, DiffStatus, NodeType } from "./types.js";
+import { DiffMap, DiffObj, DiffStatus, NodeType, DirectoryContentsMap } from "./types.js";
 
 function* computeDifferences(
-    mapA: ComputeDiffMapType,
-    mapB: ComputeDiffMapType,
+    mapA: DirectoryContentsMap,
+    mapB: DirectoryContentsMap,
     status: DiffStatus
 ): Generator<DiffObj> {
     if (status == DiffStatus.MOD) {
@@ -45,14 +45,14 @@ function* computeDifferences(
 }
 
 export function* computeDiffTreeGen(
-    map_records: Record<string, ComputeDiffMapType>,
+    map_records: DiffMap,
     base_hash: string | null,
     diffee_hash: string | null
 ): Generator<DiffObj> {
     // Initialize `map_base` as an empty object if `base_hash` is null or if `map_records` does not have an entry for `base_hash`.
-    const map_base: ComputeDiffMapType =
+    const map_base: DirectoryContentsMap =
         base_hash !== null ? map_records[base_hash] || {} : {};
-    const map_diffee: ComputeDiffMapType =
+    const map_diffee: DirectoryContentsMap =
         diffee_hash !== null ? map_records[diffee_hash] || {} : {};
 
     const new_iter = computeDifferences(map_diffee, map_base, DiffStatus.NEW);
