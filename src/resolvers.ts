@@ -1,11 +1,6 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
-import {
-    diffTreesIterative,
-    DiffStatus,
-    DiffResult,
-    NodeType,
-    DiffObj,
-} from "./diff/diff.js";
+import { diffTreesIterative } from "./diff/diff.js";
+import { DiffStatus, DiffResult, NodeType, DiffObj } from "./diff/types.js";
 import {
     Commit,
     SearchResult,

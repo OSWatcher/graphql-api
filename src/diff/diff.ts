@@ -1,7 +1,7 @@
 import { Driver } from "neo4j-driver";
 import path from "path";
 import { DIFF_QUERY, RECURSIVE_BLOBS_QUERY } from "../queries.js";
-import { ComputeDiffMapType, DiffObj, DiffStatus, NodeType, DiffResult } from "./types.js";
+import { ComputeDiffMapType, DiffObj, DiffStatus, NodeType } from "./types.js";
 import { getNodeTypeFromRel } from "./utils.js";
 
 
@@ -387,7 +387,7 @@ function* updateAndYieldDiffs(
 //     }
 // }
 
-async function* diffTreesIterative(
+export async function* diffTreesIterative(
     driver: Driver,
     base_path: string,
     base_hash: string | null,
@@ -499,5 +499,3 @@ async function* diffTreesIterative(
         }
     }
 }
-
-export { diffTreesIterative, DiffObj, NodeType, DiffStatus, DiffResult };
