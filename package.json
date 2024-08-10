@@ -16,6 +16,7 @@
     "format": "prettier --write 'src/*.ts'",
     "format-check": "prettier --check 'src/*.ts'",
     "lint": "npx eslint . --ext .ts",
+    "ccode": "npm run format && npm run lint",
     "test": "jest",
     "test:watch": "jest --watch",
     "profile": "node --prof dist/src/index.js"
