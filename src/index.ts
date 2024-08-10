@@ -37,7 +37,12 @@ const ogm = new OGM({ typeDefs, driver });
 await ogm.init();
 
 async function main() {
-    const neoSchema = new Neo4jGraphQL({ typeDefs, driver, resolvers });
+    const instanciatedResolvers = resolvers(driver, ogm);
+    const neoSchema = new Neo4jGraphQL({
+        typeDefs,
+        driver,
+        resolvers: instanciatedResolvers,
+    });
 
     const server = new ApolloServer({
         schema: await neoSchema.getSchema(),
@@ -52,5 +57,3 @@ async function main() {
 }
 
 main();
-
-export { driver, ogm };
