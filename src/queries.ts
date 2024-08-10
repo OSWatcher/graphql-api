@@ -15,6 +15,18 @@ WHERE t.hash = $parent_hash
 RETURN [r IN relationships(path) | r.name] as path_parts, b.hash as blob_hash
 `;
 
+// const DIFF_PARALLEL_QUERY = `
+// CALL apoc.cypher.mapParallel(
+//     'MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
+//     WHERE t.hash IN [_.base, _.diffee]
+//     WITH _, t.hash as parent_hash, collect({type: type(r), name: r.name, hash: c.hash}) as children
+//     RETURN collect({parent_hash: parent_hash, children: children}) as result, _.base as base_hash, _.diffee as diffee_hash, _.path as base_path',
+//     {},
+//     $hash_list
+// ) YIELD value
+// RETURN value
+// `;
+
 // search
 export const searchFSFullPathQuery = `
 MATCH (c:Commit)-[:OWNS_FILESYSTEM]->(root:Tree)-[r:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)

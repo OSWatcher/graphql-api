@@ -49,18 +49,6 @@ function* computeDifferences(
     }
 }
 
-// const DIFF_PARALLEL_QUERY = `
-// CALL apoc.cypher.mapParallel(
-//     'MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
-//     WHERE t.hash IN [_.base, _.diffee]
-//     WITH _, t.hash as parent_hash, collect({type: type(r), name: r.name, hash: c.hash}) as children
-//     RETURN collect({parent_hash: parent_hash, children: children}) as result, _.base as base_hash, _.diffee as diffee_hash, _.path as base_path',
-//     {},
-//     $hash_list
-// ) YIELD value
-// RETURN value
-// `;
-
 async function fetchRecusiveBlobs(
     driver: Driver,
     parent_tree_hash: string,
