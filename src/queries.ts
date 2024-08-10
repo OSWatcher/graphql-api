@@ -32,3 +32,10 @@ RETURN c
 `;
 
 export const GET_FINAL_NODE = GET_CHILD_NODE;
+
+// constraints
+export const createConstraintQuery = (label: string) => `
+CREATE CONSTRAINT ${label.toLowerCase()}_hash_unique IF NOT EXISTS
+FOR (n:${label})
+REQUIRE n.hash IS UNIQUE
+`;

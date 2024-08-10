@@ -2,6 +2,7 @@
 // https://neo4j.com/docs/cypher-manual/current/deprecations-additions-removals-compatibility/#cypher-deprecations-additions-removals-4.4
 
 import { Driver } from "neo4j-driver";
+import { createConstraintQuery } from "./queries.js";
 
 async function createConstraintsIfNotExists(driver: Driver) {
     const session = driver.session();
@@ -9,11 +10,7 @@ async function createConstraintsIfNotExists(driver: Driver) {
         await session.executeWrite(async (tx) => {
             const label_array = ["Blob", "Tree", "Commit"];
             const promises = label_array.map((label) =>
-                tx.run(`
-                CREATE CONSTRAINT ${label.toLowerCase()}_hash_unique IF NOT EXISTS
-                FOR (n:${label})
-                REQUIRE n.hash IS UNIQUE
-            `)
+                tx.run(createConstraintQuery(label))
             );
             await Promise.all(promises);
         });
