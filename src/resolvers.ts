@@ -1,7 +1,7 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
 import { diffTreesIterative, DiffStatus, DiffResult } from "./diff.js";
 import { driver, ogm } from "./index.js";
-import { Commit, SearchResult } from "./ogm-types.js";
+import { Commit, SearchResult, TreeCreateInput } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
 import path from "path";
@@ -156,18 +156,22 @@ const resolvers = {
         },
     },
     Mutation: {
-        async mergeTree(
-            _source: unknown,
-            args: { input: Record<string, unknown> }
-        ) {
-            const session = driver.session();
+        async mergeTree(_source: unknown, args: { input: TreeCreateInput }) {
             const { input } = args;
+
+            // Add assertion for input
+            if (input === null || input === undefined) {
+                throw new Error("Input cannot be null or undefined");
+            }
+
+            const session = driver.session();
             const prom = session.executeWrite((tx) => {
                 // merge parent tree
                 tx.run("MERGE (parent:Tree {hash: $hash})", {
                     hash: input["hash"],
                 });
-                if ("child_blobs" in input) {
+
+                if (input["child_blobs"] && input["child_blobs"]["create"]) {
                     // merge blobs with relationships
                     tx.run(
                         `
@@ -183,7 +187,8 @@ const resolvers = {
                         }
                     );
                 }
-                if ("child_trees" in input) {
+
+                if (input["child_trees"] && input["child_trees"]["create"]) {
                     // merge trees with relationships
                     tx.run(
                         `
