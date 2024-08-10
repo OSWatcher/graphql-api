@@ -23,3 +23,12 @@ WITH commit_name, commit_hash, b.hash AS blob_hash, apoc.text.join(path_parts, '
 WHERE full_path CONTAINS $search_expr
 RETURN commit_name, commit_hash, blob_hash, full_path
 `;
+
+// filesystem
+export const GET_CHILD_NODE = `
+MATCH (p)-[r]->(c)
+WHERE p.hash = $parent_hash AND r.name = $filename
+RETURN c
+`;
+
+export const GET_FINAL_NODE = GET_CHILD_NODE;
