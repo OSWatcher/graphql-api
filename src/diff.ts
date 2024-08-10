@@ -1,5 +1,6 @@
 import { Driver } from "neo4j-driver";
 import path from "path";
+import { DIFF_QUERY, RECURSIVE_BLOBS_QUERY } from "./queries.js";
 
 type DiffObj = {
     // status of the diff (NEW / MOD / DEL)
@@ -97,15 +98,6 @@ function* computeDifferences(
     }
 }
 
-// Note: return a list instead of a map of parent_hash -> child_hash
-// since Cypher doesn't support dynamic keys in map projections
-const DIFF_QUERY = `
-MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
-WHERE t.hash = $base
-    OR t.hash = $diffee
-RETURN t.hash as parent_hash, type(r) as type, r.name as name, c.hash as child_hash
-`;
-
 // const DIFF_PARALLEL_QUERY = `
 // CALL apoc.cypher.mapParallel(
 //     'MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
@@ -135,17 +127,11 @@ async function fetchRecusiveBlobs(
         }
     }
     const var_length = max_depth != null ? `*1..${max_depth}` : "*";
-    // recursive query to fetch all sub blobs under a given Tree
-    // *1..n -> between 1 and n iterations
-    const RECURSIVE_BLOBS_QUERY = `
-MATCH path = (t:Tree)-[:HAS_CHILD_BLOB|HAS_CHILD_TREE${var_length}]->(b:Blob)
-WHERE t.hash = $parent_hash
-RETURN [r IN relationships(path) | r.name] as path_parts, b.hash as blob_hash
-`;
+    const query = RECURSIVE_BLOBS_QUERY(var_length);
     const session = driver.session();
     try {
         const result = await session.executeRead((tx) => {
-            return tx.run(RECURSIVE_BLOBS_QUERY, {
+            return tx.run(query, {
                 parent_hash: parent_tree_hash,
             });
         });
