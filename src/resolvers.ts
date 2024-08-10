@@ -33,7 +33,10 @@ async function getTreeHashFromCommit(commitHash: string) {
 
 const resolvers = {
     Query: {
-        async fetchCommitHistory(_source: unknown, args: { branch_name: string }) {
+        async fetchCommitHistory(
+            _source: unknown,
+            args: { branch_name: string }
+        ) {
             const { branch_name } = args;
             const results: Commit[] = [];
             for await (const commit of fetch_commit_history(
@@ -113,7 +116,7 @@ const resolvers = {
                     }
                 }
 
-                return diff_result
+                return diff_result;
             } catch (error) {
                 console.error("Error in diffCommits: ", error);
                 throw new Error(
@@ -121,11 +124,17 @@ const resolvers = {
                 );
             }
         },
-        async getCommitExtractedDataLabels(_source: unknown, args: { commit_hash: string }) {
+        async getCommitExtractedDataLabels(
+            _source: unknown,
+            args: { commit_hash: string }
+        ) {
             const { commit_hash } = args;
             return get_commit_capabilities(driver, commit_hash);
         },
-        async traversePath(_source: unknown, args: { tree_hash: string, path: string }) {
+        async traversePath(
+            _source: unknown,
+            args: { tree_hash: string; path: string }
+        ) {
             const { tree_hash, path } = args;
             return await get_path_entry(driver, tree_hash, path);
         },
@@ -147,7 +156,10 @@ const resolvers = {
         },
     },
     Mutation: {
-        async mergeTree(_source: unknown, args: { input: Record<string, unknown> }) {
+        async mergeTree(
+            _source: unknown,
+            args: { input: Record<string, unknown> }
+        ) {
             const session = driver.session();
             const { input } = args;
             const prom = session.executeWrite((tx) => {

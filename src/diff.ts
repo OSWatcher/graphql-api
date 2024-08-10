@@ -37,7 +37,7 @@ type DiffResult = {
     newitems: DiffObj[];
     delitems: DiffObj[];
     moditems: DiffObj[];
-}
+};
 
 // helpers
 function getNodeTypeFromRel(relationship: string): NodeType {
@@ -527,30 +527,34 @@ async function* diffTreesIterative(
         } else {
             // NEW
             const new_subblobs_arr: DiffObj[][] = await Promise.all(
-                diff_trees.get(DiffStatus.NEW)!.map((diff_obj) =>
-                    fetchRecusiveBlobs(
-                        driver,
-                        diff_obj.new_hash!,
-                        diff_obj.path,
-                        DiffStatus.NEW,
-                        max_depth != null ? max_depth - depth : null
+                diff_trees
+                    .get(DiffStatus.NEW)!
+                    .map((diff_obj) =>
+                        fetchRecusiveBlobs(
+                            driver,
+                            diff_obj.new_hash!,
+                            diff_obj.path,
+                            DiffStatus.NEW,
+                            max_depth != null ? max_depth - depth : null
+                        )
                     )
-                )
             );
             for (const arr of new_subblobs_arr) {
                 yield* updateAndYieldDiffs(arr, hash_diff.path!);
             }
             // DEL
             const del_subblobs_arr: DiffObj[][] = await Promise.all(
-                diff_trees.get(DiffStatus.DEL)!.map((diff_obj) =>
-                    fetchRecusiveBlobs(
-                        driver,
-                        diff_obj.old_hash!,
-                        diff_obj.path,
-                        DiffStatus.DEL,
-                        max_depth != null ? max_depth - depth : null
+                diff_trees
+                    .get(DiffStatus.DEL)!
+                    .map((diff_obj) =>
+                        fetchRecusiveBlobs(
+                            driver,
+                            diff_obj.old_hash!,
+                            diff_obj.path,
+                            DiffStatus.DEL,
+                            max_depth != null ? max_depth - depth : null
+                        )
                     )
-                )
             );
             for (const arr of del_subblobs_arr) {
                 yield* updateAndYieldDiffs(arr, hash_diff.path!);
