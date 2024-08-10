@@ -1,7 +1,7 @@
 import { Driver } from "neo4j-driver";
 import path from "path";
 import { DIFF_QUERY, RECURSIVE_BLOBS_QUERY } from "../queries.js";
-import { ComputeDiffMapType, DiffObj, DiffStatus, NodeType } from "./types.js";
+import { DiffObj, DiffStatus, NodeType, DiffQueryResult, DiffMap } from "./types.js";
 import { getNodeTypeFromRel, updateAndYieldDiffs } from "./utils.js";
 import { computeDiffTreeGen } from "./core.js";
 
@@ -178,15 +178,13 @@ async function* diffTrees(
         //      }
         //
         // }
-        const map_records: Record<string, ComputeDiffMapType> = {};
+        const map_records: DiffMap = {};
 
         // Note: if the parent_hash has no children
         // map_records[parent_hash] will be undefined
         for await (const record of cursor.records) {
-            const parent_hash = record.get("parent_hash");
-            const name = record.get("name");
-            const rel = record.get("type");
-            const child_hash = record.get("child_hash");
+            const result = record.toObject() as DiffQueryResult;
+            const { parent_hash, name, type: rel, child_hash } = result;
 
             // Initialize the parent_hash entry if it doesn't exist
             if (!map_records[parent_hash]) {

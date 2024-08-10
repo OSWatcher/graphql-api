@@ -36,4 +36,31 @@ export type DiffObj = {
 //     path: string | null;
 // };
 
-export type ComputeDiffMapType = Record<string, Record<string, NodeType | string>>;
+type Hash = string;
+type Filename = string;
+interface TreeNode {
+    type: NodeType;
+    hash: Hash;
+}
+export type DirectoryContentsMap = Record<Filename, TreeNode>;
+
+
+// {
+//      base_hash: {
+//          filename1: {
+//              'type': ''HAS_CHILD_BLOB' | 'HASH_CHILD_TREE'
+//              'hash': d86xxxxx
+//            },
+//      },
+//      diffee_hash: {
+//      }
+//
+// }
+export type DiffMap = Record<Hash, DirectoryContentsMap>;
+
+export interface DiffQueryResult {
+    parent_hash: string;
+    name: string;
+    type: string;
+    child_hash: string;
+}
