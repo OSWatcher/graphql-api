@@ -1,4 +1,5 @@
 import { Driver } from "neo4j-driver";
+import { GET_CHILD_NODE, GET_FINAL_NODE } from "./queries.js";
 
 async function get_path_entry(
     driver: Driver,
@@ -25,12 +26,7 @@ async function get_path_entry(
         // Traverse through the path parts to find the final Tree or Blob
         for (let i = 0; i < pathParts.length - 1; i++) {
             const part = pathParts[i];
-            const query = `
-            MATCH (p)-[r]->(c)
-            WHERE p.hash = $parent_hash AND r.name = $filename
-            RETURN c
-            `;
-            const result = await session.run(query, {
+            const result = await session.run(GET_CHILD_NODE, {
                 parent_hash: currentParentHash,
                 filename: part,
             });
@@ -44,12 +40,7 @@ async function get_path_entry(
 
         // The last part of the path, could be a Tree or Blob
         const lastPart = pathParts[pathParts.length - 1];
-        const finalQuery = `
-        MATCH (p)-[r]->(c)
-        WHERE p.hash = $parent_hash AND r.name = $filename
-        RETURN c
-        `;
-        const finalResult = await session.run(finalQuery, {
+        const finalResult = await session.run(GET_FINAL_NODE, {
             parent_hash: currentParentHash,
             filename: lastPart,
         });
