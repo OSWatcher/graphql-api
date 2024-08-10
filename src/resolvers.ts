@@ -1,7 +1,17 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
-import { diffTreesIterative, DiffStatus, DiffResult } from "./diff.js";
+import {
+    diffTreesIterative,
+    DiffStatus,
+    DiffResult,
+    NodeType,
+} from "./diff.js";
 import { driver, ogm } from "./index.js";
-import { Commit, SearchResult, TreeCreateInput } from "./ogm-types.js";
+import {
+    Commit,
+    SearchResult,
+    TreeCreateInput,
+    FsNodeType,
+} from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
 import path from "path";
@@ -224,6 +234,19 @@ const resolvers = {
         },
         moditems: (parent: DiffResult, _args: unknown, _context: unknown) => {
             return parent["moditems"];
+        },
+    },
+    // custom resolver for type to translate typescript integer enum into string values
+    DiffItem: {
+        type: (parent: { type: NodeType }) => {
+            switch (parent.type) {
+                case NodeType.Blob:
+                    return FsNodeType.Blob;
+                case NodeType.Tree:
+                    return FsNodeType.Tree;
+                default:
+                    throw new Error(`Invalid NodeType: ${parent.type}`);
+            }
         },
     },
 };
