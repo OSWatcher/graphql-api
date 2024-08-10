@@ -24,14 +24,14 @@ type DiffObj = {
 // };
 
 enum NodeType {
-    Blob = "BLOB",
-    Tree = "TREE",
+    Blob,
+    Tree,
 }
 
 enum DiffStatus {
-    NEW = "NEW",
-    MOD = "MOD",
-    DEL = "DEL",
+    NEW,
+    MOD,
+    DEL,
 }
 
 type DiffResult = {
