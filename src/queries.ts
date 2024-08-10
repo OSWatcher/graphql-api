@@ -39,3 +39,21 @@ CREATE CONSTRAINT ${label.toLowerCase()}_hash_unique IF NOT EXISTS
 FOR (n:${label})
 REQUIRE n.hash IS UNIQUE
 `;
+
+// commit
+export const FETCH_COMMIT_HISTORY_QUERY = `
+    MATCH (b:Branch)-[r:TRACKS_COMMIT|HAS_PREVIOUS*0..]->(c:Commit)
+    WHERE b.name = $branch_name
+    RETURN c
+    LIMIT 100
+`;
+
+// get all labels of the commit node
+// also prevent the commit from traversing the other commits through HAS_PREVIOUS
+export const GET_COMMIT_CAPABILITIES_QUERY = `
+    MATCH path=(c:Commit {hash: $commit_hash})-[*]->(n)
+    WHERE NONE(rel IN relationships(path) WHERE type(rel) = 'HAS_PREVIOUS')
+    WITH n, labels(n) AS labels_list
+    UNWIND labels_list AS label
+    RETURN COLLECT(DISTINCT label) AS uniqueLabels
+`;
