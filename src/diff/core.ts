@@ -1,6 +1,7 @@
 import { QueryResult, RecordShape } from "neo4j-driver";
 import { DiffMap, DiffObj, DiffStatus, NodeType, DirectoryContentsMap, DiffQueryResult } from "./types.js";
 import { getNodeTypeFromRel } from "./utils.js";
+import path from "path";
 
 export async function parseDiffQueryResultAsDiffMap(
     base_hash: string | null,
@@ -102,4 +103,28 @@ export function* computeDiffTreeGen(
     yield* del_iter;
     const mod_iter = computeDifferences(map_base, map_diffee, DiffStatus.MOD);
     yield* mod_iter;
+}
+
+export function determineVarLength(max_depth: number | null): string {
+    if (max_depth === null) return "*";
+    if (max_depth <= 0) return "*1..1";
+    return `*1..${max_depth}`;
+}
+
+export function parseFetchRecursiveBlobsResults(
+    cursor: QueryResult<RecordShape>,
+    parent_filename: string,
+    status: DiffStatus
+): DiffObj[] {
+    return cursor.records.map((current) => {
+        const path_parts: Array<string> = current.get("path_parts");
+        const blob_hash: string = current.get("blob_hash");
+        return {
+            status: status,
+            path: path.join(parent_filename, ...path_parts),
+            type: NodeType.Blob,
+            old_hash: status === DiffStatus.DEL ? blob_hash : null,
+            new_hash: status === DiffStatus.NEW ? blob_hash : null,
+        };
+    });
 }

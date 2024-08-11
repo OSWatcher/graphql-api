@@ -1,12 +1,11 @@
 import { Driver } from "neo4j-driver";
-import path from "path";
 import { DIFF_QUERY, RECURSIVE_BLOBS_QUERY } from "../queries.js";
 import { DiffObj, DiffStatus, NodeType, } from "./types.js";
 import { updateAndYieldDiffs } from "./utils.js";
-import { parseDiffQueryResultAsDiffMap, computeDiffTreeGen } from "./core.js";
+import { parseDiffQueryResultAsDiffMap, computeDiffTreeGen, determineVarLength, parseFetchRecursiveBlobsResults } from "./core.js";
+import path from "path";
 
-
-async function fetchRecusiveBlobs(
+export async function fetchRecursiveBlobs(
     driver: Driver,
     parent_tree_hash: string,
     parent_filename: string,
@@ -22,11 +21,11 @@ async function fetchRecusiveBlobs(
             return [];
         }
     }
-    const var_length = max_depth != null ? `*1..${max_depth}` : "*";
+    const var_length = determineVarLength(max_depth);
     const query = RECURSIVE_BLOBS_QUERY(var_length);
     const session = driver.session();
     try {
-        const result = await session.executeRead((tx) => {
+        const cursor = await session.executeRead((tx) => {
             return tx.run(query, {
                 parent_hash: parent_tree_hash,
             });
@@ -44,18 +43,7 @@ async function fetchRecusiveBlobs(
             }
         ]
         */
-        return result.records.map((current) => {
-            const path_parts: Array<string> = current.get("path_parts");
-            const blob_hash: string = current.get("blob_hash");
-            const diff_obj: DiffObj = {
-                status: status,
-                path: path.join(parent_filename, ...path_parts),
-                type: NodeType.Blob,
-                old_hash: status == DiffStatus.DEL ? blob_hash : null,
-                new_hash: status == DiffStatus.NEW ? blob_hash : null,
-            };
-            return diff_obj;
-        });
+        return parseFetchRecursiveBlobsResults(cursor, parent_filename, status);
     } finally {
         await session.close();
     }
@@ -285,6 +273,9 @@ async function* diffTrees(
 //     }
 // }
 
+// we need one session per transaction
+// otherwise: Neo4jError: You cannot begin a transaction on a session with an open transaction;
+// either run from within the transaction or use a different session
 export async function* diffTreesIterative(
     driver: Driver,
     base_path: string,
@@ -353,7 +344,7 @@ export async function* diffTreesIterative(
                 diff_trees
                     .get(DiffStatus.NEW)!
                     .map((diff_obj) =>
-                        fetchRecusiveBlobs(
+                        fetchRecursiveBlobs(
                             driver,
                             diff_obj.new_hash!,
                             diff_obj.path,
@@ -370,7 +361,7 @@ export async function* diffTreesIterative(
                 diff_trees
                     .get(DiffStatus.DEL)!
                     .map((diff_obj) =>
-                        fetchRecusiveBlobs(
+                        fetchRecursiveBlobs(
                             driver,
                             diff_obj.old_hash!,
                             diff_obj.path,
