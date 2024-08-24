@@ -1,12 +1,7 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
 import { diffTreesIterative } from "./diff/diff.js";
-import { DiffStatus, DiffResult, NodeType, DiffObj } from "./diff/types.js";
-import {
-    Commit,
-    SearchResult,
-    TreeCreateInput,
-    FsNodeType,
-} from "./ogm-types.js";
+import { DiffStatus, DiffResult } from "./diff/types.js";
+import { Commit, SearchResult, TreeCreateInput } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
 import path from "path";
@@ -218,42 +213,6 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     session.close();
                 }
                 return "hello";
-            },
-        },
-        DiffResult: {
-            newitems: (
-                parent: DiffResult,
-                _args: unknown,
-                _context: unknown
-            ) => {
-                return parent["newitems"];
-            },
-            delitems: (
-                parent: DiffResult,
-                _args: unknown,
-                _context: unknown
-            ) => {
-                return parent["delitems"];
-            },
-            moditems: (
-                parent: DiffResult,
-                _args: unknown,
-                _context: unknown
-            ) => {
-                return parent["moditems"];
-            },
-        },
-        // custom resolver for type to translate typescript integer enum into string values
-        DiffItem: {
-            type: (parent: DiffObj) => {
-                switch (parent.type) {
-                    case NodeType.Blob:
-                        return FsNodeType.Blob;
-                    case NodeType.Tree:
-                        return FsNodeType.Tree;
-                    default:
-                        throw new Error(`Invalid NodeType: ${parent.type}`);
-                }
             },
         },
     };
