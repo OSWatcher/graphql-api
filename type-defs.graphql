@@ -1,3 +1,5 @@
+scalar JSON
+
 # common interface for all hashable nodes
 # having a .hash property
 interface Hashable {
@@ -126,12 +128,7 @@ type DiffResult {
 
 type HashableNodeProps {
     hash: String!
-    properties: [Property!]!
-}
-
-type Property {
-    name: String!
-    value: String!
+    properties: JSON!
 }
 
 type DiffItem {
