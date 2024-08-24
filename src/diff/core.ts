@@ -1,108 +1,84 @@
 import { QueryResult, RecordShape } from "neo4j-driver";
-import { DiffMap, DiffObj, DiffStatus, NodeType, DirectoryContentsMap, DiffQueryResult } from "./types.js";
-import { getNodeTypeFromRel } from "./utils.js";
+import { DiffMap, DiffStatus, NodeType, DiffQueryResult, DiffRecord, RecursiveQueryResult } from "./types.js";
 import path from "path";
 
-export async function parseDiffQueryResultAsDiffMap(
-    base_hash: string | null,
-    diffee_hash: string | null,
-    cursor: QueryResult<RecordShape>
+export async function parseDiffQueryResult(
+    result: QueryResult<RecordShape>
 ): Promise<DiffMap> {
-    // reduce records into a map
-    // {
-    //      base_hash: {
-    //          filename1: {
-    //              'type': ''HAS_CHILD_BLOB' | 'HASH_CHILD_TREE'
-    //              'hash': d86xxxxx
-    //            },
-    //      },
-    //      diffee_hash: {
-    //      }
-    //
-    // }
-    const map_records: DiffMap = {}
-    if (base_hash !== null) {
-        map_records[base_hash] = {};
-    }
-    if (diffee_hash !== null) {
-        map_records[diffee_hash] = {};
-    }
+    const diff_map: DiffMap = {}
 
     // Note: if the parent_hash has no children
     // map_records[parent_hash] will be undefined
-    for await (const record of cursor.records) {
+    for await (const record of result.records) {
         const result = record.toObject() as DiffQueryResult;
-        const { parent_hash, name, type: rel, child_hash } = result;
+        const { parent_hash, name, child } = result;
 
-        map_records[parent_hash][name] = {
-            type: getNodeTypeFromRel(rel),
-            hash: child_hash,
-        };
-    }
-    return map_records;
-}
+        if (!diff_map[parent_hash]) {
+            diff_map[parent_hash] = {};
+        }
 
-function* computeDifferences(
-    mapA: DirectoryContentsMap,
-    mapB: DirectoryContentsMap,
-    status: DiffStatus
-): Generator<DiffObj> {
-    if (status == DiffStatus.MOD) {
-        for (const [key, value] of Object.entries(mapA)) {
-            if (key in mapB) {
-                // check != hashes
-                if (value["hash"] != mapB[key]["hash"]) {
-                    const diff_obj: DiffObj = {
-                        status: status,
-                        type: value["type"] as NodeType,
-                        path: key,
-                        old_hash: mapA[key]["hash"] as string,
-                        new_hash: mapB[key]["hash"] as string,
-                    };
-                    yield diff_obj;
-                }
-            }
-        }
-    } else {
-        for (const [key, value] of Object.entries(mapA)) {
-            if (!(key in mapB)) {
-                // build DiffObj
-                const diff_obj: DiffObj = {
-                    status: status,
-                    type: value["type"] as NodeType,
-                    path: key as string,
-                    old_hash:
-                        status == DiffStatus.DEL
-                            ? (value["hash"] as string)
-                            : null,
-                    new_hash:
-                        status == DiffStatus.NEW
-                            ? (value["hash"] as string)
-                            : null,
-                };
-                yield diff_obj;
-            }
-        }
+        diff_map[parent_hash][name] = child
     }
+    return diff_map;
 }
 
 export function* computeDiffTreeGen(
     map_records: DiffMap,
     base_hash: string | null,
     diffee_hash: string | null
-): Generator<DiffObj> {
+): Generator<DiffRecord> {
     // Initialize `map_base` as an empty object if `base_hash` is null or if `map_records` does not have an entry for `base_hash`.
-    const map_base: DirectoryContentsMap =
-        base_hash !== null ? map_records[base_hash] || {} : {};
-    const map_diffee: DirectoryContentsMap =
-        diffee_hash !== null ? map_records[diffee_hash] || {} : {};
+    const map_base =
+        base_hash ? map_records[base_hash] || {} : {};
+    const map_diffee =
+        diffee_hash ? map_records[diffee_hash] || {} : {};
 
-    const new_iter = computeDifferences(map_diffee, map_base, DiffStatus.NEW);
-    yield* new_iter;
-    const del_iter = computeDifferences(map_base, map_diffee, DiffStatus.DEL);
-    yield* del_iter;
-    const mod_iter = computeDifferences(map_base, map_diffee, DiffStatus.MOD);
-    yield* mod_iter;
+    const base_set = new Set(Object.keys(map_base));
+    const diffee_set = new Set(Object.keys(map_diffee));
+
+    // find added Nodes
+    for (const name of diffee_set) {
+        if (!base_set.has(name)) {
+            yield {
+                status: DiffStatus.NEW,
+                type: NodeType[map_diffee[name].label as keyof typeof NodeType]!,
+                path: name,
+                new_props: map_diffee[name].props,
+            }
+        }
+    }
+
+    // find remove Nodes
+    for (const name of base_set) {
+        if (!diffee_set.has(name)) {
+            yield {
+                status: DiffStatus.DEL,
+                type: NodeType[map_base[name].label as keyof typeof NodeType]!,
+                path: name,
+                new_props: map_base[name].props,
+            }
+        }
+    }
+
+    // find modified Nodes
+    const intersect = new Set([...base_set].filter(x => diffee_set.has(x)));
+    for (const name of intersect) {
+        // only compare hash here
+        if (map_base[name]["props"]["hash"] != map_diffee[name]["props"]["hash"]) {
+            yield {
+                status: DiffStatus.MOD,
+                type: NodeType[map_base[name].label as keyof typeof NodeType]!,
+                path: name,
+                old_props: map_base[name].props,
+                new_props: map_diffee[name].props,
+            }
+        } else {
+            // same name
+            // same hash
+            // different label ? (type change)
+            // TODO
+        }
+    }
 }
 
 export function determineVarLength(max_depth: number | null): string {
@@ -111,20 +87,20 @@ export function determineVarLength(max_depth: number | null): string {
     return `*1..${max_depth}`;
 }
 
-export function parseFetchRecursiveBlobsResults(
+export async function parseFetchRecursiveNodesResults(
     cursor: QueryResult<RecordShape>,
     parent_filename: string,
     status: DiffStatus
-): DiffObj[] {
+): Promise<DiffRecord[]> {
     return cursor.records.map((current) => {
-        const path_parts: Array<string> = current.get("path_parts");
-        const blob_hash: string = current.get("blob_hash");
+        const result = current.toObject() as RecursiveQueryResult;
+        const { path_parts, child } = result;
         return {
             status: status,
             path: path.join(parent_filename, ...path_parts),
-            type: NodeType.Blob,
-            old_hash: status === DiffStatus.DEL ? blob_hash : null,
-            new_hash: status === DiffStatus.NEW ? blob_hash : null,
+            type: NodeType[child.label as keyof typeof NodeType]!,
+            old_props: status === DiffStatus.DEL ? child.props : undefined,
+            new_props: status === DiffStatus.NEW ? child.props : undefined,
         };
     });
 }

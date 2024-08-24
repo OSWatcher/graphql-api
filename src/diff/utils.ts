@@ -1,5 +1,5 @@
 import path from "path";
-import { NodeType, DiffObj } from "./types.js";
+import { NodeType, DiffRecord } from "./types.js";
 
 export function getNodeTypeFromRel(relationship: string): NodeType {
     switch (relationship) {
@@ -15,9 +15,9 @@ export function getNodeTypeFromRel(relationship: string): NodeType {
 
 
 export function* updateAndYieldDiffs(
-    diffs: DiffObj[],
+    diffs: DiffRecord[],
     base_path: string
-): Generator<DiffObj, void, void> {
+): Generator<DiffRecord, void, void> {
     for (const diff_obj of diffs) {
         diff_obj.path = path.join(base_path, diff_obj.path);
         yield diff_obj;

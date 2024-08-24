@@ -13,33 +13,7 @@ import path from "path";
 import { Driver } from "neo4j-driver";
 import { OGM } from "@neo4j/graphql-ogm";
 
-export const resolvers = (driver: Driver, ogm: OGM) => {
-    //
-    // utils functions utils functions
-    async function getTreeHashFromCommit(commitHash: string) {
-        const Commit = ogm.model("Commit");
-        const selectionSet = `
-    {
-        hash
-        filesystem {
-            hash
-        }
-    }`;
-
-        const result = await Commit.find({
-            selectionSet,
-            where: {
-                hash: commitHash,
-            },
-        });
-
-        if (!result || result.length === 0) {
-            throw new Error(`Commit hash ${commitHash} doesn't exist!`);
-        }
-
-        return result[0].filesystem.hash;
-    }
-
+export const resolvers = (driver: Driver, _ogm: OGM) => {
     return {
         Query: {
             async fetchCommitHistory(
@@ -56,16 +30,18 @@ export const resolvers = (driver: Driver, ogm: OGM) => {
                 }
                 return results;
             },
-            async diffCommitsAt(
+            async diffNodesAt(
                 _source: unknown,
                 {
-                    base_commit_hash,
-                    diffee_commit_hash,
+                    parent_label,
+                    base_node_hash,
+                    diffee_node_hash,
                     at_path,
                     max_depth,
                 }: {
-                    base_commit_hash: string;
-                    diffee_commit_hash: string;
+                    parent_label: string;
+                    base_node_hash: string;
+                    diffee_node_hash: string;
                     at_path: string;
                     max_depth: number | null | undefined;
                 }
@@ -76,19 +52,21 @@ export const resolvers = (driver: Driver, ogm: OGM) => {
                 } else if (max_depth && max_depth < 0) {
                     throw new Error("Max depth should be a positive integer");
                 }
-                // find Commits based on hash
                 try {
-                    // filesystem root hash from commits
-                    const [base_root_hash, diffee_root_hash] =
-                        await Promise.all([
-                            getTreeHashFromCommit(base_commit_hash),
-                            getTreeHashFromCommit(diffee_commit_hash),
-                        ]);
-
                     // traverse the given path on both filesystems with get_path_entry()
                     const [base_entry_at, diffee_entry_at] = await Promise.all([
-                        get_path_entry(driver, base_root_hash, at_path),
-                        get_path_entry(driver, diffee_root_hash, at_path),
+                        get_path_entry(
+                            driver,
+                            parent_label,
+                            base_node_hash,
+                            at_path
+                        ),
+                        get_path_entry(
+                            driver,
+                            parent_label,
+                            diffee_node_hash,
+                            at_path
+                        ),
                     ]);
 
                     const diff_result: DiffResult = {
@@ -99,6 +77,7 @@ export const resolvers = (driver: Driver, ogm: OGM) => {
 
                     for await (const diff_obj of diffTreesIterative(
                         driver,
+                        parent_label,
                         at_path,
                         base_entry_at,
                         diffee_entry_at,
@@ -146,7 +125,14 @@ export const resolvers = (driver: Driver, ogm: OGM) => {
                 args: { tree_hash: string; path: string }
             ) {
                 const { tree_hash, path } = args;
-                return await get_path_entry(driver, tree_hash, path);
+                // TODO
+                const parent_label = "Tree";
+                return await get_path_entry(
+                    driver,
+                    parent_label,
+                    tree_hash,
+                    path
+                );
             },
             async search(_source: unknown, args: { search_term: string }) {
                 const results: SearchResult[] = [];

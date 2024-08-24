@@ -1,17 +1,18 @@
-import { Driver } from "neo4j-driver";
-import { DIFF_QUERY, RECURSIVE_BLOBS_QUERY } from "../queries.js";
-import { DiffObj, DiffStatus, NodeType, } from "./types.js";
+import { Driver, QueryResult, RecordShape } from "neo4j-driver";
+import { NODES_DIFF_QUERY, RECURSIVE_NODES_QUERY } from "../queries.js";
+import { DiffRecord, DiffStatus, RECURSABLE_LABELS } from "./types.js";
 import { updateAndYieldDiffs } from "./utils.js";
-import { parseDiffQueryResultAsDiffMap, computeDiffTreeGen, determineVarLength, parseFetchRecursiveBlobsResults } from "./core.js";
+import { computeDiffTreeGen, determineVarLength, parseFetchRecursiveNodesResults, parseDiffQueryResult } from "./core.js";
 import path from "path";
 
-export async function fetchRecursiveBlobs(
+export async function fetchRecursiveNodes(
     driver: Driver,
+    parent_label: string,
     parent_tree_hash: string,
     parent_filename: string,
     status: DiffStatus,
     max_depth: number | null = null
-): Promise<DiffObj[]> {
+): Promise<DiffRecord[]> {
     if (max_depth != null) {
         if (max_depth == 0) {
             // 0 = current level only
@@ -22,28 +23,15 @@ export async function fetchRecursiveBlobs(
         }
     }
     const var_length = determineVarLength(max_depth);
-    const query = RECURSIVE_BLOBS_QUERY(var_length);
+    const query = RECURSIVE_NODES_QUERY(parent_label, var_length);
     const session = driver.session();
     try {
-        const cursor = await session.executeRead((tx) => {
+        const result = await session.executeRead((tx) => {
             return tx.run(query, {
                 parent_hash: parent_tree_hash,
             });
         });
-        /*
-        results looks like this:
-            path_parts	                                        blob_hash
-        1   ["src", "main", "resources", "Unlicense"]           f6067df486cbdbb0aac026b799b26261c92734a3
-        2   ["src", "main", "resources", "BSD License"]         d50f85b2ba155047d15ba915158350a18e76b710
- 
-        return [
-            {
-                'rel_path': 'src/main/resources/Unlicense',
-                'hash': 'f6067df486cbdbb0aac026b799b26261c92734a3'
-            }
-        ]
-        */
-        return parseFetchRecursiveBlobsResults(cursor, parent_filename, status);
+        return parseFetchRecursiveNodesResults(result, parent_filename, status);
     } finally {
         await session.close();
     }
@@ -138,11 +126,12 @@ export async function fetchRecursiveBlobs(
 //     }
 // }
 
-async function* diffTrees(
+async function* diffNodes(
     driver: Driver,
     base_hash: string | null,
-    diffee_hash: string | null
-): AsyncGenerator<DiffObj> {
+    diffee_hash: string | null,
+    parent_label: string
+): AsyncGenerator<DiffRecord> {
     // assert that at least one of the hashes is not null
     if (base_hash == null && diffee_hash == null) {
         throw new Error("At least one of the hashes should be not null");
@@ -150,11 +139,13 @@ async function* diffTrees(
 
     const session = driver.session();
     try {
-        const cursor = await session.executeRead(async (tx) => {
-            return tx.run(DIFF_QUERY, { base: base_hash, diffee: diffee_hash });
-        })
-        const map_records = await parseDiffQueryResultAsDiffMap(base_hash, diffee_hash, cursor);
-        yield* computeDiffTreeGen(map_records, base_hash, diffee_hash);
+        const query = NODES_DIFF_QUERY(parent_label);
+        const result: QueryResult<RecordShape> = await session.executeRead(async (tx) => {
+            return tx.run(query, { base: base_hash, diffee: diffee_hash });
+        });
+
+        const diff_map = await parseDiffQueryResult(result);
+        yield* computeDiffTreeGen(diff_map, base_hash, diffee_hash);
     } finally {
         await session.close();
     }
@@ -278,11 +269,12 @@ async function* diffTrees(
 // either run from within the transaction or use a different session
 export async function* diffTreesIterative(
     driver: Driver,
+    parent_label: string,
     base_path: string,
     base_hash: string | null,
     diffee_hash: string | null,
     max_depth: number | null = null
-): AsyncGenerator<DiffObj, void, void> {
+): AsyncGenerator<DiffRecord, void, void> {
     const stack = [
         {
             hash_diff: {
@@ -302,25 +294,27 @@ export async function* diffTreesIterative(
             return;
         }
 
-        const diff_trees = new Map<DiffStatus, DiffObj[]>([
+        const diff_trees = new Map<DiffStatus, DiffRecord[]>([
             [DiffStatus.NEW, []],
             [DiffStatus.MOD, []],
             [DiffStatus.DEL, []],
         ]);
 
-        for await (const diff_obj of diffTrees(
+        for await (const diff_obj of diffNodes(
             driver,
             hash_diff.base,
-            hash_diff.diffee
+            hash_diff.diffee,
+            parent_label
         )) {
-            // blob ?
-            if (diff_obj.type == NodeType.Blob) {
+            if (RECURSABLE_LABELS.has(diff_obj.type)) {
+                // "container" recurse
+                diff_trees.get(diff_obj.status)!.push(diff_obj);
+            } else {
+                // "blob"
                 diff_obj.path = path.join(hash_diff.path!, diff_obj.path);
                 yield diff_obj;
-                continue;
+                continue
             }
-            // tree
-            diff_trees.get(diff_obj.status)!.push(diff_obj);
         }
 
         // reached max depth ?
@@ -340,13 +334,14 @@ export async function* diffTreesIterative(
             );
         } else {
             // NEW
-            const new_subblobs_arr: DiffObj[][] = await Promise.all(
+            const new_subblobs_arr: DiffRecord[][] = await Promise.all(
                 diff_trees
                     .get(DiffStatus.NEW)!
                     .map((diff_obj) =>
-                        fetchRecursiveBlobs(
+                        fetchRecursiveNodes(
                             driver,
-                            diff_obj.new_hash!,
+                            parent_label,
+                            diff_obj.new_props!["hash"],
                             diff_obj.path,
                             DiffStatus.NEW,
                             max_depth != null ? max_depth - depth : null
@@ -357,13 +352,14 @@ export async function* diffTreesIterative(
                 yield* updateAndYieldDiffs(arr, hash_diff.path!);
             }
             // DEL
-            const del_subblobs_arr: DiffObj[][] = await Promise.all(
+            const del_subblobs_arr: DiffRecord[][] = await Promise.all(
                 diff_trees
                     .get(DiffStatus.DEL)!
                     .map((diff_obj) =>
-                        fetchRecursiveBlobs(
+                        fetchRecursiveNodes(
                             driver,
-                            diff_obj.old_hash!,
+                            parent_label,
+                            diff_obj.old_props!["hash"],
                             diff_obj.path,
                             DiffStatus.DEL,
                             max_depth != null ? max_depth - depth : null
@@ -378,8 +374,8 @@ export async function* diffTreesIterative(
             for (const diff_obj of diff_trees.get(DiffStatus.MOD)!) {
                 stack.push({
                     hash_diff: {
-                        base: diff_obj.old_hash,
-                        diffee: diff_obj.new_hash,
+                        base: diff_obj.old_props!["hash"],
+                        diffee: diff_obj.new_props!["hash"],
                         path: path.join(hash_diff.path!, diff_obj.path),
                     },
                     depth: depth + 1,

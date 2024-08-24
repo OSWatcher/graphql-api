@@ -9,10 +9,19 @@ WHERE t.hash = $base
 RETURN t.hash as parent_hash, type(r) as type, r.name as name, c.hash as child_hash
 `;
 
-export const RECURSIVE_BLOBS_QUERY = (var_length: string) => `
-MATCH path = (t:Tree)-[:HAS_CHILD_BLOB|HAS_CHILD_TREE${var_length}]->(b:Blob)
-WHERE t.hash = $parent_hash
-RETURN [r IN relationships(path) | r.name] as path_parts, b.hash as blob_hash
+export const NODES_DIFF_QUERY = (parent_label: string) => `
+MATCH (t:${parent_label})-[r]->(c)
+WHERE t.hash IN [$base, $diffee]
+RETURN t.hash as parent_hash, r.name as name, {props: properties(c), label: labels(c)[0]} as child
+`;
+
+export const RECURSIVE_NODES_QUERY = (
+    parent_label: string,
+    var_length: string
+) => `
+MATCH path = (t:${parent_label})-[${var_length}]->(b)
+WHERE t.hash = $parent_hash AND NOT b:${parent_label}
+RETURN [r IN relationships(path) | r.name] as path_parts, {props: properties(b), label: labels(b)[0]} as child
 `;
 
 // const DIFF_PARALLEL_QUERY = `
@@ -37,13 +46,11 @@ RETURN commit_name, commit_hash, blob_hash, full_path
 `;
 
 // filesystem
-export const GET_CHILD_NODE = `
-MATCH (p)-[r]->(c)
+export const GET_CHILD_NODE = (label: string) => `
+MATCH (p:${label})-[r]->(c)
 WHERE p.hash = $parent_hash AND r.name = $filename
 RETURN c
 `;
-
-export const GET_FINAL_NODE = GET_CHILD_NODE;
 
 // constraints
 export const createConstraintQuery = (label: string) => `
