@@ -4,9 +4,9 @@ interface Hashable {
     hash: String!
 }
 
-enum FsNodeType {
-    BLOB
-    TREE
+enum NodeType {
+    Blob
+    Tree
 }
 
 type Blob implements Hashable {
@@ -124,11 +124,21 @@ type DiffResult {
     moditems: [DiffItem]!
 }
 
+type HashableNodeProps {
+    hash: String!
+    properties: [Property!]!
+}
+
+type Property {
+    name: String!
+    value: String!
+}
+
 type DiffItem {
     path: String!
-    type: FsNodeType!
-    old_hash: String
-    new_hash: String
+    type: NodeType!
+    old_props: HashableNodeProps
+    new_props: HashableNodeProps
 }
 
 type User {
