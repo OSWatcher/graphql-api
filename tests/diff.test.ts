@@ -1,4 +1,4 @@
-import { fetchRecursiveBlobs } from "../src/diff/diff.js";
+import { fetchRecursiveNodes } from "../src/diff/diff.js";
 import { DiffStatus } from "../src/diff/types.js";
 
 describe('Diff Module', () => {
@@ -8,8 +8,9 @@ describe('Diff Module', () => {
             // create mock driver
             const mockDriver = {} as any
 
-            const result = fetchRecursiveBlobs(
+            const result = fetchRecursiveNodes(
                 mockDriver,
+                "Tree0",
                 "abcd",
                 "WinSxS",
                 DiffStatus.NEW,

@@ -1,7 +1,9 @@
 export enum NodeType {
-    Blob,
-    Tree,
+    Blob = "Blob",
+    Tree = "Tree",
 }
+
+export const RECURSABLE_LABELS = new Set(NodeType.Tree)
 
 export enum DiffStatus {
     NEW,
@@ -10,57 +12,39 @@ export enum DiffStatus {
 }
 
 export type DiffResult = {
-    newitems: DiffObj[];
-    delitems: DiffObj[];
-    moditems: DiffObj[];
+    newitems: DiffRecord[];
+    delitems: DiffRecord[];
+    moditems: DiffRecord[];
 };
 
-export type DiffObj = {
-    // status of the diff (NEW / MOD / DEL)
+export interface DiffRecord {
     status: DiffStatus;
     type: NodeType;
-    // object path. If relative the it refer to the filename only
     path: string;
-    // old and new hash values, defined depending on the DiffStatus
-    // depends on status
-    // NEW: new_hash is defined
-    // DEL: old_hash is defined
-    // MOD: both hashes are defined
-    old_hash: null | string;
-    new_hash: null | string;
-};
-
-// type HashDiff = {
-//     base: string | null;
-//     diffee: string | null;
-//     path: string | null;
-// };
-
-type Hash = string;
-type Filename = string;
-interface TreeNode {
-    type: NodeType;
-    hash: Hash;
+    old_props?: NodeProps;
+    new_props?: NodeProps;
 }
-export type DirectoryContentsMap = Record<Filename, TreeNode>;
 
+type NodeProps = Record<string, string>;
 
-// {
-//      base_hash: {
-//          filename1: {
-//              'type': ''HAS_CHILD_BLOB' | 'HASH_CHILD_TREE'
-//              'hash': d86xxxxx
-//            },
-//      },
-//      diffee_hash: {
-//      }
-//
-// }
-export type DiffMap = Record<Hash, DirectoryContentsMap>;
+interface NodeData {
+    props: NodeProps;
+    label: string;
+}
+
+export interface DiffMap {
+    [parentHash: string]: {
+        [name: string]: NodeData;
+    }
+}
 
 export interface DiffQueryResult {
     parent_hash: string;
     name: string;
-    type: string;
-    child_hash: string;
+    child: NodeData;
+}
+
+export interface RecursiveQueryResult {
+    path_parts: string[];
+    child: NodeData;
 }

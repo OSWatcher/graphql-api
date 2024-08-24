@@ -144,9 +144,10 @@ type SearchResult {
 
 # custom Queries
 type Query {
-    diffCommitsAt(
-        base_commit_hash: String!
-        diffee_commit_hash: String!
+    diffNodesAt(
+        parent_label: String!
+        base_node_hash: String!
+        diffee_node_hash: String!
         at_path: String!
         max_depth: Int
     ): DiffResult!

@@ -1,8 +1,9 @@
 import { Driver } from "neo4j-driver";
-import { GET_CHILD_NODE, GET_FINAL_NODE } from "./queries.js";
+import { GET_CHILD_NODE } from "./queries.js";
 
-async function get_path_entry(
+export async function get_path_entry(
     driver: Driver,
+    parent_label: string,
     root_fs_hash: string,
     path: string
 ): Promise<string | null> {
@@ -13,8 +14,7 @@ async function get_path_entry(
     if (path === "/") {
         return root_fs_hash;
     }
-    // given a commit hash and a path, return the Tree or Blob at that path
-    // if it exists
+    // given a node hash and a label, find the child node with the given filename
     const session = driver.session();
     try {
         // Normalize the path and split into components
@@ -22,11 +22,12 @@ async function get_path_entry(
         const pathParts = path.split("/").filter(Boolean);
 
         let currentParentHash = root_fs_hash;
+        const query = GET_CHILD_NODE(parent_label);
 
         // Traverse through the path parts to find the final Tree or Blob
         for (let i = 0; i < pathParts.length - 1; i++) {
             const part = pathParts[i];
-            const result = await session.run(GET_CHILD_NODE, {
+            const result = await session.run(query, {
                 parent_hash: currentParentHash,
                 filename: part,
             });
@@ -40,7 +41,7 @@ async function get_path_entry(
 
         // The last part of the path, could be a Tree or Blob
         const lastPart = pathParts[pathParts.length - 1];
-        const finalResult = await session.run(GET_FINAL_NODE, {
+        const finalResult = await session.run(query, {
             parent_hash: currentParentHash,
             filename: lastPart,
         });
@@ -58,5 +59,3 @@ async function get_path_entry(
         await session.close();
     }
 }
-
-export { get_path_entry };
