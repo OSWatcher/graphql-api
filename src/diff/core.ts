@@ -55,7 +55,7 @@ export function* computeDiffTreeGen(
                 status: DiffStatus.DEL,
                 type: NodeType[map_base[name].label as keyof typeof NodeType]!,
                 path: name,
-                new_props: map_base[name].props,
+                old_props: map_base[name].props,
             }
         }
     }
