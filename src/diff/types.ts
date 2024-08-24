@@ -3,7 +3,7 @@ export enum NodeType {
     Tree = "Tree",
 }
 
-export const RECURSABLE_LABELS = new Set(NodeType.Tree)
+export const RECURSABLE_LABELS = new Set([NodeType.Tree])
 
 export enum DiffStatus {
     NEW,
