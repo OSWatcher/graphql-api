@@ -11,12 +11,6 @@ export enum DiffStatus {
     DEL,
 }
 
-export type DiffResult = {
-    newitems: DiffRecord[];
-    delitems: DiffRecord[];
-    moditems: DiffRecord[];
-};
-
 export interface DiffRecord {
     status: DiffStatus;
     type: NodeType;

@@ -11,6 +11,12 @@ enum NodeType {
     Tree
 }
 
+enum DiffStatus {
+    NEW
+    MOD
+    DEL
+}
+
 type Blob implements Hashable {
     hash: String! @unique
     has_winreg: WinRegKey @relationship(type: "HAS_WINREG", direction: OUT)
@@ -113,25 +119,19 @@ type WinDataType implements Hashable {
     has_data_type: WinDataType @relationship(type: "HAS_DATA_TYPE", direction: OUT)
 }
 
-
 # custom Mutations
 type Mutation {
     mergeTree(input: TreeCreateInput!): String!
 }
 
 # custom types not part of Data model
-type DiffResult {
-    newitems: [DiffItem]!
-    delitems: [DiffItem]!
-    moditems: [DiffItem]!
-}
-
 type HashableNodeProps {
     hash: String!
     properties: JSON!
 }
 
 type DiffItem {
+    status: DiffStatus!
     path: String!
     type: NodeType!
     old_props: HashableNodeProps
@@ -157,7 +157,7 @@ type Query {
         diffee_node_hash: String!
         at_path: String!
         max_depth: Int
-    ): DiffResult!
+    ): [DiffItem!]!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
     # given a node hash, traverse the children nodes following the path

@@ -1,6 +1,6 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
 import { diffTreesIterative } from "./diff/diff.js";
-import { DiffStatus, DiffResult, DiffRecord } from "./diff/types.js";
+import { DiffStatus, DiffRecord } from "./diff/types.js";
 import { Commit, SearchResult, TreeCreateInput } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
@@ -64,11 +64,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         ),
                     ]);
 
-                    const diff_result: DiffResult = {
-                        newitems: [],
-                        delitems: [],
-                        moditems: [],
-                    };
+                    const diff_result: Array<DiffRecord> = [];
 
                     for await (const diff_obj of diffTreesIterative(
                         driver,
@@ -78,26 +74,10 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         diffee_entry_at,
                         max_depth
                     )) {
-                        switch (diff_obj.status) {
-                            case DiffStatus.NEW:
-                                diff_result.newitems.push({
-                                    ...diff_obj,
-                                    path: path.relative(at_path, diff_obj.path),
-                                });
-                                break;
-                            case DiffStatus.DEL:
-                                diff_result.delitems.push({
-                                    ...diff_obj,
-                                    path: path.relative(at_path, diff_obj.path),
-                                });
-                                break;
-                            case DiffStatus.MOD:
-                                diff_result.moditems.push({
-                                    ...diff_obj,
-                                    path: path.relative(at_path, diff_obj.path),
-                                });
-                                break;
-                        }
+                        diff_result.push({
+                            ...diff_obj,
+                            path: path.relative(at_path, diff_obj.path),
+                        });
                     }
 
                     return diff_result;
@@ -233,6 +213,18 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     hash,
                     properties: properties as Record<string, unknown>,
                 };
+            },
+            status: (parent: DiffRecord) => {
+                switch (parent.status) {
+                    case DiffStatus.NEW:
+                        return "NEW";
+                    case DiffStatus.MOD:
+                        return "MOD";
+                    case DiffStatus.DEL:
+                        return "DEL";
+                    default:
+                        return null;
+                }
             },
         },
     };
