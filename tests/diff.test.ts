@@ -14,7 +14,8 @@ describe('Diff Module', () => {
                 "abcd",
                 "WinSxS",
                 DiffStatus.NEW,
-                -1
+                -1,
+                null
             );
 
             // assert

@@ -9,18 +9,28 @@ WHERE t.hash = $base
 RETURN t.hash as parent_hash, type(r) as type, r.name as name, c.hash as child_hash
 `;
 
-export const NODES_DIFF_QUERY = (parent_label: string) => `
+export const NODES_DIFF_QUERY = (
+    parent_label: string,
+    filter: Array<string> | null
+) => `
 MATCH (t:${parent_label})-[r]->(c)
 WHERE t.hash IN [$base, $diffee]
+${
+    filter
+        ? `AND (any(label IN labels(c) WHERE label IN $filter) OR '${parent_label}' IN labels(c))`
+        : ""
+}
 RETURN t.hash as parent_hash, r.name as name, {props: properties(c), label: labels(c)[0]} as child
 `;
 
 export const RECURSIVE_NODES_QUERY = (
     parent_label: string,
-    var_length: string
+    var_length: string,
+    filter: Array<string> | null
 ) => `
 MATCH path = (t:${parent_label})-[${var_length}]->(b)
-WHERE t.hash = $parent_hash AND NOT b:${parent_label}
+WHERE t.hash = $parent_hash
+${filter ? "AND any(label IN labels(b) WHERE label IN $filter)" : ""}
 RETURN [r IN relationships(path) | r.name] as path_parts, {props: properties(b), label: labels(b)[0]} as child
 `;
 
