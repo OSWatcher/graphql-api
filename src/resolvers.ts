@@ -33,12 +33,14 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     diffee_node_hash,
                     at_path,
                     max_depth,
+                    filter,
                 }: {
                     parent_label: string;
                     base_node_hash: string;
                     diffee_node_hash: string;
                     at_path: string;
                     max_depth: number | null | undefined;
+                    filter: Array<string> | null | undefined;
                 }
             ) {
                 // max_depth undefined ?
@@ -46,6 +48,9 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     max_depth = null;
                 } else if (max_depth && max_depth < 0) {
                     throw new Error("Max depth should be a positive integer");
+                }
+                if (filter === undefined) {
+                    filter = null;
                 }
                 try {
                     // traverse the given path on both filesystems with get_path_entry()
@@ -72,7 +77,8 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         at_path,
                         base_entry_at,
                         diffee_entry_at,
-                        max_depth
+                        max_depth,
+                        filter
                     )) {
                         diff_result.push({
                             ...diff_obj,

@@ -11,7 +11,8 @@ export async function fetchRecursiveNodes(
     parent_tree_hash: string,
     parent_filename: string,
     status: DiffStatus,
-    max_depth: number | null = null
+    max_depth: number | null = null,
+    filter: Array<string> | null
 ): Promise<DiffRecord[]> {
     if (max_depth != null) {
         if (max_depth == 0) {
@@ -23,12 +24,13 @@ export async function fetchRecursiveNodes(
         }
     }
     const var_length = determineVarLength(max_depth);
-    const query = RECURSIVE_NODES_QUERY(parent_label, var_length);
+    const query = RECURSIVE_NODES_QUERY(parent_label, var_length, filter);
     const session = driver.session();
     try {
         const result = await session.executeRead((tx) => {
             return tx.run(query, {
                 parent_hash: parent_tree_hash,
+                filter
             });
         });
         return parseFetchRecursiveNodesResults(result, parent_filename, status);
@@ -130,7 +132,8 @@ async function* diffNodes(
     driver: Driver,
     base_hash: string | null,
     diffee_hash: string | null,
-    parent_label: string
+    parent_label: string,
+    filter: Array<string> | null
 ): AsyncGenerator<DiffRecord> {
     // assert that at least one of the hashes is not null
     if (base_hash == null && diffee_hash == null) {
@@ -139,9 +142,9 @@ async function* diffNodes(
 
     const session = driver.session();
     try {
-        const query = NODES_DIFF_QUERY(parent_label);
+        const query = NODES_DIFF_QUERY(parent_label, filter);
         const result: QueryResult<RecordShape> = await session.executeRead(async (tx) => {
-            return tx.run(query, { base: base_hash, diffee: diffee_hash });
+            return tx.run(query, { base: base_hash, diffee: diffee_hash, filter });
         });
 
         const diff_map = await parseDiffQueryResult(result);
@@ -273,7 +276,8 @@ export async function* diffTreesIterative(
     base_path: string,
     base_hash: string | null,
     diffee_hash: string | null,
-    max_depth: number | null = null
+    max_depth: number | null = null,
+    filter: Array<string> | null = null
 ): AsyncGenerator<DiffRecord, void, void> {
     const stack = [
         {
@@ -304,7 +308,8 @@ export async function* diffTreesIterative(
             driver,
             hash_diff.base,
             hash_diff.diffee,
-            parent_label
+            parent_label,
+            filter
         )) {
             if (RECURSABLE_LABELS.has(diff_obj.type)) {
                 // "container" recurse
@@ -344,7 +349,8 @@ export async function* diffTreesIterative(
                             diff_obj.new_props!["hash"],
                             diff_obj.path,
                             DiffStatus.NEW,
-                            max_depth != null ? max_depth - depth : null
+                            max_depth != null ? max_depth - depth : null,
+                            filter
                         )
                     )
             );
@@ -362,7 +368,8 @@ export async function* diffTreesIterative(
                             diff_obj.old_props!["hash"],
                             diff_obj.path,
                             DiffStatus.DEL,
-                            max_depth != null ? max_depth - depth : null
+                            max_depth != null ? max_depth - depth : null,
+                            filter
                         )
                     )
             );

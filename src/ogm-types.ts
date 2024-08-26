@@ -94,6 +94,7 @@ export type QueryDiffNodesAtArgs = {
   diffee_node_hash: Scalars["String"]["input"];
   at_path: Scalars["String"]["input"];
   max_depth?: InputMaybe<Scalars["Int"]["input"]>;
+  filter?: InputMaybe<Array<Scalars["String"]["input"]>>;
 };
 
 export type QueryFetchCommitHistoryArgs = {
