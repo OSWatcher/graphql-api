@@ -9,6 +9,8 @@ interface Hashable {
 enum NodeType {
     Blob
     Tree
+    WinRegValue
+    WinRegKey
 }
 
 enum DiffStatus {
