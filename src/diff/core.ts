@@ -2,6 +2,15 @@ import { QueryResult, RecordShape } from "neo4j-driver";
 import { DiffMap, DiffStatus, NodeType, DiffQueryResult, DiffRecord, RecursiveQueryResult } from "./types.js";
 import path from "path";
 
+function getNodeTypeFromLabel(label: string): NodeType {
+    const nodeType = NodeType[label as keyof typeof NodeType];
+    if (nodeType === undefined) {
+        console.assert(false, `Unknown NodeType label: "${label}"`);
+        throw new Error(`Unknown NodeType label: "${label}"`);
+    }
+    return nodeType;
+}
+
 export async function parseDiffQueryResult(
     result: QueryResult<RecordShape>
 ): Promise<DiffMap> {
@@ -41,7 +50,7 @@ export function* computeDiffTreeGen(
         if (!base_set.has(name)) {
             yield {
                 status: DiffStatus.NEW,
-                type: NodeType[map_diffee[name].label as keyof typeof NodeType]!,
+                type: getNodeTypeFromLabel(map_diffee[name].label),
                 path: name,
                 new_props: map_diffee[name].props,
             }
@@ -53,7 +62,7 @@ export function* computeDiffTreeGen(
         if (!diffee_set.has(name)) {
             yield {
                 status: DiffStatus.DEL,
-                type: NodeType[map_base[name].label as keyof typeof NodeType]!,
+                type: getNodeTypeFromLabel(map_base[name].label),
                 path: name,
                 old_props: map_base[name].props,
             }
@@ -67,7 +76,7 @@ export function* computeDiffTreeGen(
         if (map_base[name]["props"]["hash"] != map_diffee[name]["props"]["hash"]) {
             yield {
                 status: DiffStatus.MOD,
-                type: NodeType[map_base[name].label as keyof typeof NodeType]!,
+                type: getNodeTypeFromLabel(map_base[name].label),
                 path: name,
                 old_props: map_base[name].props,
                 new_props: map_diffee[name].props,
