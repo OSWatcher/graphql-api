@@ -1,9 +1,11 @@
 export enum NodeType {
     Blob = "Blob",
     Tree = "Tree",
+    WinRegValue = "WinRegValue",
+    WinRegKey = "WinRegKey"
 }
 
-export const RECURSABLE_LABELS = new Set([NodeType.Tree])
+export const RECURSABLE_LABELS = new Set([NodeType.Tree, NodeType.WinRegKey])
 
 export enum DiffStatus {
     NEW,
