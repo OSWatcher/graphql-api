@@ -1,27 +1,73 @@
 // diff
 
-// Note: return a list instead of a map of parent_hash -> child_hash
-// since Cypher doesn't support dynamic keys in map projections
-export const DIFF_QUERY = `
-MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
-WHERE t.hash = $base
-    OR t.hash = $diffee
-RETURN t.hash as parent_hash, type(r) as type, r.name as name, c.hash as child_hash
-`;
+// export const NODES_DIFF_QUERY = (
+//     parent_label: string,
+//     filter: Array<string> | null
+// ) => `
+// MATCH (t:${parent_label})-[r]->(c)
+// WHERE t.hash IN [$base, $diffee]
+// ${
+//     filter
+//         ? `AND (any(label IN labels(c) WHERE label IN $filter) OR '${parent_label}' IN labels(c))`
+//         : ""
+// }
+// RETURN t.hash as parent_hash, r.name as name, {props: properties(c), label: labels(c)[0]} as child
+// `;
 
 export const NODES_DIFF_QUERY = (
     parent_label: string,
     filter: Array<string> | null
-) => `
-MATCH (t:${parent_label})-[r]->(c)
-WHERE t.hash IN [$base, $diffee]
-${
-    filter
-        ? `AND (any(label IN labels(c) WHERE label IN $filter) OR '${parent_label}' IN labels(c))`
-        : ""
-}
-RETURN t.hash as parent_hash, r.name as name, {props: properties(c), label: labels(c)[0]} as child
+) => {
+    let allowed_labels = "";
+    if (filter) {
+        allowed_labels = `:${parent_label}|${filter[0]}`;
+    }
+    return `
+MATCH (base:${parent_label} {hash: $base})
+MATCH (diffee:${parent_label} {hash: $diffee})
+
+// NEW nodes
+OPTIONAL MATCH (diffee)-[r_new]->(c_new${allowed_labels})
+WHERE NOT EXISTS((base)-[{name: r_new.name}]->())
+WITH base, diffee, 
+     COLLECT(CASE WHEN c_new IS NOT NULL
+             THEN {status: 'NEW', type: labels(c_new)[0], path: r_new.name, new_props: properties(c_new)}
+             ELSE NULL
+             END
+    ) AS new_nodes
+
+// DEL nodes
+OPTIONAL MATCH (base)-[r_del]->(c_del${allowed_labels})
+WHERE NOT EXISTS((diffee)-[{name: r_del.name}]->())
+WITH base, diffee, new_nodes, 
+     COLLECT(CASE WHEN c_del IS NOT NULL
+             THEN {status: 'DEL', type: labels(c_del)[0], path: r_del.name, old_props: properties(c_del)}
+             ELSE NULL
+             END
+    ) AS del_nodes
+
+// MOD nodes
+OPTIONAL MATCH (base)-[r_mod]->(c_mod${allowed_labels})
+OPTIONAL MATCH (diffee)-[r_diffee {name: r_mod.name}]->(c_diffee${allowed_labels})
+WHERE c_mod.hash <> c_diffee.hash
+WITH new_nodes, del_nodes,
+     COLLECT(CASE WHEN c_mod IS NOT NULL AND c_diffee IS NOT NULL
+     THEN {
+       status: 'MOD', 
+       type: labels(c_mod)[0], 
+       path: r_mod.name, 
+       old_props: properties(c_mod), 
+       new_props: properties(c_diffee)
+     }
+     ELSE NULL
+     END
+     ) AS mod_nodes
+
+// combine all results into single list and unwind individual rows
+UNWIND new_nodes + del_nodes + mod_nodes AS diff
+RETURN diff
 `;
+};
 
 export const RECURSIVE_NODES_QUERY = (
     parent_label: string,

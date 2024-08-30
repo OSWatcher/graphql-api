@@ -35,9 +35,11 @@ export interface DiffMap {
 }
 
 export interface DiffQueryResult {
-    parent_hash: string;
-    name: string;
-    child: NodeData;
+    status: string
+    type: string
+    path: string,
+    old_props?: NodeProps
+    new_props?: NodeProps
 }
 
 export interface RecursiveQueryResult {
