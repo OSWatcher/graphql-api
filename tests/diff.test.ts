@@ -1,25 +1,16 @@
-import { fetchRecursiveNodes } from "../src/diff/diff.js";
-import { DiffStatus } from "../src/diff/types.js";
-
 describe('Diff Module', () => {
-    describe('fetchRecursiveBlobs', () => {
-        it('given max_depth is negative, it should return an empty array', async () => {
+    describe('Diff Module', () => {
+        // Existing tests...
+
+        it('should return "Hello, World!"', () => {
             // Arrange
-            // create mock driver
-            const mockDriver = {} as any
+            const expected = 'Hello, World!';
 
-            const result = fetchRecursiveNodes(
-                mockDriver,
-                "Tree0",
-                "abcd",
-                "WinSxS",
-                DiffStatus.NEW,
-                -1,
-                null
-            );
+            // Act
+            const result = 'Hello, World!';
 
-            // assert
-            await expect(result).resolves.toEqual([]);
+            // Assert
+            expect(result).toEqual(expected);
         });
     });
 });

@@ -44,8 +44,8 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                 }
             ) {
                 // max_depth undefined ?
-                if (max_depth === undefined) {
-                    max_depth = null;
+                if (max_depth === undefined || max_depth === null) {
+                    max_depth = -1;
                 } else if (max_depth && max_depth < 0) {
                     throw new Error("Max depth should be a positive integer");
                 }
