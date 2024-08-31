@@ -13,4 +13,12 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
     '@typescript-eslint/no-non-null-assertion': 'off',
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts', '**/*.spec.ts', '**/tests/**/*.ts'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off'
+      }
+    }
+  ]
 };
