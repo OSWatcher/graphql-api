@@ -1,5 +1,9 @@
 import { Driver } from "neo4j-driver";
 import { Commit } from "./ogm-types.js";
+import {
+    FETCH_COMMIT_HISTORY_QUERY,
+    GET_COMMIT_CAPABILITIES_QUERY,
+} from "./queries.js";
 
 async function* fetch_commit_history(
     driver: Driver,
@@ -11,15 +15,8 @@ async function* fetch_commit_history(
     const session = driver.session();
 
     try {
-        const query = `
-            MATCH (b:Branch)-[r:TRACKS_COMMIT|HAS_PREVIOUS*0..]->(c:Commit)
-            WHERE b.name = $branch_name
-            RETURN c
-            LIMIT 100
-        `;
-
         const result = await session.executeRead((tx) =>
-            tx.run(query, { branch_name })
+            tx.run(FETCH_COMMIT_HISTORY_QUERY, { branch_name })
         );
 
         for (const record of result.records) {
@@ -51,18 +48,8 @@ async function get_commit_capabilities(
     const session = driver.session();
 
     try {
-        // get all labels of the commit node
-        // also prevent the commit from traversing the other commits through HAS_PREVIOUS
-        const query = `
-            MATCH path=(c:Commit {hash: $commit_hash})-[*]->(n)
-            WHERE NONE(rel IN relationships(path) WHERE type(rel) = 'HAS_PREVIOUS')
-            WITH n, labels(n) AS labels_list
-            UNWIND labels_list AS label
-            RETURN COLLECT(DISTINCT label) AS uniqueLabels
-        `;
-
         const result = await session.executeRead((tx) =>
-            tx.run(query, { commit_hash })
+            tx.run(GET_COMMIT_CAPABILITIES_QUERY, { commit_hash })
         );
 
         // return list of string (labels)
