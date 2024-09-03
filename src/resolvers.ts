@@ -43,6 +43,11 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     filter: Array<string> | null | undefined;
                 }
             ) {
+                if (base_node_hash === "" || diffee_node_hash === "") {
+                    throw new Error(
+                        "Base and diffee node hashes cannot be empty"
+                    );
+                }
                 // max_depth undefined ?
                 if (max_depth === undefined || max_depth === null) {
                     max_depth = -1;
