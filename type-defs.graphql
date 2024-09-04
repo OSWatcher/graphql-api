@@ -164,7 +164,7 @@ type Query {
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
     # given a node hash, traverse the children nodes following the path
-    traversePath(tree_hash: String!, path: String!): String
+    traversePath(parent_label: String!, tree_hash: String!, path: String!): String
     # get all the possibile data labels associated with an os
     getCommitExtractedDataLabels(commit_hash: String!): [String!]!
     # search
