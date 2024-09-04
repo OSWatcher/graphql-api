@@ -1,6 +1,8 @@
 export enum NodeType {
-    Blob,
-    Tree,
+    Blob = "Blob",
+    Tree = "Tree",
+    WinRegValue = "WinRegValue",
+    WinRegKey = "WinRegKey"
 }
 
 export enum DiffStatus {
@@ -9,58 +11,20 @@ export enum DiffStatus {
     DEL,
 }
 
-export type DiffResult = {
-    newitems: DiffObj[];
-    delitems: DiffObj[];
-    moditems: DiffObj[];
-};
-
-export type DiffObj = {
-    // status of the diff (NEW / MOD / DEL)
+export interface DiffRecord {
     status: DiffStatus;
     type: NodeType;
-    // object path. If relative the it refer to the filename only
     path: string;
-    // old and new hash values, defined depending on the DiffStatus
-    // depends on status
-    // NEW: new_hash is defined
-    // DEL: old_hash is defined
-    // MOD: both hashes are defined
-    old_hash: null | string;
-    new_hash: null | string;
-};
-
-// type HashDiff = {
-//     base: string | null;
-//     diffee: string | null;
-//     path: string | null;
-// };
-
-type Hash = string;
-type Filename = string;
-interface TreeNode {
-    type: NodeType;
-    hash: Hash;
+    old_props?: NodeProps;
+    new_props?: NodeProps;
 }
-export type DirectoryContentsMap = Record<Filename, TreeNode>;
 
-
-// {
-//      base_hash: {
-//          filename1: {
-//              'type': ''HAS_CHILD_BLOB' | 'HASH_CHILD_TREE'
-//              'hash': d86xxxxx
-//            },
-//      },
-//      diffee_hash: {
-//      }
-//
-// }
-export type DiffMap = Record<Hash, DirectoryContentsMap>;
+type NodeProps = Record<string, string>;
 
 export interface DiffQueryResult {
-    parent_hash: string;
-    name: string;
-    type: string;
-    child_hash: string;
+    status: string
+    type: string
+    path: string,
+    old_props?: NodeProps
+    new_props?: NodeProps
 }

@@ -30,11 +30,13 @@ export type Scalars = {
   Int: { input: number; output: number };
   /** The `Float` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point). */
   Float: { input: number; output: number };
+  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
+  JSON: { input: any; output: any };
 };
 
 export type Query = {
   __typename?: "Query";
-  diffCommitsAt: DiffResult;
+  diffNodesAt: Array<DiffItem>;
   fetchCommitHistory: Array<Commit>;
   traversePath?: Maybe<Scalars["String"]["output"]>;
   getCommitExtractedDataLabels: Array<Scalars["String"]["output"]>;
@@ -72,9 +74,9 @@ export type Query = {
   winDataTypes: Array<WinDataType>;
   winDataTypesConnection: WinDataTypesConnection;
   winDataTypesAggregate: WinDataTypeAggregateSelection;
-  diffResults: Array<DiffResult>;
-  diffResultsConnection: DiffResultsConnection;
-  diffResultsAggregate: DiffResultAggregateSelection;
+  hashableNodeProps: Array<HashableNodeProps>;
+  hashableNodePropsConnection: HashableNodePropsConnection;
+  hashableNodePropsAggregate: HashableNodePropsAggregateSelection;
   diffItems: Array<DiffItem>;
   diffItemsConnection: DiffItemsConnection;
   diffItemsAggregate: DiffItemAggregateSelection;
@@ -86,11 +88,13 @@ export type Query = {
   searchResultsAggregate: SearchResultAggregateSelection;
 };
 
-export type QueryDiffCommitsAtArgs = {
-  base_commit_hash: Scalars["String"]["input"];
-  diffee_commit_hash: Scalars["String"]["input"];
+export type QueryDiffNodesAtArgs = {
+  parent_label: Scalars["String"]["input"];
+  base_node_hash: Scalars["String"]["input"];
+  diffee_node_hash: Scalars["String"]["input"];
   at_path: Scalars["String"]["input"];
   max_depth?: InputMaybe<Scalars["Int"]["input"]>;
+  filter?: InputMaybe<Array<Scalars["String"]["input"]>>;
 };
 
 export type QueryFetchCommitHistoryArgs = {
@@ -98,6 +102,7 @@ export type QueryFetchCommitHistoryArgs = {
 };
 
 export type QueryTraversePathArgs = {
+  parent_label: Scalars["String"]["input"];
   tree_hash: Scalars["String"]["input"];
   path: Scalars["String"]["input"];
 };
@@ -286,19 +291,20 @@ export type QueryWinDataTypesAggregateArgs = {
   where?: InputMaybe<WinDataTypeWhere>;
 };
 
-export type QueryDiffResultsArgs = {
-  where?: InputMaybe<DiffResultWhere>;
-  options?: InputMaybe<DiffResultOptions>;
+export type QueryHashableNodePropsArgs = {
+  where?: InputMaybe<HashableNodePropsWhere>;
+  options?: InputMaybe<HashableNodePropsOptions>;
 };
 
-export type QueryDiffResultsConnectionArgs = {
+export type QueryHashableNodePropsConnectionArgs = {
   first?: InputMaybe<Scalars["Int"]["input"]>;
   after?: InputMaybe<Scalars["String"]["input"]>;
-  where?: InputMaybe<DiffResultWhere>;
+  where?: InputMaybe<HashableNodePropsWhere>;
+  sort?: InputMaybe<Array<InputMaybe<HashableNodePropsSort>>>;
 };
 
-export type QueryDiffResultsAggregateArgs = {
-  where?: InputMaybe<DiffResultWhere>;
+export type QueryHashableNodePropsAggregateArgs = {
+  where?: InputMaybe<HashableNodePropsWhere>;
 };
 
 export type QueryDiffItemsArgs = {
@@ -382,9 +388,9 @@ export type Mutation = {
   createWinDataTypes: CreateWinDataTypesMutationResponse;
   deleteWinDataTypes: DeleteInfo;
   updateWinDataTypes: UpdateWinDataTypesMutationResponse;
-  createDiffResults: CreateDiffResultsMutationResponse;
-  deleteDiffResults: DeleteInfo;
-  updateDiffResults: UpdateDiffResultsMutationResponse;
+  createHashableNodeProps: CreateHashableNodePropsMutationResponse;
+  deleteHashableNodeProps: DeleteInfo;
+  updateHashableNodeProps: UpdateHashableNodePropsMutationResponse;
   createDiffItems: CreateDiffItemsMutationResponse;
   deleteDiffItems: DeleteInfo;
   updateDiffItems: UpdateDiffItemsMutationResponse;
@@ -584,17 +590,17 @@ export type MutationUpdateWinDataTypesArgs = {
   connectOrCreate?: InputMaybe<WinDataTypeConnectOrCreateInput>;
 };
 
-export type MutationCreateDiffResultsArgs = {
-  input: Array<DiffResultCreateInput>;
+export type MutationCreateHashableNodePropsArgs = {
+  input: Array<HashableNodePropsCreateInput>;
 };
 
-export type MutationDeleteDiffResultsArgs = {
-  where?: InputMaybe<DiffResultWhere>;
+export type MutationDeleteHashableNodePropsArgs = {
+  where?: InputMaybe<HashableNodePropsWhere>;
 };
 
-export type MutationUpdateDiffResultsArgs = {
-  where?: InputMaybe<DiffResultWhere>;
-  update?: InputMaybe<DiffResultUpdateInput>;
+export type MutationUpdateHashableNodePropsArgs = {
+  where?: InputMaybe<HashableNodePropsWhere>;
+  update?: InputMaybe<HashableNodePropsUpdateInput>;
 };
 
 export type MutationCreateDiffItemsArgs = {
@@ -636,9 +642,10 @@ export type MutationUpdateSearchResultsArgs = {
   update?: InputMaybe<SearchResultUpdateInput>;
 };
 
-export enum FsNodeType {
-  Blob = "BLOB",
-  Tree = "TREE",
+export enum DiffStatus {
+  New = "NEW",
+  Mod = "MOD",
+  Del = "DEL",
 }
 
 export enum HashableImplementation {
@@ -650,6 +657,13 @@ export enum HashableImplementation {
   WinStruct = "WinStruct",
   WinStructField = "WinStructField",
   WinDataType = "WinDataType",
+}
+
+export enum NodeType {
+  Blob = "Blob",
+  Tree = "Tree",
+  WinRegValue = "WinRegValue",
+  WinRegKey = "WinRegKey",
 }
 
 /** An enum for sorting in either ascending or descending order. */
@@ -1058,10 +1072,10 @@ export type CreateDiffItemsMutationResponse = {
   diffItems: Array<DiffItem>;
 };
 
-export type CreateDiffResultsMutationResponse = {
-  __typename?: "CreateDiffResultsMutationResponse";
+export type CreateHashableNodePropsMutationResponse = {
+  __typename?: "CreateHashableNodePropsMutationResponse";
   info: CreateInfo;
-  diffResults: Array<DiffResult>;
+  hashableNodeProps: Array<HashableNodeProps>;
 };
 
 /** Information about the number of nodes and relationships created during a create mutation */
@@ -1138,18 +1152,17 @@ export type DeleteInfo = {
 
 export type DiffItem = {
   __typename?: "DiffItem";
+  status: DiffStatus;
   path: Scalars["String"]["output"];
-  type: FsNodeType;
-  old_hash?: Maybe<Scalars["String"]["output"]>;
-  new_hash?: Maybe<Scalars["String"]["output"]>;
+  type: NodeType;
+  old_props?: Maybe<HashableNodeProps>;
+  new_props?: Maybe<HashableNodeProps>;
 };
 
 export type DiffItemAggregateSelection = {
   __typename?: "DiffItemAggregateSelection";
   count: Scalars["Int"]["output"];
   path: StringAggregateSelection;
-  old_hash: StringAggregateSelection;
-  new_hash: StringAggregateSelection;
 };
 
 export type DiffItemEdge = {
@@ -1163,31 +1176,6 @@ export type DiffItemsConnection = {
   totalCount: Scalars["Int"]["output"];
   pageInfo: PageInfo;
   edges: Array<DiffItemEdge>;
-};
-
-export type DiffResult = {
-  __typename?: "DiffResult";
-  newitems: Array<Maybe<DiffItem>>;
-  delitems: Array<Maybe<DiffItem>>;
-  moditems: Array<Maybe<DiffItem>>;
-};
-
-export type DiffResultAggregateSelection = {
-  __typename?: "DiffResultAggregateSelection";
-  count: Scalars["Int"]["output"];
-};
-
-export type DiffResultEdge = {
-  __typename?: "DiffResultEdge";
-  cursor: Scalars["String"]["output"];
-  node: DiffResult;
-};
-
-export type DiffResultsConnection = {
-  __typename?: "DiffResultsConnection";
-  totalCount: Scalars["Int"]["output"];
-  pageInfo: PageInfo;
-  edges: Array<DiffResultEdge>;
 };
 
 /**
@@ -1212,6 +1200,31 @@ export type HashableEdge = {
   __typename?: "HashableEdge";
   cursor: Scalars["String"]["output"];
   node: Hashable;
+};
+
+export type HashableNodeProps = {
+  __typename?: "HashableNodeProps";
+  hash: Scalars["String"]["output"];
+  properties: Scalars["JSON"]["output"];
+};
+
+export type HashableNodePropsAggregateSelection = {
+  __typename?: "HashableNodePropsAggregateSelection";
+  count: Scalars["Int"]["output"];
+  hash: StringAggregateSelection;
+};
+
+export type HashableNodePropsConnection = {
+  __typename?: "HashableNodePropsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<HashableNodePropsEdge>;
+};
+
+export type HashableNodePropsEdge = {
+  __typename?: "HashableNodePropsEdge";
+  cursor: Scalars["String"]["output"];
+  node: HashableNodeProps;
 };
 
 export type HashablesConnection = {
@@ -1515,10 +1528,10 @@ export type UpdateDiffItemsMutationResponse = {
   diffItems: Array<DiffItem>;
 };
 
-export type UpdateDiffResultsMutationResponse = {
-  __typename?: "UpdateDiffResultsMutationResponse";
+export type UpdateHashableNodePropsMutationResponse = {
+  __typename?: "UpdateHashableNodePropsMutationResponse";
   info: UpdateInfo;
-  diffResults: Array<DiffResult>;
+  hashableNodeProps: Array<HashableNodeProps>;
 };
 
 /** Information about the number of nodes and relationships created and deleted during an update mutation */
@@ -3705,10 +3718,9 @@ export type CommitWhere = {
 };
 
 export type DiffItemCreateInput = {
+  status: DiffStatus;
   path: Scalars["String"]["input"];
-  type: FsNodeType;
-  old_hash?: InputMaybe<Scalars["String"]["input"]>;
-  new_hash?: InputMaybe<Scalars["String"]["input"]>;
+  type: NodeType;
 };
 
 export type DiffItemOptions = {
@@ -3720,20 +3732,24 @@ export type DiffItemOptions = {
 
 /** Fields to sort DiffItems by. The order in which sorts are applied is not guaranteed when specifying many fields in one DiffItemSort object. */
 export type DiffItemSort = {
+  status?: InputMaybe<SortDirection>;
   path?: InputMaybe<SortDirection>;
   type?: InputMaybe<SortDirection>;
-  old_hash?: InputMaybe<SortDirection>;
-  new_hash?: InputMaybe<SortDirection>;
 };
 
 export type DiffItemUpdateInput = {
+  status?: InputMaybe<DiffStatus>;
   path?: InputMaybe<Scalars["String"]["input"]>;
-  type?: InputMaybe<FsNodeType>;
-  old_hash?: InputMaybe<Scalars["String"]["input"]>;
-  new_hash?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<NodeType>;
 };
 
 export type DiffItemWhere = {
+  status?: InputMaybe<DiffStatus>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  status_NOT?: InputMaybe<DiffStatus>;
+  status_IN?: InputMaybe<Array<DiffStatus>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  status_NOT_IN?: InputMaybe<Array<DiffStatus>>;
   path?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
   path_NOT?: InputMaybe<Scalars["String"]["input"]>;
@@ -3749,66 +3765,15 @@ export type DiffItemWhere = {
   path_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
   path_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  type?: InputMaybe<FsNodeType>;
+  type?: InputMaybe<NodeType>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  type_NOT?: InputMaybe<FsNodeType>;
-  type_IN?: InputMaybe<Array<FsNodeType>>;
+  type_NOT?: InputMaybe<NodeType>;
+  type_IN?: InputMaybe<Array<NodeType>>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  type_NOT_IN?: InputMaybe<Array<FsNodeType>>;
-  old_hash?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  old_hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
-  old_hash_IN?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  old_hash_NOT_IN?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
-  old_hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  old_hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  old_hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  old_hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  old_hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  old_hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  new_hash?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  new_hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
-  new_hash_IN?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  new_hash_NOT_IN?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
-  new_hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  new_hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  new_hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  new_hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  new_hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  new_hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  type_NOT_IN?: InputMaybe<Array<NodeType>>;
   OR?: InputMaybe<Array<DiffItemWhere>>;
   AND?: InputMaybe<Array<DiffItemWhere>>;
   NOT?: InputMaybe<DiffItemWhere>;
-};
-
-export type DiffResultCreateInput = {
-  /** Appears because this input type would be empty otherwise because this type is composed of just generated and/or relationship properties. See https://neo4j.com/docs/graphql-manual/current/troubleshooting/faqs/ */
-  _emptyInput?: InputMaybe<Scalars["Boolean"]["input"]>;
-};
-
-export type DiffResultOptions = {
-  limit?: InputMaybe<Scalars["Int"]["input"]>;
-  offset?: InputMaybe<Scalars["Int"]["input"]>;
-};
-
-export type DiffResultUpdateInput = {
-  /** Appears because this input type would be empty otherwise because this type is composed of just generated and/or relationship properties. See https://neo4j.com/docs/graphql-manual/current/troubleshooting/faqs/ */
-  _emptyInput?: InputMaybe<Scalars["Boolean"]["input"]>;
-};
-
-export type DiffResultWhere = {
-  OR?: InputMaybe<Array<DiffResultWhere>>;
-  AND?: InputMaybe<Array<DiffResultWhere>>;
-  NOT?: InputMaybe<DiffResultWhere>;
 };
 
 export type HasFilenameRelAggregationWhereInput = {
@@ -3903,6 +3868,56 @@ export type HasFilenameRelWhere = {
   OR?: InputMaybe<Array<HasFilenameRelWhere>>;
   AND?: InputMaybe<Array<HasFilenameRelWhere>>;
   NOT?: InputMaybe<HasFilenameRelWhere>;
+};
+
+export type HashableNodePropsCreateInput = {
+  hash: Scalars["String"]["input"];
+  properties: Scalars["JSON"]["input"];
+};
+
+export type HashableNodePropsOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more HashableNodePropsSort objects to sort HashableNodeProps by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<HashableNodePropsSort>>;
+};
+
+/** Fields to sort HashableNodeProps by. The order in which sorts are applied is not guaranteed when specifying many fields in one HashableNodePropsSort object. */
+export type HashableNodePropsSort = {
+  hash?: InputMaybe<SortDirection>;
+  properties?: InputMaybe<SortDirection>;
+};
+
+export type HashableNodePropsUpdateInput = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  properties?: InputMaybe<Scalars["JSON"]["input"]>;
+};
+
+export type HashableNodePropsWhere = {
+  hash?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  properties?: InputMaybe<Scalars["JSON"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  properties_NOT?: InputMaybe<Scalars["JSON"]["input"]>;
+  properties_IN?: InputMaybe<Array<Scalars["JSON"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  properties_NOT_IN?: InputMaybe<Array<Scalars["JSON"]["input"]>>;
+  OR?: InputMaybe<Array<HashableNodePropsWhere>>;
+  AND?: InputMaybe<Array<HashableNodePropsWhere>>;
+  NOT?: InputMaybe<HashableNodePropsWhere>;
 };
 
 export type HashableOptions = {
@@ -7440,56 +7455,55 @@ export declare class WinDataTypeModel {
   }): Promise<WinDataTypeAggregateSelection>;
 }
 
-export interface DiffResultAggregateSelectionInput {
+export interface HashableNodePropsAggregateSelectionInput {
   count?: boolean;
+  hash?: boolean;
 }
 
-export declare class DiffResultModel {
+export declare class HashableNodePropsModel {
   public find(args?: {
-    where?: DiffResultWhere;
+    where?: HashableNodePropsWhere;
 
-    options?: DiffResultOptions;
+    options?: HashableNodePropsOptions;
     selectionSet?: string | DocumentNode | SelectionSetNode;
     args?: any;
     context?: any;
     rootValue?: any;
-  }): Promise<DiffResult[]>;
+  }): Promise<HashableNodeProps[]>;
   public create(args: {
-    input: DiffResultCreateInput[];
+    input: HashableNodePropsCreateInput[];
     selectionSet?: string | DocumentNode | SelectionSetNode;
     args?: any;
     context?: any;
     rootValue?: any;
-  }): Promise<CreateDiffResultsMutationResponse>;
+  }): Promise<CreateHashableNodePropsMutationResponse>;
   public update(args: {
-    where?: DiffResultWhere;
-    update?: DiffResultUpdateInput;
+    where?: HashableNodePropsWhere;
+    update?: HashableNodePropsUpdateInput;
 
     selectionSet?: string | DocumentNode | SelectionSetNode;
     args?: any;
     context?: any;
     rootValue?: any;
-  }): Promise<UpdateDiffResultsMutationResponse>;
+  }): Promise<UpdateHashableNodePropsMutationResponse>;
   public delete(args: {
-    where?: DiffResultWhere;
+    where?: HashableNodePropsWhere;
 
     context?: any;
     rootValue?: any;
   }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
   public aggregate(args: {
-    where?: DiffResultWhere;
+    where?: HashableNodePropsWhere;
 
-    aggregate: DiffResultAggregateSelectionInput;
+    aggregate: HashableNodePropsAggregateSelectionInput;
     context?: any;
     rootValue?: any;
-  }): Promise<DiffResultAggregateSelection>;
+  }): Promise<HashableNodePropsAggregateSelection>;
 }
 
 export interface DiffItemAggregateSelectionInput {
   count?: boolean;
   path?: boolean;
-  old_hash?: boolean;
-  new_hash?: boolean;
 }
 
 export declare class DiffItemModel {
@@ -7639,7 +7653,7 @@ export interface ModelMap {
   WinStruct: WinStructModel;
   WinStructField: WinStructFieldModel;
   WinDataType: WinDataTypeModel;
-  DiffResult: DiffResultModel;
+  HashableNodeProps: HashableNodePropsModel;
   DiffItem: DiffItemModel;
   User: UserModel;
   SearchResult: SearchResultModel;
