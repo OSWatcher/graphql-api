@@ -108,11 +108,9 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
             },
             async traversePath(
                 _source: unknown,
-                args: { tree_hash: string; path: string }
+                args: { parent_label: string; tree_hash: string; path: string }
             ) {
-                const { tree_hash, path } = args;
-                // TODO
-                const parent_label = "Tree";
+                const { parent_label, tree_hash, path } = args;
                 return await get_path_entry(
                     driver,
                     parent_label,
