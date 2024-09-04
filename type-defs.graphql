@@ -1,12 +1,22 @@
+scalar JSON
+
 # common interface for all hashable nodes
 # having a .hash property
 interface Hashable {
     hash: String!
 }
 
-enum FsNodeType {
-    BLOB
-    TREE
+enum NodeType {
+    Blob
+    Tree
+    WinRegValue
+    WinRegKey
+}
+
+enum DiffStatus {
+    NEW
+    MOD
+    DEL
 }
 
 type Blob implements Hashable {
@@ -111,24 +121,23 @@ type WinDataType implements Hashable {
     has_data_type: WinDataType @relationship(type: "HAS_DATA_TYPE", direction: OUT)
 }
 
-
 # custom Mutations
 type Mutation {
     mergeTree(input: TreeCreateInput!): String!
 }
 
 # custom types not part of Data model
-type DiffResult {
-    newitems: [DiffItem]!
-    delitems: [DiffItem]!
-    moditems: [DiffItem]!
+type HashableNodeProps {
+    hash: String!
+    properties: JSON!
 }
 
 type DiffItem {
+    status: DiffStatus!
     path: String!
-    type: FsNodeType!
-    old_hash: String
-    new_hash: String
+    type: NodeType!
+    old_props: HashableNodeProps
+    new_props: HashableNodeProps
 }
 
 type User {
@@ -144,16 +153,18 @@ type SearchResult {
 
 # custom Queries
 type Query {
-    diffCommitsAt(
-        base_commit_hash: String!
-        diffee_commit_hash: String!
+    diffNodesAt(
+        parent_label: String!
+        base_node_hash: String!
+        diffee_node_hash: String!
         at_path: String!
         max_depth: Int
-    ): DiffResult!
+        filter: [String!]
+    ): [DiffItem!]!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
     # given a node hash, traverse the children nodes following the path
-    traversePath(tree_hash: String!, path: String!): String
+    traversePath(parent_label: String!, tree_hash: String!, path: String!): String
     # get all the possibile data labels associated with an os
     getCommitExtractedDataLabels(commit_hash: String!): [String!]!
     # search

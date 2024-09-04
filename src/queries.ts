@@ -1,31 +1,9 @@
 // diff
-
-// Note: return a list instead of a map of parent_hash -> child_hash
-// since Cypher doesn't support dynamic keys in map projections
-export const DIFF_QUERY = `
-MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
-WHERE t.hash = $base
-    OR t.hash = $diffee
-RETURN t.hash as parent_hash, type(r) as type, r.name as name, c.hash as child_hash
+export const NODES_DIFF_QUERY = `
+CALL example.diffTreesRecursive($parentLabel, $base, $diffee, $basePath, $filter, $maxDepth)
+YIELD status, type, path, old_props, new_props
+RETURN status, type, path, old_props, new_props
 `;
-
-export const RECURSIVE_BLOBS_QUERY = (var_length: string) => `
-MATCH path = (t:Tree)-[:HAS_CHILD_BLOB|HAS_CHILD_TREE${var_length}]->(b:Blob)
-WHERE t.hash = $parent_hash
-RETURN [r IN relationships(path) | r.name] as path_parts, b.hash as blob_hash
-`;
-
-// const DIFF_PARALLEL_QUERY = `
-// CALL apoc.cypher.mapParallel(
-//     'MATCH (t:Tree)-[r:HAS_CHILD_BLOB|HAS_CHILD_TREE]->(c)
-//     WHERE t.hash IN [_.base, _.diffee]
-//     WITH _, t.hash as parent_hash, collect({type: type(r), name: r.name, hash: c.hash}) as children
-//     RETURN collect({parent_hash: parent_hash, children: children}) as result, _.base as base_hash, _.diffee as diffee_hash, _.path as base_path',
-//     {},
-//     $hash_list
-// ) YIELD value
-// RETURN value
-// `;
 
 // search
 export const searchFSFullPathQuery = `
@@ -37,13 +15,11 @@ RETURN commit_name, commit_hash, blob_hash, full_path
 `;
 
 // filesystem
-export const GET_CHILD_NODE = `
-MATCH (p)-[r]->(c)
+export const GET_CHILD_NODE = (label: string) => `
+MATCH (p:${label})-[r]->(c)
 WHERE p.hash = $parent_hash AND r.name = $filename
 RETURN c
 `;
-
-export const GET_FINAL_NODE = GET_CHILD_NODE;
 
 // constraints
 export const createConstraintQuery = (label: string) => `
