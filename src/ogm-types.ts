@@ -102,6 +102,7 @@ export type QueryFetchCommitHistoryArgs = {
 };
 
 export type QueryTraversePathArgs = {
+  parent_label: Scalars["String"]["input"];
   tree_hash: Scalars["String"]["input"];
   path: Scalars["String"]["input"];
 };
@@ -661,6 +662,8 @@ export enum HashableImplementation {
 export enum NodeType {
   Blob = "Blob",
   Tree = "Tree",
+  WinRegValue = "WinRegValue",
+  WinRegKey = "WinRegKey",
 }
 
 /** An enum for sorting in either ascending or descending order. */
