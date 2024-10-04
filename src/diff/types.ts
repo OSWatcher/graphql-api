@@ -2,7 +2,8 @@ export enum NodeType {
     Blob = "Blob",
     Tree = "Tree",
     WinRegValue = "WinRegValue",
-    WinRegKey = "WinRegKey"
+    WinRegKey = "WinRegKey",
+    Symbol = "Symbol",
 }
 
 export enum DiffStatus {
