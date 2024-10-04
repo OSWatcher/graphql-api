@@ -4,6 +4,7 @@ export enum NodeType {
     WinRegValue = "WinRegValue",
     WinRegKey = "WinRegKey",
     Symbol = "Symbol",
+    WinStruct = "WinStruct",
 }
 
 export enum DiffStatus {
