@@ -6,6 +6,7 @@ export enum NodeType {
     Symbol = "Symbol",
     WinStruct = "WinStruct",
     WinStructField = "WinStructField",
+    WinDataType = "WinDataType",
 }
 
 export enum DiffStatus {
