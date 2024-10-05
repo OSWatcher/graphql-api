@@ -14,6 +14,7 @@ enum NodeType {
     Symbol
     WinStruct
     WinStructField
+    WinDataType
 }
 
 enum DiffStatus {
