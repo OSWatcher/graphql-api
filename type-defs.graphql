@@ -161,7 +161,7 @@ type Query {
         diffee_node_hash: String!
         at_path: String!
         max_depth: Int = null
-        filter: [String!]
+        filter: [String!] = []
     ): [DiffItem!]!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!

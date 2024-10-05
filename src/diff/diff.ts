@@ -13,7 +13,7 @@ export async function* diffTreesIterative(
     base_hash: string | null,
     diffee_hash: string | null,
     max_depth: number,
-    filter: Array<string> | null = null
+    filter: Array<string>
 ): AsyncGenerator<DiffRecord, void, void> {
     if (base_hash == null && diffee_hash == null) {
         throw new Error("At least one of the hashes should be not null");
