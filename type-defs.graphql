@@ -13,6 +13,7 @@ enum NodeType {
     WinRegKey
     Symbol
     WinStruct
+    WinStructField
 }
 
 enum DiffStatus {
