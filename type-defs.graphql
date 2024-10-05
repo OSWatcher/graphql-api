@@ -162,6 +162,7 @@ type Query {
         at_path: String!
         max_depth: Int = null
         filter: [String!] = []
+        with_intermediates: Boolean = false
     ): [DiffItem!]!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
