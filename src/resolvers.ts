@@ -39,8 +39,8 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     base_node_hash: string;
                     diffee_node_hash: string;
                     at_path: string;
-                    max_depth: number | null | undefined;
-                    filter: Array<string> | null | undefined;
+                    max_depth: number | null;
+                    filter: Array<string>;
                 }
             ) {
                 if (base_node_hash === "" || diffee_node_hash === "") {
@@ -48,14 +48,10 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         "Base and diffee node hashes cannot be empty"
                     );
                 }
-                // max_depth undefined ?
-                if (max_depth === undefined || max_depth === null) {
+                if (max_depth === null) {
                     max_depth = -1;
                 } else if (max_depth && max_depth < 0) {
                     throw new Error("Max depth should be a positive integer");
-                }
-                if (filter === undefined) {
-                    filter = null;
                 }
                 try {
                     // traverse the given path on both filesystems with get_path_entry()
