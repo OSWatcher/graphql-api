@@ -34,6 +34,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     at_path,
                     max_depth,
                     filter,
+                    with_intermediates,
                 }: {
                     parent_label: string;
                     base_node_hash: string;
@@ -41,6 +42,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     at_path: string;
                     max_depth: number | null;
                     filter: Array<string>;
+                    with_intermediates: boolean;
                 }
             ) {
                 if (base_node_hash === "" || diffee_node_hash === "") {
@@ -79,7 +81,8 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         base_entry_at,
                         diffee_entry_at,
                         max_depth,
-                        filter
+                        filter,
+                        with_intermediates
                     )) {
                         diff_result.push({
                             ...diff_obj,

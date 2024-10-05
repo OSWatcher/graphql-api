@@ -13,7 +13,8 @@ export async function* diffTreesIterative(
     base_hash: string | null,
     diffee_hash: string | null,
     max_depth: number,
-    filter: Array<string>
+    filter: Array<string>,
+    with_intermediates: boolean
 ): AsyncGenerator<DiffRecord, void, void> {
     if (base_hash == null && diffee_hash == null) {
         throw new Error("At least one of the hashes should be not null");
@@ -22,7 +23,15 @@ export async function* diffTreesIterative(
     const session = driver.session();
     try {
         const result: QueryResult<RecordShape> = await session.executeRead(async (tx) => {
-            return tx.run(NODES_DIFF_QUERY, { parentLabel: parent_label, base: base_hash, diffee: diffee_hash, basePath: base_path, maxDepth: max_depth, filter })
+            return tx.run(NODES_DIFF_QUERY, {
+                parentLabel: parent_label,
+                base: base_hash,
+                diffee: diffee_hash,
+                basePath: base_path,
+                maxDepth: max_depth,
+                filter,
+                withIntermediates: with_intermediates
+            })
         });
 
         for await (const record of result.records) {
