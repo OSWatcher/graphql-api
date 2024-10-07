@@ -95,6 +95,7 @@ export type QueryDiffNodesAtArgs = {
   at_path: Scalars["String"]["input"];
   max_depth?: InputMaybe<Scalars["Int"]["input"]>;
   filter?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  with_intermediates?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export type QueryFetchCommitHistoryArgs = {
@@ -357,7 +358,6 @@ export type QuerySearchResultsAggregateArgs = {
 
 export type Mutation = {
   __typename?: "Mutation";
-  mergeTree: Scalars["String"]["output"];
   createBlobs: CreateBlobsMutationResponse;
   deleteBlobs: DeleteInfo;
   updateBlobs: UpdateBlobsMutationResponse;
@@ -400,10 +400,6 @@ export type Mutation = {
   createSearchResults: CreateSearchResultsMutationResponse;
   deleteSearchResults: DeleteInfo;
   updateSearchResults: UpdateSearchResultsMutationResponse;
-};
-
-export type MutationMergeTreeArgs = {
-  input: TreeCreateInput;
 };
 
 export type MutationCreateBlobsArgs = {
@@ -664,6 +660,10 @@ export enum NodeType {
   Tree = "Tree",
   WinRegValue = "WinRegValue",
   WinRegKey = "WinRegKey",
+  Symbol = "Symbol",
+  WinStruct = "WinStruct",
+  WinStructField = "WinStructField",
+  WinDataType = "WinDataType",
 }
 
 /** An enum for sorting in either ascending or descending order. */

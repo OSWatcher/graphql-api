@@ -23,7 +23,7 @@ enum DiffStatus {
     DEL
 }
 
-type Blob implements Hashable {
+type Blob implements Hashable @mutation(operations: []) {
     hash: String! @unique
     has_winreg: WinRegKey @relationship(type: "HAS_WINREG", direction: OUT)
     has_symbol: [Symbol!]! @relationship(type: "HAS_SYMBOL", direction: OUT, properties: "HasSymbolAddressRel")
@@ -34,7 +34,7 @@ type HasFilenameRel @relationshipProperties {
     name: String!
 }
 
-type Tree implements Hashable {
+type Tree implements Hashable @mutation(operations: []) {
     hash: String! @unique
     child_blobs: [Blob!]!
         @relationship(
@@ -50,7 +50,7 @@ type Tree implements Hashable {
         )
 }
 
-type Commit implements Hashable {
+type Commit implements Hashable @mutation(operations: []) {
     hash: String! @unique
     name: String!
     description: String
@@ -59,20 +59,20 @@ type Commit implements Hashable {
     filesystem: Tree @relationship(type: "OWNS_FILESYSTEM", direction: OUT)
 }
 
-type Branch {
+type Branch @mutation(operations: []) {
     name: String!
     tracks: Commit @relationship(type: "TRACKS_COMMIT", direction: OUT)
 }
 
 # Plugins types
 ## Registry
-type WinRegValue implements Hashable {
+type WinRegValue implements Hashable @mutation(operations: []) {
     hash: String! @unique
     type: String!
     value: String!
 }
 
-type WinRegKey implements Hashable {
+type WinRegKey implements Hashable @mutation(operations: []) {
     hash: String! @unique
     child_values: [WinRegValue!]!
         @relationship(
@@ -89,7 +89,7 @@ type WinRegKey implements Hashable {
 }
 
 ## PDBs
-type Symbol {
+type Symbol @mutation(operations: []) {
     name: String!
     blob: Blob! @relationship(type: "HAS_SYMBOL", direction: IN, properties: "HasSymbolAddressRel")
 }
@@ -98,7 +98,7 @@ type HasSymbolAddressRel @relationshipProperties {
     address: String!
 }
 
-type WinStruct implements Hashable {
+type WinStruct implements Hashable @mutation(operations: []) {
     hash: String! @unique
     name: String!
     size: Int!
@@ -108,14 +108,14 @@ type WinStruct implements Hashable {
     blob: Blob! @relationship(type: "HAS_STRUCT", direction: IN)
 }
 
-type WinStructField implements Hashable {
+type WinStructField implements Hashable @mutation(operations: []) {
     hash: String! @unique
     name: String!
     offset: Int!
     type: WinDataType! @relationship(type: "HAS_DATA_TYPE", direction: OUT)
 }
 
-type WinDataType implements Hashable {
+type WinDataType implements Hashable @mutation(operations: []) {
     hash: String! @unique
     type: String!
     name: String
@@ -125,18 +125,13 @@ type WinDataType implements Hashable {
     has_data_type: WinDataType @relationship(type: "HAS_DATA_TYPE", direction: OUT)
 }
 
-# custom Mutations
-type Mutation {
-    mergeTree(input: TreeCreateInput!): String!
-}
-
 # custom types not part of Data model
-type HashableNodeProps {
+type HashableNodeProps @mutation(operations: []) {
     hash: String!
     properties: JSON!
 }
 
-type DiffItem {
+type DiffItem @mutation(operations: []) {
     status: DiffStatus!
     path: String!
     type: NodeType!
@@ -144,11 +139,11 @@ type DiffItem {
     new_props: HashableNodeProps
 }
 
-type User {
+type User @mutation(operations: []) {
     name: String!
 }
 
-type SearchResult {
+type SearchResult @mutation(operations: []) {
     commit_name: String!
     commit_hash: String!
     hash: String!
