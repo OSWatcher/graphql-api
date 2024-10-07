@@ -166,5 +166,15 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                 }
             },
         },
+        WinStructField: {
+            data_type: (parent: { data_type: string }) => {
+                try {
+                    return JSON.parse(parent.data_type);
+                } catch (error) {
+                    console.error("Error parsing data_type JSON:", error);
+                    return null; // or return an empty object {} if you prefer
+                }
+            }
+        }
     };
 };
