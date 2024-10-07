@@ -125,11 +125,6 @@ type WinDataType implements Hashable {
     has_data_type: WinDataType @relationship(type: "HAS_DATA_TYPE", direction: OUT)
 }
 
-# custom Mutations
-type Mutation {
-    mergeTree(input: TreeCreateInput!): String!
-}
-
 # custom types not part of Data model
 type HashableNodeProps {
     hash: String!
