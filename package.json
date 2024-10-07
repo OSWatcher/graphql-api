@@ -27,8 +27,8 @@
   "private": true,
   "dependencies": {
     "@apollo/server": "^4.10.4",
-    "@neo4j/graphql": "^5.4.1",
-    "@neo4j/graphql-ogm": "^5.4.1",
+    "@neo4j/graphql": "^5.7.1",
+    "@neo4j/graphql-ogm": "^5.7.1",
     "dotenv": "^16.4.5",
     "graphql": "^16.8.1",
     "graphql-type-json": "^0.3.2",
