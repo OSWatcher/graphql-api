@@ -26,11 +26,15 @@ enum DiffStatus {
 type Blob implements Hashable @mutation(operations: []) {
     hash: String! @unique
     has_winreg: WinRegKey @relationship(type: "HAS_WINREG", direction: OUT)
-    has_symbol: [Symbol!]! @relationship(type: "HAS_SYMBOL", direction: OUT, properties: "HasSymbolAddressRel")
-    has_struct: [WinStruct!]! @relationship(type: "HAS_STRUCT", direction: OUT)
+    has_symbol: [Symbol!]! @relationship(type: "HAS_SYMBOL", direction: OUT, properties: "HasNameRel")
+    has_struct: [WinStruct!]! @relationship(type: "HAS_STRUCT", direction: OUT, properties: "HasNameRel")
 }
 
 type HasFilenameRel @relationshipProperties {
+    name: String!
+}
+
+type HasNameRel @relationshipProperties {
     name: String!
 }
 
@@ -89,30 +93,27 @@ type WinRegKey implements Hashable @mutation(operations: []) {
 }
 
 ## PDBs
-type Symbol @mutation(operations: []) {
-    name: String!
-    blob: Blob! @relationship(type: "HAS_SYMBOL", direction: IN, properties: "HasSymbolAddressRel")
-}
-
-type HasSymbolAddressRel @relationshipProperties {
+type Symbol implements Hashable @mutation(operations: [])  {
+    hash: String! @unique
     address: String!
+    blob: Blob! @relationship(type: "HAS_SYMBOL", direction: IN, properties: "HasNameRel")
 }
 
 type WinStruct implements Hashable @mutation(operations: []) {
     hash: String! @unique
-    name: String!
     size: Int!
     kind: String!
     fields: [WinStructField!]!
-        @relationship(type: "HAS_FIELD", direction: OUT)
-    blob: Blob! @relationship(type: "HAS_STRUCT", direction: IN)
+        @relationship(type: "HAS_FIELD", direction: OUT, properties: "HasNameRel")
+    blob: Blob! @relationship(type: "HAS_STRUCT", direction: IN, properties: "HasNameRel")
 }
 
 type WinStructField implements Hashable @mutation(operations: []) {
     hash: String! @unique
-    name: String!
     offset: Int!
-    type: WinDataType! @relationship(type: "HAS_DATA_TYPE", direction: OUT)
+    data_type: JSON!
+    # type: WinDataType! @relationship(type: "HAS_DATA_TYPE", direction: OUT)
+    struct: WinStruct! @relationship(type: "HAS_FIELD", direction: IN, properties: "HasNameRel")
 }
 
 type WinDataType implements Hashable @mutation(operations: []) {
