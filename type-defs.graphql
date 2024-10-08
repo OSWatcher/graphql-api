@@ -140,10 +140,6 @@ type DiffItem @query(read: false, aggregate: false) @mutation(operations: []) {
     new_props: HashableNodeProps
 }
 
-type User @mutation(operations: []) {
-    name: String!
-}
-
 type SearchResult @mutation(operations: []) {
     commit_name: String!
     commit_hash: String!
