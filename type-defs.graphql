@@ -127,12 +127,12 @@ type WinDataType implements Hashable @mutation(operations: []) {
 }
 
 # custom types not part of Data model
-type HashableNodeProps @mutation(operations: []) {
+type HashableNodeProps @query(read: false, aggregate: false) @mutation(operations: []) {
     hash: String!
     properties: JSON!
 }
 
-type DiffItem @mutation(operations: []) {
+type DiffItem @query(read: false, aggregate: false) @mutation(operations: []) {
     status: DiffStatus!
     path: String!
     type: NodeType!
@@ -140,11 +140,7 @@ type DiffItem @mutation(operations: []) {
     new_props: HashableNodeProps
 }
 
-type User @mutation(operations: []) {
-    name: String!
-}
-
-type SearchResult @mutation(operations: []) {
+type SearchResult @query(read: false, aggregate: false) @mutation(operations: []) {
     commit_name: String!
     commit_hash: String!
     hash: String!
