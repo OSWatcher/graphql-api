@@ -42,6 +42,7 @@ export type Query = {
   getCommitExtractedDataLabels: Array<Scalars["String"]["output"]>;
   search: Array<SearchResult>;
   fetchSymbols: Array<SymbolFetchResult>;
+  fetchStructs: Array<WinStructFetchResult>;
   hashables: Array<Hashable>;
   hashablesConnection: HashablesConnection;
   hashablesAggregate: HashableAggregateSelection;
@@ -87,6 +88,12 @@ export type Query = {
   symbolFetchResults: Array<SymbolFetchResult>;
   symbolFetchResultsConnection: SymbolFetchResultsConnection;
   symbolFetchResultsAggregate: SymbolFetchResultAggregateSelection;
+  winStructFieldFetchResults: Array<WinStructFieldFetchResult>;
+  winStructFieldFetchResultsConnection: WinStructFieldFetchResultsConnection;
+  winStructFieldFetchResultsAggregate: WinStructFieldFetchResultAggregateSelection;
+  winStructFetchResults: Array<WinStructFetchResult>;
+  winStructFetchResultsConnection: WinStructFetchResultsConnection;
+  winStructFetchResultsAggregate: WinStructFetchResultAggregateSelection;
 };
 
 export type QueryDiffNodesAtArgs = {
@@ -120,6 +127,11 @@ export type QuerySearchArgs = {
 export type QueryFetchSymbolsArgs = {
   blob_hash: Scalars["String"]["input"];
   options?: InputMaybe<SymbolOptions>;
+};
+
+export type QueryFetchStructsArgs = {
+  blob_hash: Scalars["String"]["input"];
+  options?: InputMaybe<WinStructOptions>;
 };
 
 export type QueryHashablesArgs = {
@@ -362,6 +374,38 @@ export type QuerySymbolFetchResultsAggregateArgs = {
   where?: InputMaybe<SymbolFetchResultWhere>;
 };
 
+export type QueryWinStructFieldFetchResultsArgs = {
+  where?: InputMaybe<WinStructFieldFetchResultWhere>;
+  options?: InputMaybe<WinStructFieldFetchResultOptions>;
+};
+
+export type QueryWinStructFieldFetchResultsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<WinStructFieldFetchResultWhere>;
+  sort?: InputMaybe<Array<InputMaybe<WinStructFieldFetchResultSort>>>;
+};
+
+export type QueryWinStructFieldFetchResultsAggregateArgs = {
+  where?: InputMaybe<WinStructFieldFetchResultWhere>;
+};
+
+export type QueryWinStructFetchResultsArgs = {
+  where?: InputMaybe<WinStructFetchResultWhere>;
+  options?: InputMaybe<WinStructFetchResultOptions>;
+};
+
+export type QueryWinStructFetchResultsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<WinStructFetchResultWhere>;
+  sort?: InputMaybe<Array<InputMaybe<WinStructFetchResultSort>>>;
+};
+
+export type QueryWinStructFetchResultsAggregateArgs = {
+  where?: InputMaybe<WinStructFetchResultWhere>;
+};
+
 export type Mutation = {
   __typename?: "Mutation";
   createBlobs: CreateBlobsMutationResponse;
@@ -406,6 +450,12 @@ export type Mutation = {
   createSymbolFetchResults: CreateSymbolFetchResultsMutationResponse;
   deleteSymbolFetchResults: DeleteInfo;
   updateSymbolFetchResults: UpdateSymbolFetchResultsMutationResponse;
+  createWinStructFieldFetchResults: CreateWinStructFieldFetchResultsMutationResponse;
+  deleteWinStructFieldFetchResults: DeleteInfo;
+  updateWinStructFieldFetchResults: UpdateWinStructFieldFetchResultsMutationResponse;
+  createWinStructFetchResults: CreateWinStructFetchResultsMutationResponse;
+  deleteWinStructFetchResults: DeleteInfo;
+  updateWinStructFetchResults: UpdateWinStructFetchResultsMutationResponse;
 };
 
 export type MutationCreateBlobsArgs = {
@@ -642,6 +692,32 @@ export type MutationDeleteSymbolFetchResultsArgs = {
 export type MutationUpdateSymbolFetchResultsArgs = {
   where?: InputMaybe<SymbolFetchResultWhere>;
   update?: InputMaybe<SymbolFetchResultUpdateInput>;
+};
+
+export type MutationCreateWinStructFieldFetchResultsArgs = {
+  input: Array<WinStructFieldFetchResultCreateInput>;
+};
+
+export type MutationDeleteWinStructFieldFetchResultsArgs = {
+  where?: InputMaybe<WinStructFieldFetchResultWhere>;
+};
+
+export type MutationUpdateWinStructFieldFetchResultsArgs = {
+  where?: InputMaybe<WinStructFieldFetchResultWhere>;
+  update?: InputMaybe<WinStructFieldFetchResultUpdateInput>;
+};
+
+export type MutationCreateWinStructFetchResultsArgs = {
+  input: Array<WinStructFetchResultCreateInput>;
+};
+
+export type MutationDeleteWinStructFetchResultsArgs = {
+  where?: InputMaybe<WinStructFetchResultWhere>;
+};
+
+export type MutationUpdateWinStructFetchResultsArgs = {
+  where?: InputMaybe<WinStructFetchResultWhere>;
+  update?: InputMaybe<WinStructFetchResultUpdateInput>;
 };
 
 export enum DiffStatus {
@@ -1143,6 +1219,18 @@ export type CreateWinRegValuesMutationResponse = {
   winRegValues: Array<WinRegValue>;
 };
 
+export type CreateWinStructFetchResultsMutationResponse = {
+  __typename?: "CreateWinStructFetchResultsMutationResponse";
+  info: CreateInfo;
+  winStructFetchResults: Array<WinStructFetchResult>;
+};
+
+export type CreateWinStructFieldFetchResultsMutationResponse = {
+  __typename?: "CreateWinStructFieldFetchResultsMutationResponse";
+  info: CreateInfo;
+  winStructFieldFetchResults: Array<WinStructFieldFetchResult>;
+};
+
 export type CreateWinStructFieldsMutationResponse = {
   __typename?: "CreateWinStructFieldsMutationResponse";
   info: CreateInfo;
@@ -1633,6 +1721,18 @@ export type UpdateWinRegValuesMutationResponse = {
   winRegValues: Array<WinRegValue>;
 };
 
+export type UpdateWinStructFetchResultsMutationResponse = {
+  __typename?: "UpdateWinStructFetchResultsMutationResponse";
+  info: UpdateInfo;
+  winStructFetchResults: Array<WinStructFetchResult>;
+};
+
+export type UpdateWinStructFieldFetchResultsMutationResponse = {
+  __typename?: "UpdateWinStructFieldFetchResultsMutationResponse";
+  info: UpdateInfo;
+  winStructFieldFetchResults: Array<WinStructFieldFetchResult>;
+};
+
 export type UpdateWinStructFieldsMutationResponse = {
   __typename?: "UpdateWinStructFieldsMutationResponse";
   info: UpdateInfo;
@@ -1986,6 +2086,35 @@ export type WinStructEdge = {
   node: WinStruct;
 };
 
+export type WinStructFetchResult = {
+  __typename?: "WinStructFetchResult";
+  name: Scalars["String"]["output"];
+  size: Scalars["Int"]["output"];
+  kind: Scalars["String"]["output"];
+  fields: Array<WinStructFieldFetchResult>;
+};
+
+export type WinStructFetchResultAggregateSelection = {
+  __typename?: "WinStructFetchResultAggregateSelection";
+  count: Scalars["Int"]["output"];
+  name: StringAggregateSelection;
+  size: IntAggregateSelection;
+  kind: StringAggregateSelection;
+};
+
+export type WinStructFetchResultEdge = {
+  __typename?: "WinStructFetchResultEdge";
+  cursor: Scalars["String"]["output"];
+  node: WinStructFetchResult;
+};
+
+export type WinStructFetchResultsConnection = {
+  __typename?: "WinStructFetchResultsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<WinStructFetchResultEdge>;
+};
+
 export type WinStructField = Hashable & {
   __typename?: "WinStructField";
   hash: Scalars["String"]["output"];
@@ -2026,6 +2155,33 @@ export type WinStructFieldEdge = {
   __typename?: "WinStructFieldEdge";
   cursor: Scalars["String"]["output"];
   node: WinStructField;
+};
+
+export type WinStructFieldFetchResult = {
+  __typename?: "WinStructFieldFetchResult";
+  name: Scalars["String"]["output"];
+  offset: Scalars["Int"]["output"];
+  data_type: Scalars["JSON"]["output"];
+};
+
+export type WinStructFieldFetchResultAggregateSelection = {
+  __typename?: "WinStructFieldFetchResultAggregateSelection";
+  count: Scalars["Int"]["output"];
+  name: StringAggregateSelection;
+  offset: IntAggregateSelection;
+};
+
+export type WinStructFieldFetchResultEdge = {
+  __typename?: "WinStructFieldFetchResultEdge";
+  cursor: Scalars["String"]["output"];
+  node: WinStructFieldFetchResult;
+};
+
+export type WinStructFieldFetchResultsConnection = {
+  __typename?: "WinStructFieldFetchResultsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<WinStructFieldFetchResultEdge>;
 };
 
 export type WinStructFieldsConnection = {
@@ -6259,6 +6415,80 @@ export type WinStructDisconnectInput = {
   blob?: InputMaybe<WinStructBlobDisconnectFieldInput>;
 };
 
+export type WinStructFetchResultCreateInput = {
+  name: Scalars["String"]["input"];
+  size: Scalars["Int"]["input"];
+  kind: Scalars["String"]["input"];
+};
+
+export type WinStructFetchResultOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more WinStructFetchResultSort objects to sort WinStructFetchResults by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<WinStructFetchResultSort>>;
+};
+
+/** Fields to sort WinStructFetchResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one WinStructFetchResultSort object. */
+export type WinStructFetchResultSort = {
+  name?: InputMaybe<SortDirection>;
+  size?: InputMaybe<SortDirection>;
+  kind?: InputMaybe<SortDirection>;
+};
+
+export type WinStructFetchResultUpdateInput = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  size?: InputMaybe<Scalars["Int"]["input"]>;
+  size_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  kind?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type WinStructFetchResultWhere = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  size?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  size_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  size_NOT_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  size_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  size_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  kind?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  kind_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  kind_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  kind_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  kind_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  OR?: InputMaybe<Array<WinStructFetchResultWhere>>;
+  AND?: InputMaybe<Array<WinStructFetchResultWhere>>;
+  NOT?: InputMaybe<WinStructFetchResultWhere>;
+};
+
 export type WinStructFieldConnectInput = {
   struct?: InputMaybe<WinStructFieldStructConnectFieldInput>;
 };
@@ -6288,6 +6518,71 @@ export type WinStructFieldDeleteInput = {
 
 export type WinStructFieldDisconnectInput = {
   struct?: InputMaybe<WinStructFieldStructDisconnectFieldInput>;
+};
+
+export type WinStructFieldFetchResultCreateInput = {
+  name: Scalars["String"]["input"];
+  offset: Scalars["Int"]["input"];
+  data_type: Scalars["JSON"]["input"];
+};
+
+export type WinStructFieldFetchResultOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more WinStructFieldFetchResultSort objects to sort WinStructFieldFetchResults by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<WinStructFieldFetchResultSort>>;
+};
+
+/** Fields to sort WinStructFieldFetchResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one WinStructFieldFetchResultSort object. */
+export type WinStructFieldFetchResultSort = {
+  name?: InputMaybe<SortDirection>;
+  offset?: InputMaybe<SortDirection>;
+  data_type?: InputMaybe<SortDirection>;
+};
+
+export type WinStructFieldFetchResultUpdateInput = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  data_type?: InputMaybe<Scalars["JSON"]["input"]>;
+};
+
+export type WinStructFieldFetchResultWhere = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  offset_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  offset_NOT_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  offset_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  data_type?: InputMaybe<Scalars["JSON"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  data_type_NOT?: InputMaybe<Scalars["JSON"]["input"]>;
+  data_type_IN?: InputMaybe<Array<Scalars["JSON"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  data_type_NOT_IN?: InputMaybe<Array<Scalars["JSON"]["input"]>>;
+  OR?: InputMaybe<Array<WinStructFieldFetchResultWhere>>;
+  AND?: InputMaybe<Array<WinStructFieldFetchResultWhere>>;
+  NOT?: InputMaybe<WinStructFieldFetchResultWhere>;
 };
 
 export type WinStructFieldOnCreateInput = {
@@ -7578,6 +7873,101 @@ export declare class SymbolFetchResultModel {
   }): Promise<SymbolFetchResultAggregateSelection>;
 }
 
+export interface WinStructFieldFetchResultAggregateSelectionInput {
+  count?: boolean;
+  name?: boolean;
+  offset?: boolean;
+}
+
+export declare class WinStructFieldFetchResultModel {
+  public find(args?: {
+    where?: WinStructFieldFetchResultWhere;
+
+    options?: WinStructFieldFetchResultOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinStructFieldFetchResult[]>;
+  public create(args: {
+    input: WinStructFieldFetchResultCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateWinStructFieldFetchResultsMutationResponse>;
+  public update(args: {
+    where?: WinStructFieldFetchResultWhere;
+    update?: WinStructFieldFetchResultUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateWinStructFieldFetchResultsMutationResponse>;
+  public delete(args: {
+    where?: WinStructFieldFetchResultWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: WinStructFieldFetchResultWhere;
+
+    aggregate: WinStructFieldFetchResultAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinStructFieldFetchResultAggregateSelection>;
+}
+
+export interface WinStructFetchResultAggregateSelectionInput {
+  count?: boolean;
+  name?: boolean;
+  size?: boolean;
+  kind?: boolean;
+}
+
+export declare class WinStructFetchResultModel {
+  public find(args?: {
+    where?: WinStructFetchResultWhere;
+
+    options?: WinStructFetchResultOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinStructFetchResult[]>;
+  public create(args: {
+    input: WinStructFetchResultCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateWinStructFetchResultsMutationResponse>;
+  public update(args: {
+    where?: WinStructFetchResultWhere;
+    update?: WinStructFetchResultUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateWinStructFetchResultsMutationResponse>;
+  public delete(args: {
+    where?: WinStructFetchResultWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: WinStructFetchResultWhere;
+
+    aggregate: WinStructFetchResultAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<WinStructFetchResultAggregateSelection>;
+}
+
 export interface ModelMap {
   Blob: BlobModel;
   Tree: TreeModel;
@@ -7593,4 +7983,6 @@ export interface ModelMap {
   DiffItem: DiffItemModel;
   SearchResult: SearchResultModel;
   SymbolFetchResult: SymbolFetchResultModel;
+  WinStructFieldFetchResult: WinStructFieldFetchResultModel;
+  WinStructFetchResult: WinStructFetchResultModel;
 }
