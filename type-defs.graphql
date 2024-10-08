@@ -127,7 +127,7 @@ type WinDataType implements Hashable @mutation(operations: []) {
 }
 
 # custom types not part of Data model
-type HashableNodeProps @mutation(operations: []) {
+type HashableNodeProps @query(read: false, aggregate: false) @mutation(operations: []) {
     hash: String!
     properties: JSON!
 }
