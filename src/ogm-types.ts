@@ -119,6 +119,7 @@ export type QuerySearchArgs = {
 
 export type QueryFetchSymbolsArgs = {
   blob_hash: Scalars["String"]["input"];
+  options?: InputMaybe<SymbolOptions>;
 };
 
 export type QueryHashablesArgs = {

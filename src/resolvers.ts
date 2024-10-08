@@ -1,9 +1,10 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
 import { diffTreesIterative } from "./diff/diff.js";
 import { DiffStatus, DiffRecord } from "./diff/types.js";
-import { Commit, SearchResult, TreeCreateInput } from "./ogm-types.js";
+import { Commit, SearchResult, SymbolOptions } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
+import { fetch_symbols } from "./fetch.js";
 import path from "path";
 import { Driver } from "neo4j-driver";
 import { OGM } from "@neo4j/graphql-ogm";
@@ -132,6 +133,14 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     });
                 }
                 return results;
+            },
+            async fetchSymbols(
+                _source: unknown,
+                args: { blob_hash: string; options: SymbolOptions }
+            ) {
+                const { blob_hash, options } = args;
+
+                return await fetch_symbols(driver, blob_hash, options);
             },
         },
         DiffItem: {
