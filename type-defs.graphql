@@ -132,7 +132,7 @@ type HashableNodeProps @mutation(operations: []) {
     properties: JSON!
 }
 
-type DiffItem @mutation(operations: []) {
+type DiffItem @query(read: false, aggregate: false) @mutation(operations: []) {
     status: DiffStatus!
     path: String!
     type: NodeType!
