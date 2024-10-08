@@ -45,3 +45,14 @@ export const GET_COMMIT_CAPABILITIES_QUERY = `
     UNWIND labels_list AS label
     RETURN COLLECT(DISTINCT label) AS uniqueLabels
 `;
+
+// fetch symbols
+export const FETCH_SYMBOLS_QUERY = `
+    MATCH (b:Blob)-[r:HAS_SYMBOL]->(s:Symbol)
+    WHERE b.hash = $blob_hash
+    WITH r.name as symbol_name, s.address as symbol_address
+    ORDER BY symbol_name ASC
+    SKIP toInteger($skip_count)
+    LIMIT toInteger($limit_count)
+    RETURN symbol_name, symbol_address
+`;

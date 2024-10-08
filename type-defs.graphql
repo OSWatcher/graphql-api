@@ -147,6 +147,11 @@ type SearchResult @query(read: false, aggregate: false) @mutation(operations: []
     path: String!
 }
 
+type SymbolFetchResult @query(read: false, aggregate: false) @mutation(operations: []) {
+    name: String!
+    address: String!
+}
+
 # custom Queries
 type Query {
     diffNodesAt(
@@ -166,4 +171,6 @@ type Query {
     getCommitExtractedDataLabels(commit_hash: String!): [String!]!
     # search
     search(search_term: String!): [SearchResult!]!
+    # fetch symbols
+    fetchSymbols(blob_hash: String!, options: SymbolOptions): [SymbolFetchResult!]!
 }
