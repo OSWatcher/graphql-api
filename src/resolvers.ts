@@ -174,7 +174,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     console.error("Error parsing data_type JSON:", error);
                     return null; // or return an empty object {} if you prefer
                 }
-            }
-        }
+            },
+        },
     };
 };
