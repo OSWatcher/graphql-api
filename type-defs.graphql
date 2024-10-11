@@ -152,6 +152,19 @@ type SymbolFetchResult @query(read: false, aggregate: false) @mutation(operation
     address: String!
 }
 
+type WinStructFieldFetchResult @query(read: false, aggregate: false) @mutation(operations: []) {
+    name: String!
+    offset: Int!
+    data_type: JSON!
+}
+
+type WinStructFetchResult @query(read: false, aggregate: false) @mutation(operations: []) {
+    name: String!
+    size: Int!
+    kind: String!
+    fields: [WinStructFieldFetchResult!]!
+}
+
 # custom Queries
 type Query {
     diffNodesAt(
@@ -173,4 +186,6 @@ type Query {
     search(search_term: String!): [SearchResult!]!
     # fetch symbols
     fetchSymbols(blob_hash: String!, options: SymbolOptions): [SymbolFetchResult!]!
+    # fetch structs
+    fetchStructs(blob_hash: String!, options: WinStructOptions): [WinStructFetchResult!]!
 }
