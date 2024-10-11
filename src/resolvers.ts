@@ -6,6 +6,7 @@ import {
     SearchResult,
     SymbolOptions,
     WinStructOptions,
+    DiffNodesOptions,
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
@@ -41,6 +42,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     max_depth,
                     filter,
                     with_intermediates,
+                    options,
                 }: {
                     parent_label: string;
                     base_node_hash: string;
@@ -49,6 +51,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     max_depth: number | null;
                     filter: Array<string>;
                     with_intermediates: boolean;
+                    options: DiffNodesOptions | null;
                 }
             ) {
                 if (base_node_hash === "" || diffee_node_hash === "") {
@@ -79,6 +82,10 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     ]);
 
                     const diff_result: Array<DiffRecord> = [];
+                    let skipped = 0;
+                    let added = 0;
+                    const limit = options?.limit ?? Infinity;
+                    const offset = options?.offset ?? 0;
 
                     for await (const diff_obj of diffTreesIterative(
                         driver,
@@ -90,10 +97,20 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         filter,
                         with_intermediates
                     )) {
+                        if (skipped < offset) {
+                            skipped++;
+                            continue;
+                        }
+
+                        if (added >= limit) {
+                            break;
+                        }
+
                         diff_result.push({
                             ...diff_obj,
                             path: path.relative(at_path, diff_obj.path),
                         });
+                        added++;
                     }
 
                     return diff_result;

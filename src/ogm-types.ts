@@ -104,6 +104,7 @@ export type QueryDiffNodesAtArgs = {
   max_depth?: InputMaybe<Scalars["Int"]["input"]>;
   filter?: InputMaybe<Array<Scalars["String"]["input"]>>;
   with_intermediates?: InputMaybe<Scalars["Boolean"]["input"]>;
+  options?: InputMaybe<DiffNodesOptions>;
 };
 
 export type QueryFetchCommitHistoryArgs = {
@@ -3988,6 +3989,11 @@ export type DiffItemWhere = {
   OR?: InputMaybe<Array<DiffItemWhere>>;
   AND?: InputMaybe<Array<DiffItemWhere>>;
   NOT?: InputMaybe<DiffItemWhere>;
+};
+
+export type DiffNodesOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 export type HasFilenameRelAggregationWhereInput = {
