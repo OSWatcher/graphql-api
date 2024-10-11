@@ -165,6 +165,11 @@ type WinStructFetchResult @query(read: false, aggregate: false) @mutation(operat
     fields: [WinStructFieldFetchResult!]!
 }
 
+input DiffNodesOptions {
+    limit: Int
+    offset: Int
+}
+
 # custom Queries
 type Query {
     diffNodesAt(
@@ -175,6 +180,7 @@ type Query {
         max_depth: Int = null
         filter: [String!] = []
         with_intermediates: Boolean = false
+        options: DiffNodesOptions = null
     ): [DiffItem!]!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
