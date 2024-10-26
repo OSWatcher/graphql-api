@@ -1,12 +1,12 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
 import { diffTreesIterative } from "./diff/diff.js";
-import { DiffRecord } from "./diff/types.js";
 import {
     Commit,
     SearchResult,
     SymbolOptions,
     WinStructOptions,
     DiffNodesOptions,
+    DiffItem,
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
@@ -81,7 +81,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         ),
                     ]);
 
-                    const diff_result: Array<DiffRecord> = [];
+                    const diff_result: Array<DiffItem> = [];
                     let skipped = 0;
                     let added = 0;
                     const limit = options?.limit ?? Infinity;
@@ -173,7 +173,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
             },
         },
         DiffItem: {
-            old_props: (parent: DiffRecord) => {
+            old_props: (parent: DiffItem) => {
                 if (!parent.old_props) return null;
 
                 const { hash, ...properties } = parent.old_props;
@@ -182,7 +182,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     properties: properties as Record<string, unknown>,
                 };
             },
-            new_props: (parent: DiffRecord) => {
+            new_props: (parent: DiffItem) => {
                 if (!parent.new_props) return null;
 
                 const { hash, ...properties } = parent.new_props;
