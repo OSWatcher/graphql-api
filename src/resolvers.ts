@@ -7,6 +7,7 @@ import {
     WinStructOptions,
     DiffNodesOptions,
     DiffItem,
+    DiffNodesAtResult,
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
@@ -53,7 +54,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     with_intermediates: boolean;
                     options: DiffNodesOptions | null;
                 }
-            ) {
+            ): Promise<DiffNodesAtResult> {
                 if (base_node_hash === "" || diffee_node_hash === "") {
                     throw new Error(
                         "Base and diffee node hashes cannot be empty"
@@ -81,7 +82,10 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         ),
                     ]);
 
-                    const diff_result: Array<DiffItem> = [];
+                    const diff_nodes_at_result: DiffNodesAtResult = {
+                        total_count: 0,
+                        items: [],
+                    };
                     let skipped = 0;
                     let added = 0;
                     const limit = options?.limit ?? Infinity;
@@ -99,21 +103,21 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     )) {
                         if (skipped < offset) {
                             skipped++;
+                            diff_nodes_at_result.total_count++;
                             continue;
                         }
 
-                        if (added >= limit) {
-                            break;
+                        if (added < limit) {
+                            diff_nodes_at_result.items.push({
+                                ...diff_obj,
+                                path: path.relative(at_path, diff_obj.path),
+                            });
+                            added++;
                         }
-
-                        diff_result.push({
-                            ...diff_obj,
-                            path: path.relative(at_path, diff_obj.path),
-                        });
-                        added++;
+                        diff_nodes_at_result.total_count++;
                     }
 
-                    return diff_result;
+                    return diff_nodes_at_result;
                 } catch (error) {
                     console.error("Error in diffCommits: ", error);
                     throw new Error(
