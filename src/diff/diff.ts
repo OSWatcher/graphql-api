@@ -1,7 +1,7 @@
 import { Driver, QueryResult, RecordShape } from "neo4j-driver";
 import { NODES_DIFF_QUERY } from "../queries.js";
-import { DiffRecord, DiffQueryResult } from "./types.js";
 import { getNodeTypeFromLabel, getDiffStatusFromString } from "./utils.js";
+import { DiffItem } from "../ogm-types.js";
 
 // we need one session per transaction
 // otherwise: Neo4jError: You cannot begin a transaction on a session with an open transaction;
@@ -15,7 +15,7 @@ export async function* diffTreesIterative(
     max_depth: number,
     filter: Array<string>,
     with_intermediates: boolean
-): AsyncGenerator<DiffRecord, void, void> {
+): AsyncGenerator<DiffItem, void, void> {
     if (base_hash == null && diffee_hash == null) {
         throw new Error("At least one of the hashes should be not null");
     }
@@ -35,7 +35,7 @@ export async function* diffTreesIterative(
         });
 
         for await (const record of result.records) {
-            const diff_row = record.toObject() as DiffQueryResult;
+            const diff_row = record.toObject();
             yield {
                 status: getDiffStatusFromString(diff_row.status),
                 type: getNodeTypeFromLabel(diff_row.type),
