@@ -1,6 +1,6 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
 import { diffTreesIterative } from "./diff/diff.js";
-import { DiffStatus, DiffRecord } from "./diff/types.js";
+import { DiffRecord } from "./diff/types.js";
 import {
     Commit,
     SearchResult,
@@ -190,18 +190,6 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     hash,
                     properties: properties as Record<string, unknown>,
                 };
-            },
-            status: (parent: DiffRecord) => {
-                switch (parent.status) {
-                    case DiffStatus.NEW:
-                        return "NEW";
-                    case DiffStatus.MOD:
-                        return "MOD";
-                    case DiffStatus.DEL:
-                        return "DEL";
-                    default:
-                        return null;
-                }
             },
         },
         WinStructField: {
