@@ -1,3 +1,5 @@
+import { DiffStatus } from "../ogm-types.js";
+
 export enum NodeType {
     Blob = "Blob",
     Tree = "Tree",
@@ -7,12 +9,6 @@ export enum NodeType {
     WinStruct = "WinStruct",
     WinStructField = "WinStructField",
     WinDataType = "WinDataType",
-}
-
-export enum DiffStatus {
-    NEW,
-    MOD,
-    DEL,
 }
 
 export interface DiffRecord {
