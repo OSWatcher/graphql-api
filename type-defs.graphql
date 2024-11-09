@@ -132,6 +132,11 @@ type HashableNodeProps @query(read: false, aggregate: false) @mutation(operation
     properties: JSON!
 }
 
+type DiffNodesAtResult @query(read: false, aggregate: false) @mutation(operations: []) {
+    total_count: Int!
+    items: [DiffItem!]!
+}
+
 type DiffItem @query(read: false, aggregate: false) @mutation(operations: []) {
     status: DiffStatus!
     path: String!
@@ -181,7 +186,7 @@ type Query {
         filter: [String!] = []
         with_intermediates: Boolean = false
         options: DiffNodesOptions = null
-    ): [DiffItem!]!
+    ): DiffNodesAtResult!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
     # given a node hash, traverse the children nodes following the path

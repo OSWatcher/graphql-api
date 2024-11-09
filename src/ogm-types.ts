@@ -36,7 +36,7 @@ export type Scalars = {
 
 export type Query = {
   __typename?: "Query";
-  diffNodesAt: Array<DiffItem>;
+  diffNodesAt: DiffNodesAtResult;
   fetchCommitHistory: Array<Commit>;
   traversePath?: Maybe<Scalars["String"]["output"]>;
   getCommitExtractedDataLabels: Array<Scalars["String"]["output"]>;
@@ -79,6 +79,9 @@ export type Query = {
   hashableNodeProps: Array<HashableNodeProps>;
   hashableNodePropsConnection: HashableNodePropsConnection;
   hashableNodePropsAggregate: HashableNodePropsAggregateSelection;
+  diffNodesAtResults: Array<DiffNodesAtResult>;
+  diffNodesAtResultsConnection: DiffNodesAtResultsConnection;
+  diffNodesAtResultsAggregate: DiffNodesAtResultAggregateSelection;
   diffItems: Array<DiffItem>;
   diffItemsConnection: DiffItemsConnection;
   diffItemsAggregate: DiffItemAggregateSelection;
@@ -327,6 +330,22 @@ export type QueryHashableNodePropsAggregateArgs = {
   where?: InputMaybe<HashableNodePropsWhere>;
 };
 
+export type QueryDiffNodesAtResultsArgs = {
+  where?: InputMaybe<DiffNodesAtResultWhere>;
+  options?: InputMaybe<DiffNodesAtResultOptions>;
+};
+
+export type QueryDiffNodesAtResultsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<DiffNodesAtResultWhere>;
+  sort?: InputMaybe<Array<InputMaybe<DiffNodesAtResultSort>>>;
+};
+
+export type QueryDiffNodesAtResultsAggregateArgs = {
+  where?: InputMaybe<DiffNodesAtResultWhere>;
+};
+
 export type QueryDiffItemsArgs = {
   where?: InputMaybe<DiffItemWhere>;
   options?: InputMaybe<DiffItemOptions>;
@@ -442,6 +461,9 @@ export type Mutation = {
   createHashableNodeProps: CreateHashableNodePropsMutationResponse;
   deleteHashableNodeProps: DeleteInfo;
   updateHashableNodeProps: UpdateHashableNodePropsMutationResponse;
+  createDiffNodesAtResults: CreateDiffNodesAtResultsMutationResponse;
+  deleteDiffNodesAtResults: DeleteInfo;
+  updateDiffNodesAtResults: UpdateDiffNodesAtResultsMutationResponse;
   createDiffItems: CreateDiffItemsMutationResponse;
   deleteDiffItems: DeleteInfo;
   updateDiffItems: UpdateDiffItemsMutationResponse;
@@ -654,6 +676,19 @@ export type MutationDeleteHashableNodePropsArgs = {
 export type MutationUpdateHashableNodePropsArgs = {
   where?: InputMaybe<HashableNodePropsWhere>;
   update?: InputMaybe<HashableNodePropsUpdateInput>;
+};
+
+export type MutationCreateDiffNodesAtResultsArgs = {
+  input: Array<DiffNodesAtResultCreateInput>;
+};
+
+export type MutationDeleteDiffNodesAtResultsArgs = {
+  where?: InputMaybe<DiffNodesAtResultWhere>;
+};
+
+export type MutationUpdateDiffNodesAtResultsArgs = {
+  where?: InputMaybe<DiffNodesAtResultWhere>;
+  update?: InputMaybe<DiffNodesAtResultUpdateInput>;
 };
 
 export type MutationCreateDiffItemsArgs = {
@@ -1163,6 +1198,12 @@ export type CreateDiffItemsMutationResponse = {
   diffItems: Array<DiffItem>;
 };
 
+export type CreateDiffNodesAtResultsMutationResponse = {
+  __typename?: "CreateDiffNodesAtResultsMutationResponse";
+  info: CreateInfo;
+  diffNodesAtResults: Array<DiffNodesAtResult>;
+};
+
 export type CreateHashableNodePropsMutationResponse = {
   __typename?: "CreateHashableNodePropsMutationResponse";
   info: CreateInfo;
@@ -1279,6 +1320,31 @@ export type DiffItemsConnection = {
   totalCount: Scalars["Int"]["output"];
   pageInfo: PageInfo;
   edges: Array<DiffItemEdge>;
+};
+
+export type DiffNodesAtResult = {
+  __typename?: "DiffNodesAtResult";
+  total_count: Scalars["Int"]["output"];
+  items: Array<DiffItem>;
+};
+
+export type DiffNodesAtResultAggregateSelection = {
+  __typename?: "DiffNodesAtResultAggregateSelection";
+  count: Scalars["Int"]["output"];
+  total_count: IntAggregateSelection;
+};
+
+export type DiffNodesAtResultEdge = {
+  __typename?: "DiffNodesAtResultEdge";
+  cursor: Scalars["String"]["output"];
+  node: DiffNodesAtResult;
+};
+
+export type DiffNodesAtResultsConnection = {
+  __typename?: "DiffNodesAtResultsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<DiffNodesAtResultEdge>;
 };
 
 /**
@@ -1661,6 +1727,12 @@ export type UpdateDiffItemsMutationResponse = {
   __typename?: "UpdateDiffItemsMutationResponse";
   info: UpdateInfo;
   diffItems: Array<DiffItem>;
+};
+
+export type UpdateDiffNodesAtResultsMutationResponse = {
+  __typename?: "UpdateDiffNodesAtResultsMutationResponse";
+  info: UpdateInfo;
+  diffNodesAtResults: Array<DiffNodesAtResult>;
 };
 
 export type UpdateHashableNodePropsMutationResponse = {
@@ -3989,6 +4061,44 @@ export type DiffItemWhere = {
   OR?: InputMaybe<Array<DiffItemWhere>>;
   AND?: InputMaybe<Array<DiffItemWhere>>;
   NOT?: InputMaybe<DiffItemWhere>;
+};
+
+export type DiffNodesAtResultCreateInput = {
+  total_count: Scalars["Int"]["input"];
+};
+
+export type DiffNodesAtResultOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more DiffNodesAtResultSort objects to sort DiffNodesAtResults by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<DiffNodesAtResultSort>>;
+};
+
+/** Fields to sort DiffNodesAtResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one DiffNodesAtResultSort object. */
+export type DiffNodesAtResultSort = {
+  total_count?: InputMaybe<SortDirection>;
+};
+
+export type DiffNodesAtResultUpdateInput = {
+  total_count?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type DiffNodesAtResultWhere = {
+  total_count?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  total_count_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  total_count_NOT_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  total_count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  OR?: InputMaybe<Array<DiffNodesAtResultWhere>>;
+  AND?: InputMaybe<Array<DiffNodesAtResultWhere>>;
+  NOT?: InputMaybe<DiffNodesAtResultWhere>;
 };
 
 export type DiffNodesOptions = {
@@ -7737,6 +7847,52 @@ export declare class HashableNodePropsModel {
   }): Promise<HashableNodePropsAggregateSelection>;
 }
 
+export interface DiffNodesAtResultAggregateSelectionInput {
+  count?: boolean;
+  total_count?: boolean;
+}
+
+export declare class DiffNodesAtResultModel {
+  public find(args?: {
+    where?: DiffNodesAtResultWhere;
+
+    options?: DiffNodesAtResultOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<DiffNodesAtResult[]>;
+  public create(args: {
+    input: DiffNodesAtResultCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateDiffNodesAtResultsMutationResponse>;
+  public update(args: {
+    where?: DiffNodesAtResultWhere;
+    update?: DiffNodesAtResultUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateDiffNodesAtResultsMutationResponse>;
+  public delete(args: {
+    where?: DiffNodesAtResultWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: DiffNodesAtResultWhere;
+
+    aggregate: DiffNodesAtResultAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<DiffNodesAtResultAggregateSelection>;
+}
+
 export interface DiffItemAggregateSelectionInput {
   count?: boolean;
   path?: boolean;
@@ -7986,6 +8142,7 @@ export interface ModelMap {
   WinStructField: WinStructFieldModel;
   WinDataType: WinDataTypeModel;
   HashableNodeProps: HashableNodePropsModel;
+  DiffNodesAtResult: DiffNodesAtResultModel;
   DiffItem: DiffItemModel;
   SearchResult: SearchResultModel;
   SymbolFetchResult: SymbolFetchResultModel;
