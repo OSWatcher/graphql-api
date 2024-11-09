@@ -45,3 +45,25 @@ export const GET_COMMIT_CAPABILITIES_QUERY = `
     UNWIND labels_list AS label
     RETURN COLLECT(DISTINCT label) AS uniqueLabels
 `;
+
+// fetch symbols
+export const FETCH_SYMBOLS_QUERY = `
+    MATCH (b:Blob)-[r:HAS_SYMBOL]->(s:Symbol)
+    WHERE b.hash = $blob_hash
+    WITH r.name as symbol_name, s.address as symbol_address
+    ORDER BY symbol_name ASC
+    SKIP toInteger($skip_count)
+    LIMIT toInteger($limit_count)
+    RETURN symbol_name, symbol_address
+`;
+
+// fetch structs
+export const FETCH_STRUCTS_QUERY = `
+MATCH (b:Blob)-[rs:HAS_STRUCT]->(s:WinStruct)-[rf:HAS_FIELD]->(f:WinStructField)
+WHERE b.hash = $blob_hash
+WITH rs.name as struct_name, s, collect({field_name: rf.name, field: properties(f)}) as fields
+ORDER BY struct_name ASC
+SKIP toInteger($skip_count)
+LIMIT toInteger($limit_count)
+RETURN struct_name, properties(s) as struct_props, fields
+`;

@@ -1,9 +1,17 @@
 import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
 import { diffTreesIterative } from "./diff/diff.js";
-import { DiffStatus, DiffRecord } from "./diff/types.js";
-import { Commit, SearchResult, TreeCreateInput } from "./ogm-types.js";
+import {
+    Commit,
+    SearchResult,
+    SymbolOptions,
+    WinStructOptions,
+    DiffNodesOptions,
+    DiffItem,
+    DiffNodesAtResult,
+} from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
+import { fetch_symbols, fetch_structs } from "./fetch.js";
 import path from "path";
 import { Driver } from "neo4j-driver";
 import { OGM } from "@neo4j/graphql-ogm";
@@ -35,6 +43,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     max_depth,
                     filter,
                     with_intermediates,
+                    options,
                 }: {
                     parent_label: string;
                     base_node_hash: string;
@@ -43,8 +52,9 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     max_depth: number | null;
                     filter: Array<string>;
                     with_intermediates: boolean;
+                    options: DiffNodesOptions | null;
                 }
-            ) {
+            ): Promise<DiffNodesAtResult> {
                 if (base_node_hash === "" || diffee_node_hash === "") {
                     throw new Error(
                         "Base and diffee node hashes cannot be empty"
@@ -72,7 +82,14 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         ),
                     ]);
 
-                    const diff_result: Array<DiffRecord> = [];
+                    const diff_nodes_at_result: DiffNodesAtResult = {
+                        total_count: 0,
+                        items: [],
+                    };
+                    let skipped = 0;
+                    let added = 0;
+                    const limit = options?.limit ?? Infinity;
+                    const offset = options?.offset ?? 0;
 
                     for await (const diff_obj of diffTreesIterative(
                         driver,
@@ -84,13 +101,23 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         filter,
                         with_intermediates
                     )) {
-                        diff_result.push({
-                            ...diff_obj,
-                            path: path.relative(at_path, diff_obj.path),
-                        });
+                        if (skipped < offset) {
+                            skipped++;
+                            diff_nodes_at_result.total_count++;
+                            continue;
+                        }
+
+                        if (added < limit) {
+                            diff_nodes_at_result.items.push({
+                                ...diff_obj,
+                                path: path.relative(at_path, diff_obj.path),
+                            });
+                            added++;
+                        }
+                        diff_nodes_at_result.total_count++;
                     }
 
-                    return diff_result;
+                    return diff_nodes_at_result;
                 } catch (error) {
                     console.error("Error in diffCommits: ", error);
                     throw new Error(
@@ -133,9 +160,24 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                 }
                 return results;
             },
+            async fetchSymbols(
+                _source: unknown,
+                args: { blob_hash: string; options: SymbolOptions }
+            ) {
+                const { blob_hash, options } = args;
+
+                return await fetch_symbols(driver, blob_hash, options);
+            },
+            async fetchStructs(
+                _source: unknown,
+                args: { blob_hash: string; options: WinStructOptions }
+            ) {
+                const { blob_hash, options } = args;
+                return await fetch_structs(driver, blob_hash, options);
+            },
         },
         DiffItem: {
-            old_props: (parent: DiffRecord) => {
+            old_props: (parent: DiffItem) => {
                 if (!parent.old_props) return null;
 
                 const { hash, ...properties } = parent.old_props;
@@ -144,7 +186,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     properties: properties as Record<string, unknown>,
                 };
             },
-            new_props: (parent: DiffRecord) => {
+            new_props: (parent: DiffItem) => {
                 if (!parent.new_props) return null;
 
                 const { hash, ...properties } = parent.new_props;
@@ -152,18 +194,6 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     hash,
                     properties: properties as Record<string, unknown>,
                 };
-            },
-            status: (parent: DiffRecord) => {
-                switch (parent.status) {
-                    case DiffStatus.NEW:
-                        return "NEW";
-                    case DiffStatus.MOD:
-                        return "MOD";
-                    case DiffStatus.DEL:
-                        return "DEL";
-                    default:
-                        return null;
-                }
             },
         },
         WinStructField: {
