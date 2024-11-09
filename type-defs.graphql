@@ -132,6 +132,11 @@ type HashableNodeProps @query(read: false, aggregate: false) @mutation(operation
     properties: JSON!
 }
 
+type DiffNodesAtResult @query(read: false, aggregate: false) @mutation(operations: []) {
+    total_count: Int!
+    items: [DiffItem!]!
+}
+
 type DiffItem @query(read: false, aggregate: false) @mutation(operations: []) {
     status: DiffStatus!
     path: String!
@@ -147,6 +152,29 @@ type SearchResult @query(read: false, aggregate: false) @mutation(operations: []
     path: String!
 }
 
+type SymbolFetchResult @query(read: false, aggregate: false) @mutation(operations: []) {
+    name: String!
+    address: String!
+}
+
+type WinStructFieldFetchResult @query(read: false, aggregate: false) @mutation(operations: []) {
+    name: String!
+    offset: Int!
+    data_type: JSON!
+}
+
+type WinStructFetchResult @query(read: false, aggregate: false) @mutation(operations: []) {
+    name: String!
+    size: Int!
+    kind: String!
+    fields: [WinStructFieldFetchResult!]!
+}
+
+input DiffNodesOptions {
+    limit: Int
+    offset: Int
+}
+
 # custom Queries
 type Query {
     diffNodesAt(
@@ -157,7 +185,8 @@ type Query {
         max_depth: Int = null
         filter: [String!] = []
         with_intermediates: Boolean = false
-    ): [DiffItem!]!
+        options: DiffNodesOptions = null
+    ): DiffNodesAtResult!
     # fetches the commit history of a branch
     fetchCommitHistory(branch_name: String!): [Commit!]!
     # given a node hash, traverse the children nodes following the path
@@ -166,4 +195,8 @@ type Query {
     getCommitExtractedDataLabels(commit_hash: String!): [String!]!
     # search
     search(search_term: String!): [SearchResult!]!
+    # fetch symbols
+    fetchSymbols(blob_hash: String!, options: SymbolOptions): [SymbolFetchResult!]!
+    # fetch structs
+    fetchStructs(blob_hash: String!, options: WinStructOptions): [WinStructFetchResult!]!
 }

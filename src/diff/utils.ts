@@ -1,4 +1,5 @@
-import { NodeType, DiffStatus } from "./types.js";
+import { NodeType } from "./types.js";
+import { DiffStatus } from "../ogm-types.js"
 
 export function getNodeTypeFromLabel(label: string): NodeType {
     const nodeType = NodeType[label as keyof typeof NodeType];
@@ -12,11 +13,11 @@ export function getNodeTypeFromLabel(label: string): NodeType {
 export function getDiffStatusFromString(status_str: string): DiffStatus {
     switch (status_str) {
         case "NEW":
-            return DiffStatus.NEW
+            return DiffStatus.New
         case "MOD":
-            return DiffStatus.MOD
+            return DiffStatus.Mod
         case "DEL":
-            return DiffStatus.DEL
+            return DiffStatus.Del
         default:
             throw Error(`Unexpected status string: ${status_str}`)
     }
