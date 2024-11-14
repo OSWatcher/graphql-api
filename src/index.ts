@@ -65,7 +65,7 @@ async function main() {
 
     // PostHog events endpoint - only in production
     if (isProduction) {
-        app.post("/events", express.json(), async (req, res) => {
+        app.post("/events/*", express.json(), async (req, res) => {
             try {
                 const response = await axios.post(
                     `${POSTHOG_HOST}/capture/`,
