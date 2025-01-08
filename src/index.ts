@@ -67,7 +67,10 @@ async function main() {
     if (isProduction) {
         app.use(
             "/events/*",
-            cors(),
+            cors({
+                origin: true,
+                credentials: true,
+            }),
             express.raw({ type: "*/*" }),
             async (req, res) => {
                 try {
