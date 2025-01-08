@@ -65,37 +65,41 @@ async function main() {
 
     // PostHog events endpoint - only in production
     if (isProduction) {
-        app.all("/events/*", express.raw({ type: "*/*" }), async (req, res) => {
-            try {
-                // Get the original path after /events
-                const posthogPath = req.url.replace("/events", "");
-                const fullUrl = `${POSTHOG_HOST}${posthogPath}`;
+        app.use(
+            "/events/*",
+            cors(),
+            express.raw({ type: "*/*" }),
+            async (req, res) => {
+                try {
+                    const posthogPath = req.url.replace("/events", "");
+                    const fullUrl = `${POSTHOG_HOST}${posthogPath}`;
 
-                // Forward the request exactly as received
-                const response = await axios({
-                    method: req.method,
-                    url: fullUrl,
-                    data: req.body,
-                    headers: {
-                        ...req.headers,
-                        host: new URL(POSTHOG_HOST).host,
-                        Authorization: `Bearer ${POSTHOG_PROJECT_API_KEY}`,
-                    },
-                    decompress: false, // Prevent axios from handling compression
-                    validateStatus: () => true, // Accept any status code
-                });
+                    // Forward the request exactly as received
+                    const response = await axios({
+                        method: req.method,
+                        url: fullUrl,
+                        data: req.body,
+                        headers: {
+                            ...req.headers,
+                            host: new URL(POSTHOG_HOST).host,
+                            Authorization: `Bearer ${POSTHOG_PROJECT_API_KEY}`,
+                        },
+                        decompress: false,
+                        validateStatus: () => true,
+                    });
 
-                // Forward the response exactly as received
-                res.status(response.status);
-                Object.entries(response.headers).forEach(([key, value]) => {
-                    res.setHeader(key, value);
-                });
-                res.send(response.data);
-            } catch (error: unknown) {
-                console.error("Error proxying PostHog event:", error);
-                res.status(502).send("Bad Gateway");
+                    // Forward the response exactly as received
+                    res.status(response.status);
+                    Object.entries(response.headers).forEach(([key, value]) => {
+                        res.setHeader(key, value);
+                    });
+                    res.send(response.data);
+                } catch (error: unknown) {
+                    console.error("Error proxying PostHog event:", error);
+                    res.status(502).send("Bad Gateway");
+                }
             }
-        });
+        );
         console.log(`📊 PostHog events endpoint enabled in production`);
     }
 
