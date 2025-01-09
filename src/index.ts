@@ -74,7 +74,7 @@ async function main() {
             express.raw({ type: "*/*" }),
             async (req, res) => {
                 try {
-                    const posthogPath = req.url.replace("/events", "");
+                    const posthogPath = req.originalUrl.replace("/events", "");
                     const fullUrl = `${POSTHOG_HOST}${posthogPath}`;
 
                     // Forward the request exactly as received
@@ -88,7 +88,6 @@ async function main() {
                             Authorization: `Bearer ${POSTHOG_PROJECT_API_KEY}`,
                         },
                         decompress: false,
-                        validateStatus: () => true,
                     });
 
                     // Forward the response exactly as received
