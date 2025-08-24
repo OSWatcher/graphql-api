@@ -29,13 +29,18 @@ REQUIRE n.hash IS UNIQUE
 `;
 
 // commit
-export const FETCH_COMMIT_HISTORY_QUERY = `
-    MATCH (b:Branch)-[r:TRACKS_COMMIT|HAS_PREVIOUS*0..]->(c:Commit)
-    WHERE b.name = $branch_name
-    OPTIONAL MATCH (c)-[prev:HAS_PREVIOUS]->(previous:Commit)
-    OPTIONAL MATCH (c)<-[next:HAS_PREVIOUS]-(p:Commit)
-    RETURN c, previous, COLLECT(p) AS nextCommits
-    LIMIT 100
+export const FETCH_COMMIT_HISTORY_BACKWARD_QUERY = `
+MATCH (start:Commit {hash: $commit_hash})-[:HAS_PREVIOUS*0..]->(c:Commit)
+OPTIONAL MATCH (c)-[:HAS_PREVIOUS]->(previous:Commit)
+OPTIONAL MATCH (c)<-[:HAS_PREVIOUS]-(next:Commit)
+RETURN c, previous, COLLECT(next) AS nextCommits
+`;
+
+export const FETCH_COMMIT_HISTORY_FORWARD_QUERY = `
+MATCH (start:Commit {hash: $commit_hash})<-[:HAS_PREVIOUS*0..]-(c:Commit)
+OPTIONAL MATCH (c)-[:HAS_PREVIOUS]->(previous:Commit)
+OPTIONAL MATCH (c)<-[:HAS_PREVIOUS]-(next:Commit)
+RETURN c, previous, COLLECT(next) AS nextCommits
 `;
 
 // get all labels of the commit node
