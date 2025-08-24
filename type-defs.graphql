@@ -60,6 +60,7 @@ type Commit implements Hashable @mutation(operations: []) {
     description: String
     date: String!
     previous: Commit @relationship(type: "HAS_PREVIOUS", direction: OUT)
+    next: [Commit!]! @relationship(type: "HAS_PREVIOUS", direction: IN)
     filesystem: Tree @relationship(type: "OWNS_FILESYSTEM", direction: OUT)
 }
 
