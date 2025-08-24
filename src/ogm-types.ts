@@ -1058,6 +1058,9 @@ export type Commit = Hashable & {
   previousAggregate?: Maybe<CommitCommitPreviousAggregationSelection>;
   previous?: Maybe<Commit>;
   previousConnection: CommitPreviousConnection;
+  nextAggregate?: Maybe<CommitCommitNextAggregationSelection>;
+  next: Array<Commit>;
+  nextConnection: CommitNextConnection;
   filesystemAggregate?: Maybe<CommitTreeFilesystemAggregationSelection>;
   filesystem?: Maybe<Tree>;
   filesystemConnection: CommitFilesystemConnection;
@@ -1082,6 +1085,25 @@ export type CommitPreviousConnectionArgs = {
   sort?: InputMaybe<Array<CommitPreviousConnectionSort>>;
 };
 
+export type CommitNextAggregateArgs = {
+  where?: InputMaybe<CommitWhere>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type CommitNextArgs = {
+  where?: InputMaybe<CommitWhere>;
+  options?: InputMaybe<CommitOptions>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type CommitNextConnectionArgs = {
+  where?: InputMaybe<CommitNextConnectionWhere>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  directed?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sort?: InputMaybe<Array<CommitNextConnectionSort>>;
+};
+
 export type CommitFilesystemAggregateArgs = {
   where?: InputMaybe<TreeWhere>;
   directed?: InputMaybe<Scalars["Boolean"]["input"]>;
@@ -1104,6 +1126,20 @@ export type CommitFilesystemConnectionArgs = {
 export type CommitAggregateSelection = {
   __typename?: "CommitAggregateSelection";
   count: Scalars["Int"]["output"];
+  hash: StringAggregateSelection;
+  name: StringAggregateSelection;
+  description: StringAggregateSelection;
+  date: StringAggregateSelection;
+};
+
+export type CommitCommitNextAggregationSelection = {
+  __typename?: "CommitCommitNextAggregationSelection";
+  count: Scalars["Int"]["output"];
+  node?: Maybe<CommitCommitNextNodeAggregateSelection>;
+};
+
+export type CommitCommitNextNodeAggregateSelection = {
+  __typename?: "CommitCommitNextNodeAggregateSelection";
   hash: StringAggregateSelection;
   name: StringAggregateSelection;
   description: StringAggregateSelection;
@@ -1141,6 +1177,19 @@ export type CommitFilesystemRelationship = {
   __typename?: "CommitFilesystemRelationship";
   cursor: Scalars["String"]["output"];
   node: Tree;
+};
+
+export type CommitNextConnection = {
+  __typename?: "CommitNextConnection";
+  edges: Array<CommitNextRelationship>;
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+};
+
+export type CommitNextRelationship = {
+  __typename?: "CommitNextRelationship";
+  cursor: Scalars["String"]["output"];
+  node: Commit;
 };
 
 export type CommitPreviousConnection = {
@@ -3414,11 +3463,13 @@ export type BranchWhere = {
 
 export type CommitConnectInput = {
   previous?: InputMaybe<CommitPreviousConnectFieldInput>;
+  next?: InputMaybe<Array<CommitNextConnectFieldInput>>;
   filesystem?: InputMaybe<CommitFilesystemConnectFieldInput>;
 };
 
 export type CommitConnectOrCreateInput = {
   previous?: InputMaybe<CommitPreviousConnectOrCreateFieldInput>;
+  next?: InputMaybe<Array<CommitNextConnectOrCreateFieldInput>>;
   filesystem?: InputMaybe<CommitFilesystemConnectOrCreateFieldInput>;
 };
 
@@ -3436,16 +3487,19 @@ export type CommitCreateInput = {
   description?: InputMaybe<Scalars["String"]["input"]>;
   date: Scalars["String"]["input"];
   previous?: InputMaybe<CommitPreviousFieldInput>;
+  next?: InputMaybe<CommitNextFieldInput>;
   filesystem?: InputMaybe<CommitFilesystemFieldInput>;
 };
 
 export type CommitDeleteInput = {
   previous?: InputMaybe<CommitPreviousDeleteFieldInput>;
+  next?: InputMaybe<Array<CommitNextDeleteFieldInput>>;
   filesystem?: InputMaybe<CommitFilesystemDeleteFieldInput>;
 };
 
 export type CommitDisconnectInput = {
   previous?: InputMaybe<CommitPreviousDisconnectFieldInput>;
+  next?: InputMaybe<Array<CommitNextDisconnectFieldInput>>;
   filesystem?: InputMaybe<CommitFilesystemDisconnectFieldInput>;
 };
 
@@ -3583,6 +3637,307 @@ export type CommitFilesystemUpdateFieldInput = {
   create?: InputMaybe<CommitFilesystemCreateFieldInput>;
   update?: InputMaybe<CommitFilesystemUpdateConnectionInput>;
   delete?: InputMaybe<CommitFilesystemDeleteFieldInput>;
+};
+
+export type CommitNextAggregateInput = {
+  count?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  AND?: InputMaybe<Array<CommitNextAggregateInput>>;
+  OR?: InputMaybe<Array<CommitNextAggregateInput>>;
+  NOT?: InputMaybe<CommitNextAggregateInput>;
+  node?: InputMaybe<CommitNextNodeAggregationWhereInput>;
+};
+
+export type CommitNextConnectFieldInput = {
+  where?: InputMaybe<CommitConnectWhere>;
+  /** Whether or not to overwrite any matching relationship with the new properties. */
+  overwrite?: Scalars["Boolean"]["input"];
+  connect?: InputMaybe<Array<CommitConnectInput>>;
+};
+
+export type CommitNextConnectionSort = {
+  node?: InputMaybe<CommitSort>;
+};
+
+export type CommitNextConnectionWhere = {
+  AND?: InputMaybe<Array<CommitNextConnectionWhere>>;
+  OR?: InputMaybe<Array<CommitNextConnectionWhere>>;
+  NOT?: InputMaybe<CommitNextConnectionWhere>;
+  node?: InputMaybe<CommitWhere>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_NOT?: InputMaybe<CommitWhere>;
+};
+
+export type CommitNextConnectOrCreateFieldInput = {
+  where: CommitConnectOrCreateWhere;
+  onCreate: CommitNextConnectOrCreateFieldInputOnCreate;
+};
+
+export type CommitNextConnectOrCreateFieldInputOnCreate = {
+  node: CommitOnCreateInput;
+};
+
+export type CommitNextCreateFieldInput = {
+  node: CommitCreateInput;
+};
+
+export type CommitNextDeleteFieldInput = {
+  where?: InputMaybe<CommitNextConnectionWhere>;
+  delete?: InputMaybe<CommitDeleteInput>;
+};
+
+export type CommitNextDisconnectFieldInput = {
+  where?: InputMaybe<CommitNextConnectionWhere>;
+  disconnect?: InputMaybe<CommitDisconnectInput>;
+};
+
+export type CommitNextFieldInput = {
+  connectOrCreate?: InputMaybe<Array<CommitNextConnectOrCreateFieldInput>>;
+  connect?: InputMaybe<Array<CommitNextConnectFieldInput>>;
+  create?: InputMaybe<Array<CommitNextCreateFieldInput>>;
+};
+
+export type CommitNextNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<CommitNextNodeAggregationWhereInput>>;
+  OR?: InputMaybe<Array<CommitNextNodeAggregationWhereInput>>;
+  NOT?: InputMaybe<CommitNextNodeAggregationWhereInput>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  hash_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  hash_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  hash_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  hash_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  name_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  name_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  description_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  description_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  description_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  description_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  description_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  description_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  date_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  date_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
+  date_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  date_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  date_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  date_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
+  date_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  date_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  date_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  date_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
+  date_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  date_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  date_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  date_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
+  date_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  date_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
+  date_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
+  date_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  date_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
+  date_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  date_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type CommitNextUpdateConnectionInput = {
+  node?: InputMaybe<CommitUpdateInput>;
+};
+
+export type CommitNextUpdateFieldInput = {
+  where?: InputMaybe<CommitNextConnectionWhere>;
+  connectOrCreate?: InputMaybe<Array<CommitNextConnectOrCreateFieldInput>>;
+  connect?: InputMaybe<Array<CommitNextConnectFieldInput>>;
+  disconnect?: InputMaybe<Array<CommitNextDisconnectFieldInput>>;
+  create?: InputMaybe<Array<CommitNextCreateFieldInput>>;
+  update?: InputMaybe<CommitNextUpdateConnectionInput>;
+  delete?: InputMaybe<Array<CommitNextDeleteFieldInput>>;
 };
 
 export type CommitOnCreateInput = {
@@ -3902,6 +4257,7 @@ export type CommitPreviousUpdateFieldInput = {
 
 export type CommitRelationInput = {
   previous?: InputMaybe<CommitPreviousCreateFieldInput>;
+  next?: InputMaybe<Array<CommitNextCreateFieldInput>>;
   filesystem?: InputMaybe<CommitFilesystemCreateFieldInput>;
 };
 
@@ -3923,6 +4279,7 @@ export type CommitUpdateInput = {
   description?: InputMaybe<Scalars["String"]["input"]>;
   date?: InputMaybe<Scalars["String"]["input"]>;
   previous?: InputMaybe<CommitPreviousUpdateFieldInput>;
+  next?: InputMaybe<Array<CommitNextUpdateFieldInput>>;
   filesystem?: InputMaybe<CommitFilesystemUpdateFieldInput>;
 };
 
@@ -3997,6 +4354,31 @@ export type CommitWhere = {
   previousConnection?: InputMaybe<CommitPreviousConnectionWhere>;
   previousConnection_NOT?: InputMaybe<CommitPreviousConnectionWhere>;
   previousAggregate?: InputMaybe<CommitPreviousAggregateInput>;
+  /** @deprecated Use `next_SOME` instead. */
+  next?: InputMaybe<CommitWhere>;
+  /** @deprecated Use `next_NONE` instead. */
+  next_NOT?: InputMaybe<CommitWhere>;
+  /** Return Commits where all of the related Commits match this filter */
+  next_ALL?: InputMaybe<CommitWhere>;
+  /** Return Commits where none of the related Commits match this filter */
+  next_NONE?: InputMaybe<CommitWhere>;
+  /** Return Commits where one of the related Commits match this filter */
+  next_SINGLE?: InputMaybe<CommitWhere>;
+  /** Return Commits where some of the related Commits match this filter */
+  next_SOME?: InputMaybe<CommitWhere>;
+  /** @deprecated Use `nextConnection_SOME` instead. */
+  nextConnection?: InputMaybe<CommitNextConnectionWhere>;
+  /** @deprecated Use `nextConnection_NONE` instead. */
+  nextConnection_NOT?: InputMaybe<CommitNextConnectionWhere>;
+  /** Return Commits where all of the related CommitNextConnections match this filter */
+  nextConnection_ALL?: InputMaybe<CommitNextConnectionWhere>;
+  /** Return Commits where none of the related CommitNextConnections match this filter */
+  nextConnection_NONE?: InputMaybe<CommitNextConnectionWhere>;
+  /** Return Commits where one of the related CommitNextConnections match this filter */
+  nextConnection_SINGLE?: InputMaybe<CommitNextConnectionWhere>;
+  /** Return Commits where some of the related CommitNextConnections match this filter */
+  nextConnection_SOME?: InputMaybe<CommitNextConnectionWhere>;
+  nextAggregate?: InputMaybe<CommitNextAggregateInput>;
   filesystem?: InputMaybe<TreeWhere>;
   filesystem_NOT?: InputMaybe<TreeWhere>;
   filesystemConnection?: InputMaybe<CommitFilesystemConnectionWhere>;
