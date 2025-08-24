@@ -32,7 +32,9 @@ REQUIRE n.hash IS UNIQUE
 export const FETCH_COMMIT_HISTORY_QUERY = `
     MATCH (b:Branch)-[r:TRACKS_COMMIT|HAS_PREVIOUS*0..]->(c:Commit)
     WHERE b.name = $branch_name
-    RETURN c
+    OPTIONAL MATCH (c)-[prev:HAS_PREVIOUS]->(previous:Commit)
+    OPTIONAL MATCH (c)<-[next:HAS_PREVIOUS]-(p:Commit)
+    RETURN c, previous, COLLECT(p) AS nextCommits
     LIMIT 100
 `;
 

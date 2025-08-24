@@ -59,13 +59,22 @@ export async function fetch_structs(
                 name: record.get("struct_name"),
                 size: record.get("struct_props")["size"],
                 kind: record.get("struct_props")["kind"],
-                fields: record.get("fields").map((field: any) => {
-                    return {
-                        name: field["field_name"],
-                        offset: field["field"]["offset"],
-                        data_type: JSON.parse(field["field"]["data_type"]),
-                    };
-                }),
+                fields: record
+                    .get("fields")
+                    .map(
+                        (field: {
+                            field_name: string;
+                            field: Record<string, unknown>;
+                        }) => {
+                            return {
+                                name: field["field_name"],
+                                offset: field["field"]["offset"],
+                                data_type: JSON.parse(
+                                    field["field"]["data_type"] as string
+                                ),
+                            };
+                        }
+                    ),
             };
         });
     } catch (error) {
