@@ -1,19 +1,26 @@
 import { Driver, Node } from "neo4j-driver";
-import { Commit } from "./ogm-types.js";
+import { Commit, CommitHistoryDirection } from "./ogm-types.js";
 import {
-    FETCH_COMMIT_HISTORY_QUERY,
+    FETCH_COMMIT_HISTORY_BACKWARD_QUERY,
+    FETCH_COMMIT_HISTORY_FORWARD_QUERY,
     GET_COMMIT_CAPABILITIES_QUERY,
 } from "./queries.js";
 
 async function* fetch_commit_history(
     driver: Driver,
-    branch_name: string
+    commit_hash: string,
+    direction: CommitHistoryDirection = CommitHistoryDirection.Backward
 ): AsyncGenerator<Commit> {
     const session = driver.session();
 
     try {
+        const query =
+            direction === CommitHistoryDirection.Forward
+                ? FETCH_COMMIT_HISTORY_FORWARD_QUERY
+                : FETCH_COMMIT_HISTORY_BACKWARD_QUERY;
+
         const result = await session.executeRead((tx) =>
-            tx.run(FETCH_COMMIT_HISTORY_QUERY, { branch_name })
+            tx.run(query, { commit_hash })
         );
 
         for (const record of result.records) {
