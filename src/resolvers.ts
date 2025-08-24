@@ -8,6 +8,7 @@ import {
     DiffNodesOptions,
     DiffItem,
     DiffNodesAtResult,
+    CommitHistoryDirection,
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
@@ -21,13 +22,20 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
         Query: {
             async fetchCommitHistory(
                 _source: unknown,
-                args: { branch_name: string }
+                args: {
+                    commit_hash: string;
+                    direction?: CommitHistoryDirection;
+                }
             ) {
-                const { branch_name } = args;
+                const {
+                    commit_hash,
+                    direction = CommitHistoryDirection.Backward,
+                } = args;
                 const results: Commit[] = [];
                 for await (const commit of fetch_commit_history(
                     driver,
-                    branch_name
+                    commit_hash,
+                    direction
                 )) {
                     results.push(commit);
                 }

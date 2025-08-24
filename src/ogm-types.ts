@@ -111,7 +111,8 @@ export type QueryDiffNodesAtArgs = {
 };
 
 export type QueryFetchCommitHistoryArgs = {
-  branch_name: Scalars["String"]["input"];
+  commit_hash: Scalars["String"]["input"];
+  direction?: InputMaybe<CommitHistoryDirection>;
 };
 
 export type QueryTraversePathArgs = {
@@ -755,6 +756,11 @@ export type MutationUpdateWinStructFetchResultsArgs = {
   where?: InputMaybe<WinStructFetchResultWhere>;
   update?: InputMaybe<WinStructFetchResultUpdateInput>;
 };
+
+export enum CommitHistoryDirection {
+  Forward = "FORWARD",
+  Backward = "BACKWARD",
+}
 
 export enum DiffStatus {
   New = "NEW",
