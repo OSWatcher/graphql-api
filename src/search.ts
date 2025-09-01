@@ -1,5 +1,6 @@
 import { Driver } from "neo4j-driver";
-import { searchFSFullPathQuery } from "./queries.js";
+import { getCommitsInRangeQuery, searchFSInCommitsQuery } from "./queries.js";
+import { CommitRange } from "./ogm-types.js";
 
 // Define the structure of the object that each yield will return
 type FSSearchResult = {
@@ -12,15 +13,27 @@ type FSSearchResult = {
 async function* search_fs_fullpath(
     driver: Driver,
     search_expr: string,
+    commit_range: CommitRange
 ): AsyncGenerator<FSSearchResult> {
-    // search the filesystem in Neo4j, reconstructing the full path to Blob nodes
-    // to search for search_term
-    // returns an iterator
     const session = driver.session();
 
     try {
+        // First, get the commits in the specified range
+        const commitsResult = await session.executeRead((tx) =>
+            tx.run(getCommitsInRangeQuery, {
+                startCommit: commit_range.startCommit,
+                scope: commit_range.scope,
+                endCommit: commit_range.endCommit,
+            })
+        );
+
+        const commit_hashes = commitsResult.records.map(
+            (record) => record.get("commit").properties.hash
+        );
+
+        // Then search within those commits
         const result = await session.executeRead((tx) =>
-            tx.run(searchFSFullPathQuery, { search_expr }),
+            tx.run(searchFSInCommitsQuery, { commit_hashes, search_expr })
         );
 
         for (const record of result.records) {
