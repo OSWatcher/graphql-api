@@ -13,7 +13,7 @@ type FSSearchResult = {
 async function* search_fs_fullpath(
     driver: Driver,
     search_expr: string,
-    commit_range: CommitRange
+    commit_range: CommitRange,
 ): AsyncGenerator<FSSearchResult> {
     const session = driver.session();
 
@@ -24,16 +24,16 @@ async function* search_fs_fullpath(
                 startCommit: commit_range.startCommit,
                 scope: commit_range.scope,
                 endCommit: commit_range.endCommit,
-            })
+            }),
         );
 
         const commit_hashes = commitsResult.records.map(
-            (record) => record.get("commit").properties.hash
+            (record) => record.get("commit").properties.hash,
         );
 
         // Then search within those commits
         const result = await session.executeRead((tx) =>
-            tx.run(searchFSInCommitsQuery, { commit_hashes, search_expr })
+            tx.run(searchFSInCommitsQuery, { commit_hashes, search_expr }),
         );
 
         for (const record of result.records) {
