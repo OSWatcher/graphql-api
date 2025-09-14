@@ -29,7 +29,7 @@
     "@apollo/server": "5.0.0",
     "@as-integrations/express5": "^1.1.2",
     "@neo4j/graphql": "^5.7.1",
-    "@neo4j/graphql-ogm": "^5.7.1",
+    "@neo4j/graphql-ogm": "5.11.4",
     "axios": "1.12.2",
     "cors": "^2.8.5",
     "dotenv": "17.2.2",
