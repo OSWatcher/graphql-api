@@ -25,7 +25,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                 args: {
                     commit_hash: string;
                     direction?: CommitHistoryDirection;
-                }
+                },
             ) {
                 const {
                     commit_hash,
@@ -35,7 +35,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                 for await (const commit of fetch_commit_history(
                     driver,
                     commit_hash,
-                    direction
+                    direction,
                 )) {
                     results.push(commit);
                 }
@@ -61,11 +61,11 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     filter: Array<string>;
                     with_intermediates: boolean;
                     options: DiffNodesOptions | null;
-                }
+                },
             ): Promise<DiffNodesAtResult> {
                 if (base_node_hash === "" || diffee_node_hash === "") {
                     throw new Error(
-                        "Base and diffee node hashes cannot be empty"
+                        "Base and diffee node hashes cannot be empty",
                     );
                 }
                 if (max_depth === null) {
@@ -80,13 +80,13 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                             driver,
                             parent_label,
                             base_node_hash,
-                            at_path
+                            at_path,
                         ),
                         get_path_entry(
                             driver,
                             parent_label,
                             diffee_node_hash,
-                            at_path
+                            at_path,
                         ),
                     ]);
 
@@ -107,7 +107,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         diffee_entry_at,
                         max_depth,
                         filter,
-                        with_intermediates
+                        with_intermediates,
                     )) {
                         if (skipped < offset) {
                             skipped++;
@@ -129,27 +129,27 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                 } catch (error) {
                     console.error("Error in diffCommits: ", error);
                     throw new Error(
-                        "An error occurred while processing the request."
+                        "An error occurred while processing the request.",
                     );
                 }
             },
             async getCommitExtractedDataLabels(
                 _source: unknown,
-                args: { commit_hash: string }
+                args: { commit_hash: string },
             ) {
                 const { commit_hash } = args;
                 return get_commit_capabilities(driver, commit_hash);
             },
             async traversePath(
                 _source: unknown,
-                args: { parent_label: string; tree_hash: string; path: string }
+                args: { parent_label: string; tree_hash: string; path: string },
             ) {
                 const { parent_label, tree_hash, path } = args;
                 return await get_path_entry(
                     driver,
                     parent_label,
                     tree_hash,
-                    path
+                    path,
                 );
             },
             async search(_source: unknown, args: { search_term: string }) {
@@ -157,7 +157,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                 const { search_term } = args;
                 for await (const result of search_fs_fullpath(
                     driver,
-                    search_term
+                    search_term,
                 ) as AsyncGenerator<FSSearchResult>) {
                     results.push({
                         commit_name: result.commit_name,
@@ -170,7 +170,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
             },
             async fetchSymbols(
                 _source: unknown,
-                args: { blob_hash: string; options: SymbolOptions }
+                args: { blob_hash: string; options: SymbolOptions },
             ) {
                 const { blob_hash, options } = args;
 
@@ -178,7 +178,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
             },
             async fetchStructs(
                 _source: unknown,
-                args: { blob_hash: string; options: WinStructOptions }
+                args: { blob_hash: string; options: WinStructOptions },
             ) {
                 const { blob_hash, options } = args;
                 return await fetch_structs(driver, blob_hash, options);
