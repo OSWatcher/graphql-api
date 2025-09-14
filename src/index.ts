@@ -67,7 +67,9 @@ async function main() {
         app.use(
             "/events/*",
             cors({
-                origin: true,
+                origin: process.env.ALLOWED_ORIGINS?.split(",") || [
+                    "https://oswatcher.github.io",
+                ],
                 credentials: true,
             }),
             express.raw({ type: "*/*" }),
@@ -107,7 +109,12 @@ async function main() {
     // Apply middleware
     app.use(
         "/graphql",
-        cors(),
+        cors({
+            origin: process.env.ALLOWED_ORIGINS?.split(",") || [
+                "https://oswatcher.github.io",
+            ],
+            credentials: true,
+        }),
         express.json(),
         expressMiddleware(server, {
             context: async ({ req }: { req: Request }) => ({ req }),
