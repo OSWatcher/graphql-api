@@ -23,7 +23,7 @@
   },
   "keywords": [],
   "author": "Mathieu Tarral",
-  "license": "UNLICENSED",
+  "license": "PROPRIETARY",
   "private": true,
   "dependencies": {
     "@apollo/server": "5.0.0",
