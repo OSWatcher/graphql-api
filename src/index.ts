@@ -183,6 +183,7 @@ async function main() {
         cors({
             origin: process.env.ALLOWED_ORIGINS?.split(",") || [
                 "https://oswatcher.github.io",
+                "http://127.0.0.1:8080",
             ],
             credentials: true,
         }),
