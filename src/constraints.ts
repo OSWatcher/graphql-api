@@ -10,7 +10,7 @@ async function createConstraintsIfNotExists(driver: Driver) {
         await session.executeWrite(async (tx) => {
             const label_array = ["Blob", "Tree", "Commit"];
             const promises = label_array.map((label) =>
-                tx.run(createConstraintQuery(label))
+                tx.run(createConstraintQuery(label)),
             );
             await Promise.all(promises);
         });

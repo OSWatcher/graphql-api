@@ -26,7 +26,7 @@ if (
 // Neo4j driver instance
 const driver = neo4j.driver(
     process.env.NEO4J_URI,
-    neo4j.auth.basic(process.env.NEO4J_USER, process.env.NEO4J_PASSWORD)
+    neo4j.auth.basic(process.env.NEO4J_USER, process.env.NEO4J_PASSWORD),
 );
 
 // ensure Neo4j constraints are applied
@@ -100,7 +100,7 @@ async function main() {
                     console.error("Error proxying PostHog event:", error);
                     res.status(502).send("Bad Gateway");
                 }
-            }
+            },
         );
         console.log(`📊 PostHog events endpoint enabled in production`);
     }
@@ -112,7 +112,7 @@ async function main() {
         bodyParser.json(),
         expressMiddleware(server, {
             context: async ({ req }) => ({ req }),
-        })
+        }),
     );
 
     // Start the server
@@ -120,7 +120,7 @@ async function main() {
         console.log(`🚀 Server ready at http://localhost:4000/graphql`);
         if (isProduction) {
             console.log(
-                `📊 PostHog events endpoint ready at http://localhost:4000/events`
+                `📊 PostHog events endpoint ready at http://localhost:4000/events`,
             );
         }
     });
