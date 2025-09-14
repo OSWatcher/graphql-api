@@ -65,7 +65,7 @@ async function main() {
     // PostHog events endpoint - only in production
     if (isProduction) {
         app.use(
-            "/events/*",
+            "/events",
             cors({
                 origin: process.env.ALLOWED_ORIGINS?.split(",") || [
                     "https://oswatcher.github.io",
