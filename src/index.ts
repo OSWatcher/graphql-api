@@ -39,9 +39,8 @@ const typeDefs = readFileSync("./type-defs.graphql").toString("utf-8");
 const ogm = new OGM({ typeDefs, driver });
 await ogm.init();
 
-const POSTHOG_HOST = "https://us.i.posthog.com";
-const POSTHOG_PROJECT_API_KEY =
-    "phc_LVf2RSEzYw7WlDJJFiUeEW4KxX2ncOFLn2k3WCTof5G";
+const POSTHOG_HOST = process.env.POSTHOG_HOST || "https://us.i.posthog.com";
+const POSTHOG_PROJECT_API_KEY = process.env.POSTHOG_PROJECT_API_KEY;
 const isProduction = process.env.NODE_ENV === "production";
 
 async function main() {
@@ -63,7 +62,7 @@ async function main() {
     await server.start();
 
     // PostHog events endpoint - only in production
-    if (isProduction) {
+    if (isProduction && POSTHOG_PROJECT_API_KEY) {
         app.use(
             "/events",
             cors({
