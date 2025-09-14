@@ -9,7 +9,7 @@ import {
 async function* fetch_commit_history(
     driver: Driver,
     commit_hash: string,
-    direction: CommitHistoryDirection = CommitHistoryDirection.Backward
+    direction: CommitHistoryDirection = CommitHistoryDirection.Backward,
 ): AsyncGenerator<Commit> {
     const session = driver.session();
 
@@ -20,7 +20,7 @@ async function* fetch_commit_history(
                 : FETCH_COMMIT_HISTORY_BACKWARD_QUERY;
 
         const result = await session.executeRead((tx) =>
-            tx.run(query, { commit_hash })
+            tx.run(query, { commit_hash }),
         );
 
         for (const record of result.records) {
@@ -33,7 +33,7 @@ async function* fetch_commit_history(
             const commit: Commit = {
                 ...commitNode.properties,
                 next: nextCommits.map(
-                    (nextCommit: Node) => nextCommit.properties
+                    (nextCommit: Node) => nextCommit.properties,
                 ),
                 previous: previous ? previous.properties : null,
                 nextConnection: {
@@ -84,13 +84,13 @@ async function* fetch_commit_history(
 
 async function get_commit_capabilities(
     driver: Driver,
-    commit_hash: string
+    commit_hash: string,
 ): Promise<string[]> {
     const session = driver.session();
 
     try {
         const result = await session.executeRead((tx) =>
-            tx.run(GET_COMMIT_CAPABILITIES_QUERY, { commit_hash })
+            tx.run(GET_COMMIT_CAPABILITIES_QUERY, { commit_hash }),
         );
 
         // return list of string (labels)

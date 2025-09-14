@@ -13,7 +13,7 @@ import { FETCH_SYMBOLS_QUERY, FETCH_STRUCTS_QUERY } from "./queries.js";
 export async function fetch_symbols(
     driver: Driver,
     blob_hash: string,
-    options: SymbolOptions
+    options: SymbolOptions,
 ): Promise<SymbolFetchResult[]> {
     const session = driver.session();
     try {
@@ -22,7 +22,7 @@ export async function fetch_symbols(
                 blob_hash,
                 skip_count: options.offset,
                 limit_count: options.limit,
-            })
+            }),
         );
 
         return result.records.map((record) => {
@@ -42,7 +42,7 @@ export async function fetch_symbols(
 export async function fetch_structs(
     driver: Driver,
     blob_hash: string,
-    options: WinStructOptions
+    options: WinStructOptions,
 ): Promise<WinStructFetchResult[]> {
     const session = driver.session();
     try {
@@ -51,7 +51,7 @@ export async function fetch_structs(
                 blob_hash,
                 skip_count: options.offset,
                 limit_count: options.limit,
-            })
+            }),
         );
 
         return result.records.map((record) => {
@@ -70,10 +70,10 @@ export async function fetch_structs(
                                 name: field["field_name"],
                                 offset: field["field"]["offset"],
                                 data_type: JSON.parse(
-                                    field["field"]["data_type"] as string
+                                    field["field"]["data_type"] as string,
                                 ),
                             };
-                        }
+                        },
                     ),
             };
         });

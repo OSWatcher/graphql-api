@@ -7,10 +7,9 @@ import neo4j from "neo4j-driver";
 import * as dotenv from "dotenv";
 import { createConstraintsIfNotExists } from "./constraints.js";
 import { resolvers } from "./resolvers.js";
-import express from "express";
-import { expressMiddleware } from "@apollo/server/express4";
+import express, { Request, Response } from "express";
+import { expressMiddleware } from "@as-integrations/express5";
 import cors from "cors";
-import bodyParser from "body-parser";
 import axios from "axios";
 
 dotenv.config();
@@ -26,7 +25,7 @@ if (
 // Neo4j driver instance
 const driver = neo4j.driver(
     process.env.NEO4J_URI,
-    neo4j.auth.basic(process.env.NEO4J_USER, process.env.NEO4J_PASSWORD)
+    neo4j.auth.basic(process.env.NEO4J_USER, process.env.NEO4J_PASSWORD),
 );
 
 // ensure Neo4j constraints are applied
@@ -72,7 +71,7 @@ async function main() {
                 credentials: true,
             }),
             express.raw({ type: "*/*" }),
-            async (req, res) => {
+            async (req: Request, res: Response) => {
                 try {
                     const posthogPath = req.originalUrl.replace("/events", "");
                     const fullUrl = `${POSTHOG_HOST}${posthogPath}`;
@@ -100,7 +99,7 @@ async function main() {
                     console.error("Error proxying PostHog event:", error);
                     res.status(502).send("Bad Gateway");
                 }
-            }
+            },
         );
         console.log(`📊 PostHog events endpoint enabled in production`);
     }
@@ -109,10 +108,10 @@ async function main() {
     app.use(
         "/graphql",
         cors(),
-        bodyParser.json(),
+        express.json(),
         expressMiddleware(server, {
-            context: async ({ req }) => ({ req }),
-        })
+            context: async ({ req }: { req: Request }) => ({ req }),
+        }),
     );
 
     // Start the server
@@ -120,7 +119,7 @@ async function main() {
         console.log(`🚀 Server ready at http://localhost:4000/graphql`);
         if (isProduction) {
             console.log(
-                `📊 PostHog events endpoint ready at http://localhost:4000/events`
+                `📊 PostHog events endpoint ready at http://localhost:4000/events`,
             );
         }
     });
