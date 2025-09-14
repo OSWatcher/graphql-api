@@ -71,7 +71,7 @@ async function main() {
                 ],
                 credentials: true,
             }),
-            express.raw({ type: "*/*" }),
+            express.raw({ type: "*/*", limit: '10mb' }),
             async (req: Request, res: Response) => {
                 try {
                     const posthogPath = req.originalUrl.replace("/events", "");
@@ -114,7 +114,7 @@ async function main() {
             ],
             credentials: true,
         }),
-        express.json(),
+        express.json({ limit: '1mb' }),
         expressMiddleware(server, {
             context: async ({ req }: { req: Request }) => ({ req }),
         }),
