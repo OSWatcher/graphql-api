@@ -53,19 +53,55 @@ async function main() {
 
     const server = new ApolloServer({
         schema: await neoSchema.getSchema(),
+        validationRules: [
+            // Prevent deeply nested queries that can cause DoS
+            (context: any) => ({
+                Field(node: any, key: any, parent: any, path: any) {
+                    if (path.length > 10) {
+                        // Max depth of 10
+                        context.reportError(
+                            new Error(
+                                "Query depth exceeded maximum allowed depth of 10",
+                            ),
+                        );
+                    }
+                },
+            }),
+            // Prevent complex queries by limiting field count
+            (context: any) => {
+                let fieldCount = 0;
+                return {
+                    Field() {
+                        fieldCount++;
+                        if (fieldCount > 100) {
+                            // Max 100 fields per query
+                            context.reportError(
+                                new Error(
+                                    "Query complexity exceeded: too many fields requested",
+                                ),
+                            );
+                        }
+                    },
+                };
+            },
+        ],
         formatError: (err) => {
             // Log full error details for debugging
-            console.error('GraphQL Error:', err);
-            
+            console.error("GraphQL Error:", err);
+
             // In production, hide sensitive error details
             if (isProduction) {
                 // Only return generic error for unknown errors
-                if (err.message.includes('Neo4j') || err.message.includes('Cypher') || 
-                    err.message.includes('database') || err.message.includes('driver')) {
-                    return new Error('Internal server error');
+                if (
+                    err.message.includes("Neo4j") ||
+                    err.message.includes("Cypher") ||
+                    err.message.includes("database") ||
+                    err.message.includes("driver")
+                ) {
+                    return new Error("Internal server error");
                 }
             }
-            
+
             return err;
         },
     });
@@ -86,7 +122,7 @@ async function main() {
                 ],
                 credentials: true,
             }),
-            express.raw({ type: "*/*", limit: '10mb' }),
+            express.raw({ type: "*/*", limit: "10mb" }),
             async (req: Request, res: Response) => {
                 try {
                     const posthogPath = req.originalUrl.replace("/events", "");
@@ -114,7 +150,9 @@ async function main() {
                 } catch (error: unknown) {
                     // Log full error for debugging but don't expose details
                     console.error("Error proxying PostHog event:", error);
-                    res.status(502).json({ error: "Service temporarily unavailable" });
+                    res.status(502).json({
+                        error: "Service temporarily unavailable",
+                    });
                 }
             },
         );
@@ -130,7 +168,7 @@ async function main() {
             ],
             credentials: true,
         }),
-        express.json({ limit: '1mb' }),
+        express.json({ limit: "1mb" }),
         expressMiddleware(server, {
             context: async ({ req }: { req: Request }) => ({ req }),
         }),
