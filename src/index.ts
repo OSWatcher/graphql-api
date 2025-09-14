@@ -53,6 +53,21 @@ async function main() {
 
     const server = new ApolloServer({
         schema: await neoSchema.getSchema(),
+        formatError: (err) => {
+            // Log full error details for debugging
+            console.error('GraphQL Error:', err);
+            
+            // In production, hide sensitive error details
+            if (isProduction) {
+                // Only return generic error for unknown errors
+                if (err.message.includes('Neo4j') || err.message.includes('Cypher') || 
+                    err.message.includes('database') || err.message.includes('driver')) {
+                    return new Error('Internal server error');
+                }
+            }
+            
+            return err;
+        },
     });
 
     // Create Express app
@@ -97,8 +112,9 @@ async function main() {
                     });
                     res.send(response.data);
                 } catch (error: unknown) {
+                    // Log full error for debugging but don't expose details
                     console.error("Error proxying PostHog event:", error);
-                    res.status(502).send("Bad Gateway");
+                    res.status(502).json({ error: "Service temporarily unavailable" });
                 }
             },
         );
