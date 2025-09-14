@@ -43,6 +43,37 @@ const POSTHOG_HOST = process.env.POSTHOG_HOST || "https://us.i.posthog.com";
 const POSTHOG_PROJECT_API_KEY = process.env.POSTHOG_PROJECT_API_KEY;
 const isProduction = process.env.NODE_ENV === "production";
 
+// Simple in-memory rate limiter
+const rateLimiter = new Map<string, { count: number; resetTime: number }>();
+
+const createRateLimit = (maxRequests: number, windowMs: number) => {
+    return (req: Request, res: Response, next: Function) => {
+        const clientId = req.ip || req.headers["x-forwarded-for"] || "unknown";
+        const now = Date.now();
+        const key = String(clientId);
+
+        const clientData = rateLimiter.get(key);
+
+        // Reset window if expired
+        if (!clientData || now > clientData.resetTime) {
+            rateLimiter.set(key, { count: 1, resetTime: now + windowMs });
+            return next();
+        }
+
+        // Check if limit exceeded
+        if (clientData.count >= maxRequests) {
+            return res.status(429).json({
+                error: "Too many requests. Please try again later.",
+                retryAfter: Math.ceil((clientData.resetTime - now) / 1000),
+            });
+        }
+
+        // Increment count
+        clientData.count++;
+        next();
+    };
+};
+
 async function main() {
     const instanciatedResolvers = resolvers(driver, ogm);
     const neoSchema = new Neo4jGraphQL({
@@ -168,6 +199,7 @@ async function main() {
             ],
             credentials: true,
         }),
+        createRateLimit(100, 60000), // 100 requests per minute
         express.json({ limit: "1mb" }),
         expressMiddleware(server, {
             context: async ({ req }: { req: Request }) => ({ req }),
