@@ -15,11 +15,22 @@ RETURN commit_name, commit_hash, blob_hash, full_path
 `;
 
 // filesystem
-export const GET_CHILD_NODE = (label: string) => `
+const ALLOWED_TRAVERSAL_LABELS = ["Tree", "Blob"] as const;
+
+export const GET_CHILD_NODE = (label: string) => {
+    // Validate label against whitelist to prevent Cypher injection
+    if (!ALLOWED_TRAVERSAL_LABELS.includes(label as any)) {
+        throw new Error(
+            `Invalid parent label: ${label}. Only Tree and Blob traversal allowed.`,
+        );
+    }
+
+    return `
 MATCH (p:${label})-[r]->(c)
 WHERE p.hash = $parent_hash AND r.name = $filename
 RETURN c
 `;
+};
 
 // constraints
 export const createConstraintQuery = (label: string) => `

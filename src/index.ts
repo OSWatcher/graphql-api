@@ -39,10 +39,40 @@ const typeDefs = readFileSync("./type-defs.graphql").toString("utf-8");
 const ogm = new OGM({ typeDefs, driver });
 await ogm.init();
 
-const POSTHOG_HOST = "https://us.i.posthog.com";
-const POSTHOG_PROJECT_API_KEY =
-    "phc_LVf2RSEzYw7WlDJJFiUeEW4KxX2ncOFLn2k3WCTof5G";
+const POSTHOG_HOST = process.env.POSTHOG_HOST || "https://us.i.posthog.com";
+const POSTHOG_PROJECT_API_KEY = process.env.POSTHOG_PROJECT_API_KEY;
 const isProduction = process.env.NODE_ENV === "production";
+
+// Simple in-memory rate limiter
+const rateLimiter = new Map<string, { count: number; resetTime: number }>();
+
+const createRateLimit = (maxRequests: number, windowMs: number) => {
+    return (req: Request, res: Response, next: Function) => {
+        const clientId = req.ip || req.headers["x-forwarded-for"] || "unknown";
+        const now = Date.now();
+        const key = String(clientId);
+
+        const clientData = rateLimiter.get(key);
+
+        // Reset window if expired
+        if (!clientData || now > clientData.resetTime) {
+            rateLimiter.set(key, { count: 1, resetTime: now + windowMs });
+            return next();
+        }
+
+        // Check if limit exceeded
+        if (clientData.count >= maxRequests) {
+            return res.status(429).json({
+                error: "Too many requests. Please try again later.",
+                retryAfter: Math.ceil((clientData.resetTime - now) / 1000),
+            });
+        }
+
+        // Increment count
+        clientData.count++;
+        next();
+    };
+};
 
 async function main() {
     const instanciatedResolvers = resolvers(driver, ogm);
@@ -54,6 +84,57 @@ async function main() {
 
     const server = new ApolloServer({
         schema: await neoSchema.getSchema(),
+        validationRules: [
+            // Prevent deeply nested queries that can cause DoS
+            (context: any) => ({
+                Field(node: any, key: any, parent: any, path: any) {
+                    if (path.length > 10) {
+                        // Max depth of 10
+                        context.reportError(
+                            new Error(
+                                "Query depth exceeded maximum allowed depth of 10",
+                            ),
+                        );
+                    }
+                },
+            }),
+            // Prevent complex queries by limiting field count
+            (context: any) => {
+                let fieldCount = 0;
+                return {
+                    Field() {
+                        fieldCount++;
+                        if (fieldCount > 100) {
+                            // Max 100 fields per query
+                            context.reportError(
+                                new Error(
+                                    "Query complexity exceeded: too many fields requested",
+                                ),
+                            );
+                        }
+                    },
+                };
+            },
+        ],
+        formatError: (err) => {
+            // Log full error details for debugging
+            console.error("GraphQL Error:", err);
+
+            // In production, hide sensitive error details
+            if (isProduction) {
+                // Only return generic error for unknown errors
+                if (
+                    err.message.includes("Neo4j") ||
+                    err.message.includes("Cypher") ||
+                    err.message.includes("database") ||
+                    err.message.includes("driver")
+                ) {
+                    return new Error("Internal server error");
+                }
+            }
+
+            return err;
+        },
     });
 
     // Create Express app
@@ -63,7 +144,7 @@ async function main() {
     await server.start();
 
     // PostHog events endpoint - only in production
-    if (isProduction) {
+    if (isProduction && POSTHOG_PROJECT_API_KEY) {
         app.use(
             "/events",
             cors({
@@ -72,7 +153,7 @@ async function main() {
                 ],
                 credentials: true,
             }),
-            express.raw({ type: "*/*" }),
+            express.raw({ type: "*/*", limit: "10mb" }),
             async (req: Request, res: Response) => {
                 try {
                     const posthogPath = req.originalUrl.replace("/events", "");
@@ -98,8 +179,11 @@ async function main() {
                     });
                     res.send(response.data);
                 } catch (error: unknown) {
+                    // Log full error for debugging but don't expose details
                     console.error("Error proxying PostHog event:", error);
-                    res.status(502).send("Bad Gateway");
+                    res.status(502).json({
+                        error: "Service temporarily unavailable",
+                    });
                 }
             },
         );
@@ -115,7 +199,8 @@ async function main() {
             ],
             credentials: true,
         }),
-        express.json(),
+        createRateLimit(100, 60000), // 100 requests per minute
+        express.json({ limit: "1mb" }),
         expressMiddleware(server, {
             context: async ({ req }: { req: Request }) => ({ req }),
         }),
