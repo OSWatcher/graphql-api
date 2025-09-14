@@ -85,19 +85,6 @@ async function main() {
     const server = new ApolloServer({
         schema: await neoSchema.getSchema(),
         validationRules: [
-            // Prevent deeply nested queries that can cause DoS
-            (context: any) => ({
-                Field(node: any, key: any, parent: any, path: any) {
-                    if (path.length > 10) {
-                        // Max depth of 10
-                        context.reportError(
-                            new Error(
-                                "Query depth exceeded maximum allowed depth of 10",
-                            ),
-                        );
-                    }
-                },
-            }),
             // Prevent complex queries by limiting field count
             (context: any) => {
                 let fieldCount = 0;
