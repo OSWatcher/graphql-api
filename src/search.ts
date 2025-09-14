@@ -11,7 +11,7 @@ type FSSearchResult = {
 
 async function* search_fs_fullpath(
     driver: Driver,
-    search_expr: string
+    search_expr: string,
 ): AsyncGenerator<FSSearchResult> {
     // search the filesystem in Neo4j, reconstructing the full path to Blob nodes
     // to search for search_term
@@ -20,7 +20,7 @@ async function* search_fs_fullpath(
 
     try {
         const result = await session.executeRead((tx) =>
-            tx.run(searchFSFullPathQuery, { search_expr })
+            tx.run(searchFSFullPathQuery, { search_expr }),
         );
 
         for (const record of result.records) {

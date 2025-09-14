@@ -5,7 +5,7 @@ export async function get_path_entry(
     driver: Driver,
     parent_label: string,
     root_fs_hash: string,
-    path: string
+    path: string,
 ): Promise<string | null> {
     // path should be absolute
     if (!path.startsWith("/")) {
