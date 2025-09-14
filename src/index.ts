@@ -7,10 +7,9 @@ import neo4j from "neo4j-driver";
 import * as dotenv from "dotenv";
 import { createConstraintsIfNotExists } from "./constraints.js";
 import { resolvers } from "./resolvers.js";
-import express from "express";
-import { expressMiddleware } from "@apollo/server/express4";
+import express, { Request, Response } from "express";
+import { expressMiddleware } from "@as-integrations/express5";
 import cors from "cors";
-import bodyParser from "body-parser";
 import axios from "axios";
 
 dotenv.config();
@@ -72,7 +71,7 @@ async function main() {
                 credentials: true,
             }),
             express.raw({ type: "*/*" }),
-            async (req, res) => {
+            async (req: Request, res: Response) => {
                 try {
                     const posthogPath = req.originalUrl.replace("/events", "");
                     const fullUrl = `${POSTHOG_HOST}${posthogPath}`;
@@ -109,9 +108,9 @@ async function main() {
     app.use(
         "/graphql",
         cors(),
-        bodyParser.json(),
+        express.json(),
         expressMiddleware(server, {
-            context: async ({ req }) => ({ req }),
+            context: async ({ req }: { req: Request }) => ({ req }),
         }),
     );
 
