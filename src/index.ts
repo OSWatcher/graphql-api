@@ -75,134 +75,148 @@ const createRateLimit = (maxRequests: number, windowMs: number) => {
 };
 
 async function main() {
-    const instanciatedResolvers = resolvers(driver, ogm);
-    const neoSchema = new Neo4jGraphQL({
-        typeDefs,
-        driver,
-        resolvers: instanciatedResolvers,
-    });
+    try {
+        const instanciatedResolvers = resolvers(driver, ogm);
+        const neoSchema = new Neo4jGraphQL({
+            typeDefs,
+            driver,
+            resolvers: instanciatedResolvers,
+        });
 
-    const server = new ApolloServer({
-        schema: await neoSchema.getSchema(),
-        validationRules: [
-            // Prevent complex queries by limiting field count
-            (context: any) => {
-                let fieldCount = 0;
-                return {
-                    Field() {
-                        fieldCount++;
-                        if (fieldCount > 100) {
-                            // Max 100 fields per query
-                            context.reportError(
-                                new Error(
-                                    "Query complexity exceeded: too many fields requested",
-                                ),
-                            );
-                        }
-                    },
-                };
-            },
-        ],
-        formatError: (err) => {
-            // Log full error details for debugging
-            console.error("GraphQL Error:", err);
+        const server = new ApolloServer({
+            schema: await neoSchema.getSchema(),
+            validationRules: [
+                // Prevent complex queries by limiting field count
+                (context: any) => {
+                    let fieldCount = 0;
+                    return {
+                        Field() {
+                            fieldCount++;
+                            if (fieldCount > 100) {
+                                // Max 100 fields per query
+                                context.reportError(
+                                    new Error(
+                                        "Query complexity exceeded: too many fields requested",
+                                    ),
+                                );
+                            }
+                        },
+                    };
+                },
+            ],
+            formatError: (err) => {
+                // Log full error details for debugging
+                console.error("GraphQL Error:", err);
 
-            // In production, hide sensitive error details
-            if (isProduction) {
-                // Only return generic error for unknown errors
-                if (
-                    err.message.includes("Neo4j") ||
-                    err.message.includes("Cypher") ||
-                    err.message.includes("database") ||
-                    err.message.includes("driver")
-                ) {
-                    return new Error("Internal server error");
+                // In production, hide sensitive error details
+                if (isProduction) {
+                    // Only return generic error for unknown errors
+                    if (
+                        err.message.includes("Neo4j") ||
+                        err.message.includes("Cypher") ||
+                        err.message.includes("database") ||
+                        err.message.includes("driver")
+                    ) {
+                        return new Error("Internal server error");
+                    }
                 }
-            }
 
-            return err;
-        },
-    });
+                return err;
+            },
+        });
 
-    // Create Express app
-    const app = express();
+        // Create Express app
+        const app = express();
 
-    // Start Apollo Server
-    await server.start();
+        // Start Apollo Server
+        await server.start();
 
-    // PostHog events endpoint - only in production
-    if (isProduction && POSTHOG_PROJECT_API_KEY) {
+        // PostHog events endpoint - only in production
+        if (isProduction && POSTHOG_PROJECT_API_KEY) {
+            app.use(
+                "/events",
+                cors({
+                    origin: process.env.ALLOWED_ORIGINS?.split(",") || [
+                        "https://oswatcher.github.io",
+                    ],
+                    credentials: true,
+                }),
+                express.raw({ type: "*/*", limit: "10mb" }),
+                async (req: Request, res: Response) => {
+                    try {
+                        const posthogPath = req.originalUrl.replace(
+                            "/events",
+                            "",
+                        );
+                        const fullUrl = `${POSTHOG_HOST}${posthogPath}`;
+
+                        // Forward the request exactly as received
+                        const response = await axios({
+                            method: req.method,
+                            url: fullUrl,
+                            data: req.body,
+                            headers: {
+                                ...req.headers,
+                                host: new URL(POSTHOG_HOST).host,
+                                Authorization: `Bearer ${POSTHOG_PROJECT_API_KEY}`,
+                            },
+                            decompress: false,
+                        });
+
+                        // Forward the response exactly as received
+                        res.status(response.status);
+                        Object.entries(response.headers).forEach(
+                            ([key, value]) => {
+                                res.setHeader(key, value);
+                            },
+                        );
+                        res.send(response.data);
+                    } catch (error: unknown) {
+                        // Log full error for debugging but don't expose details
+                        console.error("Error proxying PostHog event:", error);
+                        res.status(502).json({
+                            error: "Service temporarily unavailable",
+                        });
+                    }
+                },
+            );
+            console.log(`📊 PostHog events endpoint enabled in production`);
+        }
+
+        // Apply middleware
         app.use(
-            "/events",
+            "/graphql",
             cors({
                 origin: process.env.ALLOWED_ORIGINS?.split(",") || [
                     "https://oswatcher.github.io",
+                    "http://127.0.0.1:8080",
                 ],
                 credentials: true,
             }),
-            express.raw({ type: "*/*", limit: "10mb" }),
-            async (req: Request, res: Response) => {
-                try {
-                    const posthogPath = req.originalUrl.replace("/events", "");
-                    const fullUrl = `${POSTHOG_HOST}${posthogPath}`;
-
-                    // Forward the request exactly as received
-                    const response = await axios({
-                        method: req.method,
-                        url: fullUrl,
-                        data: req.body,
-                        headers: {
-                            ...req.headers,
-                            host: new URL(POSTHOG_HOST).host,
-                            Authorization: `Bearer ${POSTHOG_PROJECT_API_KEY}`,
-                        },
-                        decompress: false,
-                    });
-
-                    // Forward the response exactly as received
-                    res.status(response.status);
-                    Object.entries(response.headers).forEach(([key, value]) => {
-                        res.setHeader(key, value);
-                    });
-                    res.send(response.data);
-                } catch (error: unknown) {
-                    // Log full error for debugging but don't expose details
-                    console.error("Error proxying PostHog event:", error);
-                    res.status(502).json({
-                        error: "Service temporarily unavailable",
-                    });
-                }
-            },
+            createRateLimit(100, 60000), // 100 requests per minute
+            express.json({ limit: "1mb" }),
+            expressMiddleware(server, {
+                context: async ({ req }: { req: Request }) => ({ req }),
+            }),
         );
-        console.log(`📊 PostHog events endpoint enabled in production`);
+
+        // Start the server
+        app.listen(4000, () => {
+            console.log(`🚀 Server ready at http://localhost:4000/graphql`);
+            if (isProduction) {
+                console.log(
+                    `📊 PostHog events endpoint ready at http://localhost:4000/events`,
+                );
+            }
+        });
+    } catch (error) {
+        console.error("❌ Server startup failed:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
+        process.exit(1);
     }
-
-    // Apply middleware
-    app.use(
-        "/graphql",
-        cors({
-            origin: process.env.ALLOWED_ORIGINS?.split(",") || [
-                "https://oswatcher.github.io",
-                "http://127.0.0.1:8080",
-            ],
-            credentials: true,
-        }),
-        createRateLimit(100, 60000), // 100 requests per minute
-        express.json({ limit: "1mb" }),
-        expressMiddleware(server, {
-            context: async ({ req }: { req: Request }) => ({ req }),
-        }),
-    );
-
-    // Start the server
-    app.listen(4000, () => {
-        console.log(`🚀 Server ready at http://localhost:4000/graphql`);
-        if (isProduction) {
-            console.log(
-                `📊 PostHog events endpoint ready at http://localhost:4000/events`,
-            );
-        }
-    });
 }
 
-main();
+main().catch((error) => {
+    console.error("❌ Unhandled error in main():", error);
+    process.exit(1);
+});

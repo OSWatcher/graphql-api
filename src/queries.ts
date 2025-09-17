@@ -15,7 +15,7 @@ RETURN commit_name, commit_hash, blob_hash, full_path
 `;
 
 // filesystem
-const ALLOWED_TRAVERSAL_LABELS = ["Tree", "Blob"] as const;
+const ALLOWED_TRAVERSAL_LABELS = ["Tree", "Blob", "WinRegKey"] as const;
 
 export const GET_CHILD_NODE = (label: string) => {
     // Validate label against whitelist to prevent Cypher injection
