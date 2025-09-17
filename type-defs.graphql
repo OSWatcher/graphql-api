@@ -28,7 +28,8 @@ enum CommitHistoryDirection {
     BACKWARD
 }
 
-type Blob implements Hashable @query(read: false, aggregate: false) @mutation(operations: []) @limit(default: 100, max: 5000) {
+# read: needed for HAS_WINREG
+type Blob implements Hashable @query(read: true, aggregate: false) @mutation(operations: []) @limit(default: 100, max: 5000) {
     hash: String! @unique
     has_winreg: WinRegKey @relationship(type: "HAS_WINREG", direction: OUT)
     has_symbol: [Symbol!]! @relationship(type: "HAS_SYMBOL", direction: OUT, properties: "HasNameRel")
