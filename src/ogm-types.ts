@@ -126,6 +126,7 @@ export type QueryGetCommitExtractedDataLabelsArgs = {
 };
 
 export type QuerySearchArgs = {
+  commit_range: CommitRange;
   search_term: Scalars["String"]["input"];
 };
 
@@ -760,6 +761,13 @@ export type MutationUpdateWinStructFetchResultsArgs = {
 export enum CommitHistoryDirection {
   Forward = "FORWARD",
   Backward = "BACKWARD",
+}
+
+export enum CommitScope {
+  Single = "SINGLE",
+  History = "HISTORY",
+  HistoryWithUpdates = "HISTORY_WITH_UPDATES",
+  Range = "RANGE",
 }
 
 export enum DiffStatus {
@@ -4259,6 +4267,12 @@ export type CommitPreviousUpdateFieldInput = {
   create?: InputMaybe<CommitPreviousCreateFieldInput>;
   update?: InputMaybe<CommitPreviousUpdateConnectionInput>;
   delete?: InputMaybe<CommitPreviousDeleteFieldInput>;
+};
+
+export type CommitRange = {
+  startCommit: Scalars["String"]["input"];
+  scope: CommitScope;
+  endCommit?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 export type CommitRelationInput = {

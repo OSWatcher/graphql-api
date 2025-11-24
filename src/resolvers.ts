@@ -9,6 +9,7 @@ import {
     DiffItem,
     DiffNodesAtResult,
     CommitHistoryDirection,
+    CommitRange,
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
@@ -152,12 +153,16 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     path,
                 );
             },
-            async search(_source: unknown, args: { search_term: string }) {
+            async search(
+                _source: unknown,
+                args: { commit_range: CommitRange; search_term: string },
+            ) {
                 const results: SearchResult[] = [];
-                const { search_term } = args;
+                const { commit_range, search_term } = args;
                 for await (const result of search_fs_fullpath(
                     driver,
                     search_term,
+                    commit_range,
                 ) as AsyncGenerator<FSSearchResult>) {
                     results.push({
                         commit_name: result.commit_name,

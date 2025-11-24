@@ -28,6 +28,17 @@ enum CommitHistoryDirection {
     BACKWARD
 }
 
+enum CommitScope {
+    # Search within a single commit only
+    SINGLE
+    # Search within the commit and all its reachable history (backwards traversal)
+    HISTORY
+    # Search within the commit, its history, and all updates (bidirectional traversal)
+    HISTORY_WITH_UPDATES
+    # Search within a range of commits from startCommit to endCommit (inclusive)
+    RANGE
+}
+
 # read: needed for HAS_WINREG
 type Blob implements Hashable @query(read: true, aggregate: false) @mutation(operations: []) @limit(default: 100, max: 5000) {
     hash: String! @unique
@@ -182,6 +193,15 @@ input DiffNodesOptions {
     offset: Int
 }
 
+input CommitRange {
+    # The starting commit hash for the search range
+    startCommit: String!
+    # Defines the scope of commits to search within
+    scope: CommitScope!
+    # The ending commit hash (required when scope is RANGE, ignored otherwise)
+    endCommit: String = null
+}
+
 # custom Queries
 type Query {
     diffNodesAt(
@@ -201,7 +221,7 @@ type Query {
     # get all the possibile data labels associated with an os
     getCommitExtractedDataLabels(commit_hash: String!): [String!]!
     # search
-    search(search_term: String!): [SearchResult!]!
+    search(commit_range: CommitRange!, search_term: String!): [SearchResult!]!
     # fetch symbols
     fetchSymbols(blob_hash: String!, options: SymbolOptions): [SymbolFetchResult!]!
     # fetch structs
