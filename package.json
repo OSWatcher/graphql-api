@@ -28,6 +28,7 @@
   "dependencies": {
     "@apollo/server": "5.0.0",
     "@as-integrations/express5": "^1.1.2",
+    "@graphql-tools/schema": "^10.0.29",
     "@neo4j/graphql": "^5.7.1",
     "@neo4j/graphql-ogm": "5.11.4",
     "axios": "1.12.2",
@@ -36,8 +37,10 @@
     "express": "^5.1.0",
     "graphql": "16.11.0",
     "graphql-type-json": "^0.3.2",
+    "graphql-ws": "^6.0.6",
     "neo4j-driver": "^5.28.1",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "ws": "^8.18.3"
   },
   "prettier": {
     "tabWidth": 4
@@ -49,6 +52,7 @@
     "@types/express": "^5.0.3",
     "@types/jest": "30.0.0",
     "@types/semver": "^7.7.1",
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "8.43.0",
     "@typescript-eslint/parser": "8.43.0",
     "eslint": "9.35.0",

@@ -2,6 +2,7 @@ import { Neo4jGraphQL } from "@neo4j/graphql";
 import pkg from "@neo4j/graphql-ogm";
 const { OGM } = pkg;
 import { ApolloServer } from "@apollo/server";
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { readFileSync } from "fs";
 import neo4j from "neo4j-driver";
 import * as dotenv from "dotenv";
@@ -11,6 +12,9 @@ import express, { Request, Response } from "express";
 import { expressMiddleware } from "@as-integrations/express5";
 import cors from "cors";
 import axios from "axios";
+import { createServer } from "http";
+import { WebSocketServer } from "ws";
+import { useServer } from "graphql-ws/use/ws";
 
 dotenv.config();
 
@@ -83,8 +87,36 @@ async function main() {
             resolvers: instanciatedResolvers,
         });
 
+        // Get Neo4j GraphQL schema (supports both queries and subscriptions)
+        const schema = await neoSchema.getSchema();
+
+        // Create Express app and HTTP server
+        const app = express();
+        const httpServer = createServer(app);
+
+        // Create WebSocket server for subscriptions
+        const wsServer = new WebSocketServer({
+            server: httpServer,
+            path: "/graphql",
+        });
+
+        // Set up WebSocket subscription handler
+        const serverCleanup = useServer({ schema }, wsServer);
+
         const server = new ApolloServer({
-            schema: await neoSchema.getSchema(),
+            schema,
+            plugins: [
+                ApolloServerPluginDrainHttpServer({ httpServer }),
+                {
+                    async serverWillStart() {
+                        return {
+                            async drainServer() {
+                                await serverCleanup.dispose();
+                            },
+                        };
+                    },
+                },
+            ],
             validationRules: [
                 // Prevent complex queries by limiting field count
                 (context: any) => {
@@ -124,9 +156,6 @@ async function main() {
                 return err;
             },
         });
-
-        // Create Express app
-        const app = express();
 
         // Start Apollo Server
         await server.start();
@@ -200,9 +229,10 @@ async function main() {
             }),
         );
 
-        // Start the server
-        app.listen(4000, () => {
+        // Start the server (using httpServer to support both HTTP and WebSocket)
+        httpServer.listen(4000, () => {
             console.log(`🚀 Server ready at http://localhost:4000/graphql`);
+            console.log(`🔌 WebSocket ready at ws://localhost:4000/graphql`);
             if (isProduction) {
                 console.log(
                     `📊 PostHog events endpoint ready at http://localhost:4000/events`,

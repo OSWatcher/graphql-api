@@ -227,3 +227,9 @@ type Query {
     # fetch structs
     fetchStructs(blob_hash: String!, options: WinStructOptions): [WinStructFetchResult!]!
 }
+
+# custom Subscriptions
+type Subscription {
+    # search (streaming) - results are streamed as they are found
+    searchStream(commit_range: CommitRange!, search_term: String!): SearchResult!
+}

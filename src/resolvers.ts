@@ -20,6 +20,32 @@ import { OGM } from "@neo4j/graphql-ogm";
 
 export const resolvers = (driver: Driver, _ogm: OGM) => {
     return {
+        Subscription: {
+            searchStream: {
+                subscribe: async function* (
+                    _source: unknown,
+                    args: { commit_range: CommitRange; search_term: string },
+                ) {
+                    const { commit_range, search_term } = args;
+                    // Pure functional core - stream results from Neo4j
+                    for await (const result of search_fs_fullpath(
+                        driver,
+                        search_term,
+                        commit_range,
+                    ) as AsyncGenerator<FSSearchResult>) {
+                        // Wrap each result in subscription envelope
+                        yield {
+                            searchStream: {
+                                commit_name: result.commit_name,
+                                commit_hash: result.commit_hash,
+                                hash: result.blob_hash,
+                                path: result.full_path,
+                            },
+                        };
+                    }
+                },
+            },
+        },
         Query: {
             async fetchCommitHistory(
                 _source: unknown,
