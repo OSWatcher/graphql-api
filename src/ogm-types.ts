@@ -766,6 +766,7 @@ export enum CommitHistoryDirection {
 export enum CommitScope {
   Single = "SINGLE",
   History = "HISTORY",
+  HistoryWithUpdates = "HISTORY_WITH_UPDATES",
   Range = "RANGE",
 }
 

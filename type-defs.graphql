@@ -33,6 +33,8 @@ enum CommitScope {
     SINGLE
     # Search within the commit and all its reachable history (backwards traversal)
     HISTORY
+    # Search within the commit, its history, and all updates (bidirectional traversal)
+    HISTORY_WITH_UPDATES
     # Search within a range of commits from startCommit to endCommit (inclusive)
     RANGE
 }

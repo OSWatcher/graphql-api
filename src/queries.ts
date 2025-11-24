@@ -14,16 +14,20 @@ OPTIONAL MATCH (end:Commit {hash: $endCommit})
 OPTIONAL MATCH (single:Commit)
 WHERE $scope = "SINGLE" AND single = start
 
-// History mode
+// History mode (backwards only)
 OPTIONAL MATCH (start)-[:HAS_PREVIOUS*0..]->(history:Commit)
 WHERE $scope = "HISTORY"
+
+// History with updates mode (bidirectional)
+OPTIONAL MATCH (start)-[:HAS_PREVIOUS*0..]-(historyWithUpdates:Commit)
+WHERE $scope = "HISTORY_WITH_UPDATES"
 
 // Range mode
 OPTIONAL MATCH (start)-[:HAS_PREVIOUS*0..]->(range:Commit)
 WHERE $scope = "RANGE" AND (range = end OR (range)-[:HAS_PREVIOUS*0..]->(end))
 
 // Collect all non-null results
-WITH coalesce(single, history, range) AS commit
+WITH coalesce(single, history, historyWithUpdates, range) AS commit
 WHERE commit IS NOT NULL
 RETURN commit
 `;
