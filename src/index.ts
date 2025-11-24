@@ -13,7 +13,6 @@ import { expressMiddleware } from "@as-integrations/express5";
 import cors from "cors";
 import axios from "axios";
 import { createServer } from "http";
-import { makeExecutableSchema } from "@graphql-tools/schema";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
 
@@ -88,14 +87,8 @@ async function main() {
             resolvers: instanciatedResolvers,
         });
 
-        // Create executable schema for both HTTP and WebSocket
-        const schema = makeExecutableSchema({
-            typeDefs,
-            resolvers: instanciatedResolvers,
-        });
-
-        // Merge with Neo4j GraphQL schema
-        const mergedSchema = await neoSchema.getSchema();
+        // Get Neo4j GraphQL schema (supports both queries and subscriptions)
+        const schema = await neoSchema.getSchema();
 
         // Create Express app and HTTP server
         const app = express();
@@ -108,10 +101,10 @@ async function main() {
         });
 
         // Set up WebSocket subscription handler
-        const serverCleanup = useServer({ schema: mergedSchema }, wsServer);
+        const serverCleanup = useServer({ schema }, wsServer);
 
         const server = new ApolloServer({
-            schema: mergedSchema,
+            schema,
             plugins: [
                 ApolloServerPluginDrainHttpServer({ httpServer }),
                 {
