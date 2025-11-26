@@ -54,27 +54,46 @@ RETURN commit_name, commit_hash, blob_hash, full_path
 // filesystem
 const ALLOWED_TRAVERSAL_LABELS = ["Tree", "Blob", "WinRegKey"] as const;
 
+// Type-safe label mapping to prevent injection and info disclosure
+const LABEL_MAP: Record<string, string> = {
+    Tree: "Tree",
+    Blob: "Blob",
+    WinRegKey: "WinRegKey",
+} as const;
+
 export const GET_CHILD_NODE = (label: string) => {
     // Validate label against whitelist to prevent Cypher injection
-    if (!ALLOWED_TRAVERSAL_LABELS.includes(label as any)) {
-        throw new Error(
-            `Invalid parent label: ${label}. Only Tree and Blob traversal allowed.`,
-        );
+    const safeLabel = LABEL_MAP[label];
+    if (!safeLabel) {
+        // Don't leak user input in error message
+        throw new Error("Invalid label type");
     }
 
     return `
-MATCH (p:${label})-[r]->(c)
+MATCH (p:${safeLabel})-[r]->(c)
 WHERE p.hash = $parent_hash AND r.name = $filename
 RETURN c
 `;
 };
 
 // constraints
-export const createConstraintQuery = (label: string) => `
-CREATE CONSTRAINT ${label.toLowerCase()}_hash_unique IF NOT EXISTS
-FOR (n:${label})
+const CONSTRAINT_LABELS = {
+    Blob: "Blob",
+    Tree: "Tree",
+    Commit: "Commit",
+} as const;
+
+export const createConstraintQuery = (label: string) => {
+    const safeLabel = CONSTRAINT_LABELS[label as keyof typeof CONSTRAINT_LABELS];
+    if (!safeLabel) {
+        throw new Error("Invalid constraint label");
+    }
+    return `
+CREATE CONSTRAINT ${safeLabel.toLowerCase()}_hash_unique IF NOT EXISTS
+FOR (n:${safeLabel})
 REQUIRE n.hash IS UNIQUE
 `;
+};
 
 // commit
 export const FETCH_COMMIT_HISTORY_BACKWARD_QUERY = `

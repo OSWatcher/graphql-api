@@ -17,6 +17,16 @@ import { fetch_symbols, fetch_structs } from "./fetch.js";
 import path from "path";
 import { Driver } from "neo4j-driver";
 import { OGM } from "@neo4j/graphql-ogm";
+import {
+    SearchArgsSchema,
+    FetchCommitHistoryArgsSchema,
+    TraversePathArgsSchema,
+    DiffNodesArgsSchema,
+    FetchSymbolsArgsSchema,
+    FetchStructsArgsSchema,
+    GetCommitCapabilitiesArgsSchema,
+} from "./validation.js";
+import { GraphQLError } from "graphql";
 
 export const resolvers = (driver: Driver, _ogm: OGM) => {
     return {
@@ -24,9 +34,12 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
             searchStream: {
                 subscribe: async function* (
                     _source: unknown,
-                    args: { commit_range: CommitRange; search_term: string },
+                    args: unknown,
                 ) {
-                    const { commit_range, search_term } = args;
+                    // Validate input
+                    const validatedArgs = SearchArgsSchema.parse(args);
+                    const { commit_range, search_term } = validatedArgs;
+
                     // Pure functional core - stream results from Neo4j
                     for await (const result of search_fs_fullpath(
                         driver,
@@ -49,20 +62,20 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
         Query: {
             async fetchCommitHistory(
                 _source: unknown,
-                args: {
-                    commit_hash: string;
-                    direction?: CommitHistoryDirection;
-                },
+                args: unknown,
             ) {
+                // Validate input
+                const validatedArgs = FetchCommitHistoryArgsSchema.parse(args);
                 const {
                     commit_hash,
                     direction = CommitHistoryDirection.Backward,
-                } = args;
+                } = validatedArgs;
+
                 const results: Commit[] = [];
                 for await (const commit of fetch_commit_history(
                     driver,
                     commit_hash,
-                    direction,
+                    direction as CommitHistoryDirection,
                 )) {
                     results.push(commit);
                 }
@@ -70,7 +83,11 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
             },
             async diffNodesAt(
                 _source: unknown,
-                {
+                args: unknown,
+            ): Promise<DiffNodesAtResult> {
+                // Validate input
+                const validatedArgs = DiffNodesArgsSchema.parse(args);
+                const {
                     parent_label,
                     base_node_hash,
                     diffee_node_hash,
@@ -79,26 +96,16 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     filter,
                     with_intermediates,
                     options,
-                }: {
-                    parent_label: string;
-                    base_node_hash: string;
-                    diffee_node_hash: string;
-                    at_path: string;
-                    max_depth: number | null;
-                    filter: Array<string>;
-                    with_intermediates: boolean;
-                    options: DiffNodesOptions | null;
-                },
-            ): Promise<DiffNodesAtResult> {
+                } = validatedArgs;
                 if (base_node_hash === "" || diffee_node_hash === "") {
                     throw new Error(
                         "Base and diffee node hashes cannot be empty",
                     );
                 }
-                if (max_depth === null) {
-                    max_depth = -1;
-                } else if (max_depth && max_depth < 0) {
-                    throw new Error("Max depth should be a positive integer");
+                // Convert null max_depth to -1 (unlimited)
+                const resolvedMaxDepth = max_depth === null || max_depth === undefined ? -1 : max_depth;
+                if (resolvedMaxDepth < -1) {
+                    throw new Error("Max depth should be -1 (unlimited) or a positive integer");
                 }
                 try {
                     // traverse the given path on both filesystems with get_path_entry()
@@ -132,7 +139,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         at_path,
                         base_entry_at,
                         diffee_entry_at,
-                        max_depth,
+                        resolvedMaxDepth,
                         filter,
                         with_intermediates,
                     )) {
@@ -162,16 +169,20 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
             },
             async getCommitExtractedDataLabels(
                 _source: unknown,
-                args: { commit_hash: string },
+                args: unknown,
             ) {
-                const { commit_hash } = args;
+                // Validate input
+                const validatedArgs = GetCommitCapabilitiesArgsSchema.parse(args);
+                const { commit_hash } = validatedArgs;
                 return get_commit_capabilities(driver, commit_hash);
             },
             async traversePath(
                 _source: unknown,
-                args: { parent_label: string; tree_hash: string; path: string },
+                args: unknown,
             ) {
-                const { parent_label, tree_hash, path } = args;
+                // Validate input
+                const validatedArgs = TraversePathArgsSchema.parse(args);
+                const { parent_label, tree_hash, path } = validatedArgs;
                 return await get_path_entry(
                     driver,
                     parent_label,
@@ -181,10 +192,13 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
             },
             async search(
                 _source: unknown,
-                args: { commit_range: CommitRange; search_term: string },
+                args: unknown,
             ) {
+                // Validate input
+                const validatedArgs = SearchArgsSchema.parse(args);
+                const { commit_range, search_term } = validatedArgs;
+
                 const results: SearchResult[] = [];
-                const { commit_range, search_term } = args;
                 for await (const result of search_fs_fullpath(
                     driver,
                     search_term,
@@ -201,17 +215,21 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
             },
             async fetchSymbols(
                 _source: unknown,
-                args: { blob_hash: string; options: SymbolOptions },
+                args: unknown,
             ) {
-                const { blob_hash, options } = args;
+                // Validate input
+                const validatedArgs = FetchSymbolsArgsSchema.parse(args);
+                const { blob_hash, options } = validatedArgs;
 
                 return await fetch_symbols(driver, blob_hash, options);
             },
             async fetchStructs(
                 _source: unknown,
-                args: { blob_hash: string; options: WinStructOptions },
+                args: unknown,
             ) {
-                const { blob_hash, options } = args;
+                // Validate input
+                const validatedArgs = FetchStructsArgsSchema.parse(args);
+                const { blob_hash, options } = validatedArgs;
                 return await fetch_structs(driver, blob_hash, options);
             },
         },
