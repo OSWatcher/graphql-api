@@ -55,10 +55,23 @@ export async function fetch_structs(
         );
 
         return result.records.map((record) => {
+            const structProps = record.get("struct_props") as Record<
+                string,
+                unknown
+            >;
+
+            // Validate struct properties
+            if (
+                typeof structProps.size !== "number" ||
+                typeof structProps.kind !== "string"
+            ) {
+                throw new Error("Invalid struct properties format");
+            }
+
             return {
                 name: record.get("struct_name"),
-                size: record.get("struct_props")["size"],
-                kind: record.get("struct_props")["kind"],
+                size: structProps.size,
+                kind: structProps.kind,
                 fields: record
                     .get("fields")
                     .map(
@@ -66,12 +79,25 @@ export async function fetch_structs(
                             field_name: string;
                             field: Record<string, unknown>;
                         }) => {
+                            // Safe JSON parsing with error handling
+                            let dataType: unknown;
+                            try {
+                                const dataTypeStr = field["field"][
+                                    "data_type"
+                                ] as string;
+                                dataType = JSON.parse(dataTypeStr);
+                            } catch (parseError) {
+                                console.error(
+                                    "Failed to parse data_type JSON:",
+                                    parseError,
+                                );
+                                dataType = null;
+                            }
+
                             return {
                                 name: field["field_name"],
-                                offset: field["field"]["offset"],
-                                data_type: JSON.parse(
-                                    field["field"]["data_type"] as string,
-                                ),
+                                offset: field["field"]["offset"] as number,
+                                data_type: dataType,
                             };
                         },
                     ),

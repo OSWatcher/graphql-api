@@ -12,6 +12,7 @@ async function* fetch_commit_history(
     direction: CommitHistoryDirection = CommitHistoryDirection.Backward,
 ): AsyncGenerator<Commit> {
     const session = driver.session();
+    const tx = session.beginTransaction();
 
     try {
         const query =
@@ -19,11 +20,10 @@ async function* fetch_commit_history(
                 ? FETCH_COMMIT_HISTORY_FORWARD_QUERY
                 : FETCH_COMMIT_HISTORY_BACKWARD_QUERY;
 
-        const result = await session.executeRead((tx) =>
-            tx.run(query, { commit_hash }),
-        );
+        // Use async iteration for true streaming from Neo4j
+        const result = tx.run(query, { commit_hash });
 
-        for (const record of result.records) {
+        for await (const record of result) {
             const commitNode = record.get("c");
             const nextCommits = record.get("nextCommits");
             const previous = record.get("previous");
@@ -74,8 +74,11 @@ async function* fetch_commit_history(
             };
             yield commit;
         }
+
+        await tx.commit();
     } catch (error) {
         console.error("Error fetching commit history:", error);
+        await tx.rollback();
         throw error;
     } finally {
         await session.close();
@@ -94,9 +97,12 @@ async function get_commit_capabilities(
         );
 
         // return list of string (labels)
+        if (result.records.length === 0) {
+            return [];
+        }
         return result.records[0].get("uniqueLabels");
     } catch (error) {
-        console.error("Error searching filesystem by full path:", error);
+        console.error("Error fetching commit capabilities:", error);
         throw error;
     } finally {
         await session.close();

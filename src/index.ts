@@ -94,14 +94,67 @@ async function main() {
         const app = express();
         const httpServer = createServer(app);
 
-        // Create WebSocket server for subscriptions
+        // Track WebSocket connections per IP for rate limiting
+        const wsConnections = new Map<string, number>();
+        const MAX_WS_CONNECTIONS_PER_IP = 5;
+
+        // Create WebSocket server for subscriptions with security limits
         const wsServer = new WebSocketServer({
             server: httpServer,
             path: "/graphql",
+            maxPayload: 100 * 1024, // 100KB max message size
+            perMessageDeflate: false, // Prevent compression bombs
         });
 
-        // Set up WebSocket subscription handler
-        const serverCleanup = useServer({ schema }, wsServer);
+        // Set up WebSocket subscription handler with security
+        const serverCleanup = useServer(
+            {
+                schema,
+                context: async (_ctx) => {
+                    // Context is available for authentication
+                    // For now, just return empty context
+                    // Future: add token validation here
+                    return {};
+                },
+                onConnect: async (ctx) => {
+                    // Rate limit connections per IP
+                    const ip =
+                        ctx.extra.request.socket.remoteAddress || "unknown";
+                    const currentConnections = wsConnections.get(ip) || 0;
+
+                    if (currentConnections >= MAX_WS_CONNECTIONS_PER_IP) {
+                        console.warn(
+                            `WebSocket connection limit exceeded for IP: ${ip}`,
+                        );
+                        return false; // Reject connection
+                    }
+
+                    wsConnections.set(ip, currentConnections + 1);
+                    console.log(
+                        `WebSocket connected from ${ip} (${currentConnections + 1}/${MAX_WS_CONNECTIONS_PER_IP})`,
+                    );
+                    return true;
+                },
+                onDisconnect: async (ctx) => {
+                    // Clean up connection tracking
+                    const ip =
+                        ctx.extra.request.socket.remoteAddress || "unknown";
+                    const currentConnections = wsConnections.get(ip) || 1;
+                    if (currentConnections <= 1) {
+                        wsConnections.delete(ip);
+                    } else {
+                        wsConnections.set(ip, currentConnections - 1);
+                    }
+                    console.log(
+                        `WebSocket disconnected from ${ip} (${currentConnections - 1} remaining)`,
+                    );
+                },
+                onError: (ctx, message, errors) => {
+                    console.error("WebSocket error:", message, errors);
+                },
+            },
+            wsServer,
+        );
 
         const server = new ApolloServer({
             schema,
@@ -137,23 +190,63 @@ async function main() {
                 },
             ],
             formatError: (err) => {
-                // Log full error details for debugging
-                console.error("GraphQL Error:", err);
+                // Log full error details for debugging (server-side only)
+                console.error("GraphQL Error:", {
+                    message: err.message,
+                    path: err.path,
+                    extensions: err.extensions,
+                });
 
-                // In production, hide sensitive error details
-                if (isProduction) {
-                    // Only return generic error for unknown errors
-                    if (
-                        err.message.includes("Neo4j") ||
-                        err.message.includes("Cypher") ||
-                        err.message.includes("database") ||
-                        err.message.includes("driver")
-                    ) {
-                        return new Error("Internal server error");
-                    }
+                // Sanitize error messages to prevent information disclosure
+                const isSensitiveError =
+                    err.message.includes("Neo4j") ||
+                    err.message.includes("Cypher") ||
+                    err.message.includes("database") ||
+                    err.message.includes("driver") ||
+                    err.message.includes("session") ||
+                    err.message.includes("transaction");
+
+                if (isSensitiveError) {
+                    // Return generic error, hide internal details
+                    return {
+                        message: "An internal error occurred",
+                        extensions: {
+                            code:
+                                err.extensions?.code || "INTERNAL_SERVER_ERROR",
+                        },
+                    };
                 }
 
-                return err;
+                // For validation errors (from Zod), return helpful messages
+                if (err.extensions?.code === "BAD_USER_INPUT") {
+                    return {
+                        message: err.message,
+                        extensions: {
+                            code: "BAD_USER_INPUT",
+                            // Don't include stack traces or internal details
+                        },
+                    };
+                }
+
+                // In production, always hide stack traces
+                if (isProduction) {
+                    return {
+                        message: err.message,
+                        extensions: {
+                            code:
+                                err.extensions?.code || "INTERNAL_SERVER_ERROR",
+                        },
+                    };
+                }
+
+                // In development, return error but still sanitize stack traces
+                return {
+                    message: err.message,
+                    extensions: {
+                        code: err.extensions?.code,
+                        // Stack traces only in development logs, not to client
+                    },
+                };
             },
         });
 
