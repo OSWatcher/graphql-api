@@ -110,7 +110,7 @@ async function main() {
         const serverCleanup = useServer(
             {
                 schema,
-                context: async (ctx) => {
+                context: async (_ctx) => {
                     // Context is available for authentication
                     // For now, just return empty context
                     // Future: add token validation here
@@ -211,7 +211,8 @@ async function main() {
                     return {
                         message: "An internal error occurred",
                         extensions: {
-                            code: err.extensions?.code || "INTERNAL_SERVER_ERROR",
+                            code:
+                                err.extensions?.code || "INTERNAL_SERVER_ERROR",
                         },
                     };
                 }
@@ -232,7 +233,8 @@ async function main() {
                     return {
                         message: err.message,
                         extensions: {
-                            code: err.extensions?.code || "INTERNAL_SERVER_ERROR",
+                            code:
+                                err.extensions?.code || "INTERNAL_SERVER_ERROR",
                         },
                     };
                 }

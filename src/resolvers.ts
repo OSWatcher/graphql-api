@@ -3,13 +3,9 @@ import { diffTreesIterative } from "./diff/diff.js";
 import {
     Commit,
     SearchResult,
-    SymbolOptions,
-    WinStructOptions,
-    DiffNodesOptions,
     DiffItem,
     DiffNodesAtResult,
     CommitHistoryDirection,
-    CommitRange,
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
@@ -26,16 +22,12 @@ import {
     FetchStructsArgsSchema,
     GetCommitCapabilitiesArgsSchema,
 } from "./validation.js";
-import { GraphQLError } from "graphql";
 
 export const resolvers = (driver: Driver, _ogm: OGM) => {
     return {
         Subscription: {
             searchStream: {
-                subscribe: async function* (
-                    _source: unknown,
-                    args: unknown,
-                ) {
+                subscribe: async function* (_source: unknown, args: unknown) {
                     // Validate input
                     const validatedArgs = SearchArgsSchema.parse(args);
                     const { commit_range, search_term } = validatedArgs;
@@ -60,10 +52,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
             },
         },
         Query: {
-            async fetchCommitHistory(
-                _source: unknown,
-                args: unknown,
-            ) {
+            async fetchCommitHistory(_source: unknown, args: unknown) {
                 // Validate input
                 const validatedArgs = FetchCommitHistoryArgsSchema.parse(args);
                 const {
@@ -103,9 +92,14 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     );
                 }
                 // Convert null max_depth to -1 (unlimited)
-                const resolvedMaxDepth = max_depth === null || max_depth === undefined ? -1 : max_depth;
+                const resolvedMaxDepth =
+                    max_depth === null || max_depth === undefined
+                        ? -1
+                        : max_depth;
                 if (resolvedMaxDepth < -1) {
-                    throw new Error("Max depth should be -1 (unlimited) or a positive integer");
+                    throw new Error(
+                        "Max depth should be -1 (unlimited) or a positive integer",
+                    );
                 }
                 try {
                     // traverse the given path on both filesystems with get_path_entry()
@@ -172,14 +166,12 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                 args: unknown,
             ) {
                 // Validate input
-                const validatedArgs = GetCommitCapabilitiesArgsSchema.parse(args);
+                const validatedArgs =
+                    GetCommitCapabilitiesArgsSchema.parse(args);
                 const { commit_hash } = validatedArgs;
                 return get_commit_capabilities(driver, commit_hash);
             },
-            async traversePath(
-                _source: unknown,
-                args: unknown,
-            ) {
+            async traversePath(_source: unknown, args: unknown) {
                 // Validate input
                 const validatedArgs = TraversePathArgsSchema.parse(args);
                 const { parent_label, tree_hash, path } = validatedArgs;
@@ -190,10 +182,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     path,
                 );
             },
-            async search(
-                _source: unknown,
-                args: unknown,
-            ) {
+            async search(_source: unknown, args: unknown) {
                 // Validate input
                 const validatedArgs = SearchArgsSchema.parse(args);
                 const { commit_range, search_term } = validatedArgs;
@@ -213,20 +202,14 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                 }
                 return results;
             },
-            async fetchSymbols(
-                _source: unknown,
-                args: unknown,
-            ) {
+            async fetchSymbols(_source: unknown, args: unknown) {
                 // Validate input
                 const validatedArgs = FetchSymbolsArgsSchema.parse(args);
                 const { blob_hash, options } = validatedArgs;
 
                 return await fetch_symbols(driver, blob_hash, options);
             },
-            async fetchStructs(
-                _source: unknown,
-                args: unknown,
-            ) {
+            async fetchStructs(_source: unknown, args: unknown) {
                 // Validate input
                 const validatedArgs = FetchStructsArgsSchema.parse(args);
                 const { blob_hash, options } = validatedArgs;

@@ -48,9 +48,7 @@ export async function get_path_entry(
                 filename: lastPart,
             });
             // retrieve the hash and throw an error if no node found
-            const [node] = finalResult.records.map(
-                (record) => record.get("c"),
-            );
+            const [node] = finalResult.records.map((record) => record.get("c"));
             if (!node) {
                 return null;
             }

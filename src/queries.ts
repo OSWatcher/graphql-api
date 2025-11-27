@@ -52,8 +52,6 @@ RETURN commit_name, commit_hash, blob_hash, full_path
 `;
 
 // filesystem
-const ALLOWED_TRAVERSAL_LABELS = ["Tree", "Blob", "WinRegKey"] as const;
-
 // Type-safe label mapping to prevent injection and info disclosure
 const LABEL_MAP: Record<string, string> = {
     Tree: "Tree",
@@ -84,7 +82,8 @@ const CONSTRAINT_LABELS = {
 } as const;
 
 export const createConstraintQuery = (label: string) => {
-    const safeLabel = CONSTRAINT_LABELS[label as keyof typeof CONSTRAINT_LABELS];
+    const safeLabel =
+        CONSTRAINT_LABELS[label as keyof typeof CONSTRAINT_LABELS];
     if (!safeLabel) {
         throw new Error("Invalid constraint label");
     }
