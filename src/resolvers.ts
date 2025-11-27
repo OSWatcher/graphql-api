@@ -64,7 +64,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                 for await (const commit of fetch_commit_history(
                     driver,
                     commit_hash,
-                    direction as CommitHistoryDirection,
+                    direction,
                 )) {
                     results.push(commit);
                 }

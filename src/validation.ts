@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CommitScope } from "./ogm-types.js";
+import { CommitScope, CommitHistoryDirection } from "./ogm-types.js";
 
 // Git commit hash validation (40 character hex string)
 const GitSHA1Schema = z
@@ -19,8 +19,20 @@ const CommitScopeSchema = z
                 return CommitScope.HistoryWithUpdates;
             case "RANGE":
                 return CommitScope.Range;
-            default:
-                return val;
+            // No default case needed; all enum values are handled above.
+        }
+    });
+
+// Commit history direction enum - map to OGM enum
+const CommitHistoryDirectionSchema = z
+    .enum(["FORWARD", "BACKWARD"])
+    .transform((val) => {
+        switch (val) {
+            case "FORWARD":
+                return CommitHistoryDirection.Forward;
+            case "BACKWARD":
+                return CommitHistoryDirection.Backward;
+            // No default case needed; enum validation ensures only valid values.
         }
     });
 
@@ -57,7 +69,7 @@ export const SearchArgsSchema = z.object({
 // Fetch commit history arguments
 export const FetchCommitHistoryArgsSchema = z.object({
     commit_hash: GitSHA1Schema,
-    direction: z.enum(["FORWARD", "BACKWARD"]).optional(),
+    direction: CommitHistoryDirectionSchema.optional(),
 });
 
 // Traverse path arguments
