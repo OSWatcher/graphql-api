@@ -15,6 +15,7 @@ import axios from "axios";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
+import { auth } from "express-oauth2-jwt-bearer";
 
 dotenv.config();
 
@@ -22,10 +23,17 @@ if (
     process.env.NEO4J_URI == undefined ||
     process.env.NEO4J_USER == undefined ||
     process.env.NEO4J_PASSWORD == undefined ||
-    process.env.JWKS_URI == undefined
+    process.env.AUTH0_DOMAIN_URI == undefined ||
+    process.env.AUTH0_AUDIENCE == undefined
 ) {
     throw Error("Invalid env configuration");
 }
+
+const checkJwt = auth({
+    audience: process.env.AUTH0_AUDIENCE!,
+    issuerBaseURL: `${process.env.AUTH0_DOMAIN_URI!}/`,
+    authRequired: false, // Allow requests without JWT tokens
+});
 
 // Neo4j driver instance
 const driver = neo4j.driver(
@@ -87,7 +95,7 @@ async function main() {
             features: {
                 authorization: {
                     key: {
-                        url: process.env.JWKS_URI!,
+                        url: `${process.env.AUTH0_DOMAIN_URI!}/.well-known/jwks.json`,
                     },
                 },
             },
@@ -322,8 +330,14 @@ async function main() {
             }),
             createRateLimit(100, 60000), // 100 requests per minute
             express.json({ limit: "1mb" }),
+            // Auth0 middleware: validates token, adds req.auth
+            checkJwt,
             expressMiddleware(server, {
-                context: async ({ req }: { req: Request }) => ({ req }),
+                context: async ({ req }: { req: Request }) => ({
+                    req,
+                    jwt: req.auth,
+                    permissions: req.auth?.payload.permissions,
+                }),
             }),
         );
 
