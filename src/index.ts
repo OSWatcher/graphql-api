@@ -21,7 +21,8 @@ dotenv.config();
 if (
     process.env.NEO4J_URI == undefined ||
     process.env.NEO4J_USER == undefined ||
-    process.env.NEO4J_PASSWORD == undefined
+    process.env.NEO4J_PASSWORD == undefined ||
+    process.env.JWKS_URI == undefined
 ) {
     throw Error("Invalid env configuration");
 }
@@ -83,6 +84,13 @@ async function main() {
         const instanciatedResolvers = resolvers(driver, ogm);
         const neoSchema = new Neo4jGraphQL({
             typeDefs,
+            features: {
+                authorization: {
+                    key: {
+                        url: process.env.JWKS_URI!,
+                    },
+                },
+            },
             driver,
             resolvers: instanciatedResolvers,
         });
@@ -111,9 +119,6 @@ async function main() {
             {
                 schema,
                 context: async (_ctx) => {
-                    // Context is available for authentication
-                    // For now, just return empty context
-                    // Future: add token validation here
                     return {};
                 },
                 onConnect: async (ctx) => {
