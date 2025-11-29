@@ -15,16 +15,25 @@ import axios from "axios";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
+import { auth } from "express-oauth2-jwt-bearer";
 
 dotenv.config();
 
 if (
     process.env.NEO4J_URI == undefined ||
     process.env.NEO4J_USER == undefined ||
-    process.env.NEO4J_PASSWORD == undefined
+    process.env.NEO4J_PASSWORD == undefined ||
+    process.env.AUTH0_DOMAIN_URI == undefined ||
+    process.env.AUTH0_AUDIENCE == undefined
 ) {
     throw Error("Invalid env configuration");
 }
+
+const checkJwt = auth({
+    audience: process.env.AUTH0_AUDIENCE!,
+    issuerBaseURL: `${process.env.AUTH0_DOMAIN_URI!}/`,
+    authRequired: false, // Allow requests without JWT tokens
+});
 
 // Neo4j driver instance
 const driver = neo4j.driver(
@@ -83,6 +92,13 @@ async function main() {
         const instanciatedResolvers = resolvers(driver, ogm);
         const neoSchema = new Neo4jGraphQL({
             typeDefs,
+            features: {
+                authorization: {
+                    key: {
+                        url: `${process.env.AUTH0_DOMAIN_URI!}/.well-known/jwks.json`,
+                    },
+                },
+            },
             driver,
             resolvers: instanciatedResolvers,
         });
@@ -111,9 +127,6 @@ async function main() {
             {
                 schema,
                 context: async (_ctx) => {
-                    // Context is available for authentication
-                    // For now, just return empty context
-                    // Future: add token validation here
                     return {};
                 },
                 onConnect: async (ctx) => {
@@ -159,6 +172,37 @@ async function main() {
         const server = new ApolloServer({
             schema,
             plugins: [
+                // Plugin to filter branches based on authentication
+                {
+                    async requestDidStart() {
+                        return {
+                            async willSendResponse({
+                                response,
+                                contextValue,
+                            }: any) {
+                                // Only filter branches query responses
+                                if (
+                                    response?.body?.kind === "single" &&
+                                    response.body.singleResult?.data?.branches
+                                ) {
+                                    const isAuthenticated =
+                                        contextValue.jwt?.payload?.sub;
+
+                                    // If unauthenticated, filter to free tier branches (ubuntu only)
+                                    if (!isAuthenticated) {
+                                        response.body.singleResult.data.branches =
+                                            response.body.singleResult.data.branches.filter(
+                                                (branch: any) =>
+                                                    branch.name
+                                                        .toLowerCase()
+                                                        .includes("ubuntu"),
+                                            );
+                                    }
+                                }
+                            },
+                        };
+                    },
+                },
                 ApolloServerPluginDrainHttpServer({ httpServer }),
                 {
                     async serverWillStart() {
@@ -317,8 +361,14 @@ async function main() {
             }),
             createRateLimit(100, 60000), // 100 requests per minute
             express.json({ limit: "1mb" }),
+            // Auth0 middleware: validates token, adds req.auth
+            checkJwt,
             expressMiddleware(server, {
-                context: async ({ req }: { req: Request }) => ({ req }),
+                context: async ({ req }: { req: Request }) => ({
+                    req,
+                    jwt: req.auth,
+                    permissions: req.auth?.payload.permissions,
+                }),
             }),
         );
 
