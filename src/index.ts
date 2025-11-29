@@ -172,6 +172,37 @@ async function main() {
         const server = new ApolloServer({
             schema,
             plugins: [
+                // Plugin to filter branches based on authentication
+                {
+                    async requestDidStart() {
+                        return {
+                            async willSendResponse({
+                                response,
+                                contextValue,
+                            }: any) {
+                                // Only filter branches query responses
+                                if (
+                                    response?.body?.kind === "single" &&
+                                    response.body.singleResult?.data?.branches
+                                ) {
+                                    const isAuthenticated =
+                                        contextValue.jwt?.payload?.sub;
+
+                                    // If unauthenticated, filter to free tier branches (ubuntu only)
+                                    if (!isAuthenticated) {
+                                        response.body.singleResult.data.branches =
+                                            response.body.singleResult.data.branches.filter(
+                                                (branch: any) =>
+                                                    branch.name
+                                                        .toLowerCase()
+                                                        .includes("ubuntu"),
+                                            );
+                                    }
+                                }
+                            },
+                        };
+                    },
+                },
                 ApolloServerPluginDrainHttpServer({ httpServer }),
                 {
                     async serverWillStart() {
