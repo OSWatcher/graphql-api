@@ -6,6 +6,7 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import { readFileSync } from "fs";
 import neo4j from "neo4j-driver";
 import * as dotenv from "dotenv";
+import { cleanEnv, str, url } from "envalid";
 import { createConstraintsIfNotExists } from "./constraints.js";
 import { resolvers } from "./resolvers.js";
 import express, { Request, Response } from "express";
@@ -19,26 +20,43 @@ import { auth } from "express-oauth2-jwt-bearer";
 
 dotenv.config();
 
-if (
-    process.env.NEO4J_URI == undefined ||
-    process.env.NEO4J_USER == undefined ||
-    process.env.NEO4J_PASSWORD == undefined ||
-    process.env.AUTH0_DOMAIN_URI == undefined ||
-    process.env.AUTH0_AUDIENCE == undefined
-) {
-    throw Error("Invalid env configuration");
-}
+// Validate required environment variables
+const env = cleanEnv(process.env, {
+    NEO4J_URI: url({ desc: "Neo4j connection URI" }),
+    NEO4J_USER: str({ desc: "Neo4j username" }),
+    NEO4J_PASSWORD: str({ desc: "Neo4j password" }),
+    AUTH0_DOMAIN_URI: url({ desc: "Auth0 domain URI" }),
+    AUTH0_AUDIENCE: str({ desc: "Auth0 API audience" }),
+    OBJECT_STORAGE_URI: url({ desc: "S3/MinIO object storage endpoint" }),
+    // Optional environment variables
+    POSTHOG_HOST: url({
+        default: "https://us.i.posthog.com",
+        desc: "PostHog analytics host",
+    }),
+    POSTHOG_PROJECT_API_KEY: str({
+        desc: "PostHog project API key",
+    }),
+    NODE_ENV: str({
+        choices: ["development", "production", "test"],
+        default: "development",
+        desc: "Node environment",
+    }),
+    ALLOWED_ORIGINS: str({
+        default: "https://oswatcher.github.io,http://127.0.0.1:8080",
+        desc: "Comma-separated list of allowed CORS origins",
+    }),
+});
 
 const checkJwt = auth({
-    audience: process.env.AUTH0_AUDIENCE!,
-    issuerBaseURL: `${process.env.AUTH0_DOMAIN_URI!}/`,
+    audience: env.AUTH0_AUDIENCE,
+    issuerBaseURL: `${env.AUTH0_DOMAIN_URI}/`,
     authRequired: false, // Allow requests without JWT tokens
 });
 
 // Neo4j driver instance
 const driver = neo4j.driver(
-    process.env.NEO4J_URI,
-    neo4j.auth.basic(process.env.NEO4J_USER, process.env.NEO4J_PASSWORD),
+    env.NEO4J_URI,
+    neo4j.auth.basic(env.NEO4J_USER, env.NEO4J_PASSWORD),
 );
 
 // ensure Neo4j constraints are applied
@@ -52,9 +70,7 @@ const typeDefs = readFileSync("./type-defs.graphql").toString("utf-8");
 const ogm = new OGM({ typeDefs, driver });
 await ogm.init();
 
-const POSTHOG_HOST = process.env.POSTHOG_HOST || "https://us.i.posthog.com";
-const POSTHOG_PROJECT_API_KEY = process.env.POSTHOG_PROJECT_API_KEY;
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = env.NODE_ENV === "production";
 
 // Simple in-memory rate limiter
 const rateLimiter = new Map<string, { count: number; resetTime: number }>();
@@ -95,7 +111,7 @@ async function main() {
             features: {
                 authorization: {
                     key: {
-                        url: `${process.env.AUTH0_DOMAIN_URI!}/.well-known/jwks.json`,
+                        url: `${env.AUTH0_DOMAIN_URI}/.well-known/jwks.json`,
                     },
                 },
             },
@@ -298,13 +314,11 @@ async function main() {
         await server.start();
 
         // PostHog events endpoint - only in production
-        if (isProduction && POSTHOG_PROJECT_API_KEY) {
+        if (isProduction && env.POSTHOG_PROJECT_API_KEY) {
             app.use(
                 "/events",
                 cors({
-                    origin: process.env.ALLOWED_ORIGINS?.split(",") || [
-                        "https://oswatcher.github.io",
-                    ],
+                    origin: env.ALLOWED_ORIGINS.split(","),
                     credentials: true,
                 }),
                 express.raw({ type: "*/*", limit: "10mb" }),
@@ -314,7 +328,7 @@ async function main() {
                             "/events",
                             "",
                         );
-                        const fullUrl = `${POSTHOG_HOST}${posthogPath}`;
+                        const fullUrl = `${env.POSTHOG_HOST}${posthogPath}`;
 
                         // Forward the request exactly as received
                         const response = await axios({
@@ -323,8 +337,8 @@ async function main() {
                             data: req.body,
                             headers: {
                                 ...req.headers,
-                                host: new URL(POSTHOG_HOST).host,
-                                Authorization: `Bearer ${POSTHOG_PROJECT_API_KEY}`,
+                                host: new URL(env.POSTHOG_HOST).host,
+                                Authorization: `Bearer ${env.POSTHOG_PROJECT_API_KEY}`,
                             },
                             decompress: false,
                         });
@@ -353,10 +367,7 @@ async function main() {
         app.use(
             "/graphql",
             cors({
-                origin: process.env.ALLOWED_ORIGINS?.split(",") || [
-                    "https://oswatcher.github.io",
-                    "http://127.0.0.1:8080",
-                ],
+                origin: env.ALLOWED_ORIGINS.split(","),
                 credentials: true,
             }),
             createRateLimit(100, 60000), // 100 requests per minute
