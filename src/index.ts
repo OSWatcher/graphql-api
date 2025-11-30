@@ -9,6 +9,7 @@ import * as dotenv from "dotenv";
 import { cleanEnv, str, url } from "envalid";
 import { createConstraintsIfNotExists } from "./constraints.js";
 import { resolvers } from "./resolvers.js";
+import { createBlobRouter } from "./blob-routes.js";
 import express, { Request, Response } from "express";
 import { expressMiddleware } from "@as-integrations/express5";
 import cors from "cors";
@@ -363,6 +364,20 @@ async function main() {
             console.log(`📊 PostHog events endpoint enabled in production`);
         }
 
+        // Blob REST API - mounted before GraphQL
+        app.use(
+            "/blob",
+            cors({
+                origin: env.ALLOWED_ORIGINS.split(","),
+                credentials: true,
+            }),
+            createRateLimit(100, 60000), // 100 requests per minute
+            express.json({ limit: "1mb" }),
+            // Auth0 middleware: validates token, adds req.auth
+            checkJwt,
+            createBlobRouter(driver),
+        );
+
         // Apply middleware
         app.use(
             "/graphql",
@@ -387,6 +402,7 @@ async function main() {
         httpServer.listen(4000, () => {
             console.log(`🚀 Server ready at http://localhost:4000/graphql`);
             console.log(`🔌 WebSocket ready at ws://localhost:4000/graphql`);
+            console.log(`📦 Blob API ready at http://localhost:4000/blob`);
             if (isProduction) {
                 console.log(
                     `📊 PostHog events endpoint ready at http://localhost:4000/events`,
