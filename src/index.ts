@@ -375,7 +375,7 @@ async function main() {
             express.json({ limit: "1mb" }),
             // Auth0 middleware: validates token, adds req.auth
             checkJwt,
-            createBlobRouter(driver),
+            createBlobRouter(driver, env.OBJECT_STORAGE_URI),
         );
 
         // Apply middleware
