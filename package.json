@@ -34,6 +34,7 @@
     "axios": "1.12.2",
     "cors": "^2.8.5",
     "dotenv": "17.2.2",
+    "envalid": "^8.1.1",
     "express": "^5.1.0",
     "express-oauth2-jwt-bearer": "^1.7.1",
     "graphql": "16.11.0",

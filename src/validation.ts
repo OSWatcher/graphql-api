@@ -129,3 +129,19 @@ export const FetchStructsArgsSchema = z.object({
 export const GetCommitCapabilitiesArgsSchema = z.object({
     commit_hash: GitSHA1Schema,
 });
+
+// Blob hash validation (SHA-1 format, same as commits)
+export const BlobHashParamSchema = z.object({
+    hash: GitSHA1Schema,
+});
+
+// Blob download arguments (GET /blob/:hash)
+export const BlobDownloadArgsSchema = BlobHashParamSchema;
+
+// Blob upload arguments (PUT /blob/:hash)
+export const BlobUploadArgsSchema = z.object({
+    hash: GitSHA1Schema,
+    // Future fields for upload metadata
+    // contentType: z.string().optional(),
+    // size: z.number().int().positive().optional(),
+});
