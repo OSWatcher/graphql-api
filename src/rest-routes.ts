@@ -3,8 +3,13 @@ import { Driver } from "neo4j-driver";
 import { BlobHashParamSchema } from "./validation.js";
 import axios from "axios";
 import { ZodError } from "zod";
+import { isBlobRestricted } from "./blob-authorization.js";
 
-export const createBlobRouter = (driver: Driver, objectStorageUri: string) => {
+export const createRestRouter = (
+    driver: Driver,
+    objectStorageUri: string,
+    restrictedBranchName: string,
+) => {
     const router = Router();
 
     // GET /blob/:hash - Download a blob
@@ -13,20 +18,20 @@ export const createBlobRouter = (driver: Driver, objectStorageUri: string) => {
             // Validate hash parameter
             const { hash } = BlobHashParamSchema.parse(req.params);
 
-            // Access JWT context (populated by Auth0 middleware)
-            const jwt = req.auth;
-            const isAuthenticated = jwt?.payload?.sub;
-
-            // TODO: Implement authorization logic using Neo4j
-            // 1. Query Neo4j to find commits connected to this blob
-            // 2. Determine OS type from commit names/capabilities
-            // 3. Apply authorization rules:
-            //    - Allow if any commit is Ubuntu/Linux
-            //    - Deny if all commits are Windows-only
-            //    - Deny if no commits found
-
             console.log(`Blob download requested: ${hash}`);
-            console.log(`Authenticated: ${isAuthenticated}`);
+
+            // Check authorization: deny access to restricted blobs
+            const restricted = await isBlobRestricted(
+                driver,
+                hash,
+                restrictedBranchName,
+            );
+            if (restricted) {
+                return res.status(403).json({
+                    error: "Forbidden",
+                    message: "This blob is restricted",
+                });
+            }
 
             // Construct S3/MinIO URL: {base_url}/objects/{hash}
             const objectUrl = `${objectStorageUri}/objects/${hash}`;

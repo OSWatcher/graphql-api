@@ -9,7 +9,7 @@ import * as dotenv from "dotenv";
 import { cleanEnv, str, url } from "envalid";
 import { createConstraintsIfNotExists } from "./constraints.js";
 import { resolvers } from "./resolvers.js";
-import { createBlobRouter } from "./blob-routes.js";
+import { createRestRouter } from "./rest-routes.js";
 import express, { Request, Response } from "express";
 import { expressMiddleware } from "@as-integrations/express5";
 import cors from "cors";
@@ -29,6 +29,7 @@ const env = cleanEnv(process.env, {
     AUTH0_DOMAIN_URI: url({ desc: "Auth0 domain URI" }),
     AUTH0_AUDIENCE: str({ desc: "Auth0 API audience" }),
     OBJECT_STORAGE_URI: url({ desc: "S3/MinIO object storage endpoint" }),
+    RESTRICTED_BRANCH_NAME: str({ desc: "Branch name for restricted blobs" }),
     // Optional environment variables
     POSTHOG_HOST: url({
         default: "https://us.i.posthog.com",
@@ -375,7 +376,11 @@ async function main() {
             express.json({ limit: "1mb" }),
             // Auth0 middleware: validates token, adds req.auth
             checkJwt,
-            createBlobRouter(driver, env.OBJECT_STORAGE_URI),
+            createRestRouter(
+                driver,
+                env.OBJECT_STORAGE_URI,
+                env.RESTRICTED_BRANCH_NAME,
+            ),
         );
 
         // Apply middleware
