@@ -140,3 +140,16 @@ SKIP toInteger($skip_count)
 LIMIT toInteger($limit_count)
 RETURN struct_name, properties(s) as struct_props, fields
 `;
+
+// blob authorization
+export const CHECK_BLOB_RESTRICTED_QUERY = `
+MATCH (b:Blob)
+WHERE b.hash = $blob_hash
+WITH b
+MATCH (b)<-[:HAS_CHILD_BLOB]-(t:Tree)<-[:HAS_CHILD_TREE|OWNS_FILESYSTEM*]-(c:Commit)
+WITH collect(c) as commit_list_where_hash
+MATCH (br:Branch)-[:TRACKS_COMMIT|HAS_PREVIOUS*]-(c:Commit)
+WHERE br.name = $branch_name
+WITH commit_list_where_hash, collect(c) as branch_reachable_commit_list
+RETURN all(c IN commit_list_where_hash WHERE c IN branch_reachable_commit_list) as is_restricted
+`;
