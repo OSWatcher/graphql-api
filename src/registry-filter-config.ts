@@ -4,10 +4,7 @@
 
 export const REDACTED_VALUE = "[REDACTED]";
 
-const DEFAULT_SENSITIVE_VALUE_NAMES = [
-    "DigitalProductId",
-    "ProductId",
-];
+const DEFAULT_SENSITIVE_VALUE_NAMES = ["DigitalProductId", "ProductId"];
 
 /**
  * Get the list of sensitive registry value names from environment or defaults

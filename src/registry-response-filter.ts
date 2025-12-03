@@ -2,7 +2,10 @@
  * Response filtering for sensitive Windows registry values
  */
 
-import { isSensitiveValueName, REDACTED_VALUE } from "./registry-filter-config.js";
+import {
+    isSensitiveValueName,
+    REDACTED_VALUE,
+} from "./registry-filter-config.js";
 
 /**
  * Filter sensitive registry values from GraphQL response data
@@ -36,7 +39,10 @@ function redactSensitiveValues(obj: any): void {
     // Pattern 1: Connection edge with properties.name
     // Example: child_valuesConnection.edges[].node.value
     if (obj.node && obj.properties?.name) {
-        if (isSensitiveValueName(obj.properties.name) && obj.node.value !== undefined) {
+        if (
+            isSensitiveValueName(obj.properties.name) &&
+            obj.node.value !== undefined
+        ) {
             obj.node.value = REDACTED_VALUE;
         }
     }
