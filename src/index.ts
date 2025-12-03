@@ -10,6 +10,7 @@ import { cleanEnv, str, url } from "envalid";
 import { createConstraintsIfNotExists } from "./constraints.js";
 import { resolvers } from "./resolvers.js";
 import { createRestRouter } from "./rest-routes.js";
+import { filterSensitiveRegistryValues } from "./registry-response-filter.js";
 import express, { Request, Response } from "express";
 import { expressMiddleware } from "@as-integrations/express5";
 import cors from "cors";
@@ -46,6 +47,10 @@ const env = cleanEnv(process.env, {
     ALLOWED_ORIGINS: str({
         default: "https://oswatcher.github.io,http://127.0.0.1:8080",
         desc: "Comma-separated list of allowed CORS origins",
+    }),
+    SENSITIVE_REGISTRY_VALUES: str({
+        default: "",
+        desc: "Comma-separated list of sensitive registry value names to redact",
     }),
 });
 
@@ -215,6 +220,31 @@ async function main() {
                                                         .toLowerCase()
                                                         .includes("ubuntu"),
                                             );
+                                    }
+                                }
+                            },
+                        };
+                    },
+                },
+                // Filter sensitive registry values from responses
+                {
+                    async requestDidStart() {
+                        return {
+                            async willSendResponse({ response }: any) {
+                                if (
+                                    response?.body?.kind === "single" &&
+                                    response.body.singleResult?.data
+                                ) {
+                                    try {
+                                        filterSensitiveRegistryValues(
+                                            response.body.singleResult.data,
+                                        );
+                                    } catch (error) {
+                                        console.error(
+                                            "Registry filter error:",
+                                            error,
+                                        );
+                                        // Fail-open: don't break API if filtering fails
                                     }
                                 }
                             },
