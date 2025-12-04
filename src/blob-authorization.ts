@@ -24,6 +24,14 @@ export async function isBlobRestricted(
             });
         });
 
+        // Handle case where blob doesn't exist in database
+        if (result.records.length === 0) {
+            console.warn(
+                `Blob ${blobHash} not found in database, allowing download`,
+            );
+            return false; // Allow download if blob not tracked in DB
+        }
+
         const isRestricted = result.records[0].get("is_restricted");
         return isRestricted === true;
     } catch (error) {
