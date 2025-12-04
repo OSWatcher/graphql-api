@@ -85,7 +85,7 @@ export const TraversePathArgsSchema = z.object({
 
 // Diff nodes arguments
 export const DiffNodesArgsSchema = z.object({
-    parent_label: z.enum(["Tree", "Blob"]),
+    parent_label: z.enum(["Tree", "Blob", "WinRegKey"]),
     base_node_hash: GitSHA1Schema,
     diffee_node_hash: GitSHA1Schema,
     at_path: z.string().startsWith("/", "Path must be absolute"),
