@@ -1,16 +1,30 @@
 import { Router, Request, Response } from "express";
 import { Driver } from "neo4j-driver";
 import { BlobHashParamSchema } from "./validation.js";
-import axios from "axios";
 import { ZodError } from "zod";
 import { isBlobRestricted } from "./blob-authorization.js";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
 export const createRestRouter = (
     driver: Driver,
     objectStorageUri: string,
     restrictedBranchName: string,
+    minioAccessKey: string,
+    minioSecretKey: string,
+    minioObjectsBucketName: string,
 ) => {
     const router = Router();
+
+    // Create S3 client for authenticated MinIO access
+    const s3Client = new S3Client({
+        endpoint: objectStorageUri, // MinIO endpoint
+        region: "us-east-1", // Default for MinIO (doesn't matter)
+        credentials: {
+            accessKeyId: minioAccessKey,
+            secretAccessKey: minioSecretKey,
+        },
+        forcePathStyle: true, // Required for MinIO compatibility
+    });
 
     // GET /blob/:hash - Download a blob
     router.get("/:hash", async (req: Request, res: Response) => {
@@ -33,40 +47,57 @@ export const createRestRouter = (
                 });
             }
 
-            // Construct S3/MinIO URL: {base_url}/objects/{hash}
-            const objectUrl = `${objectStorageUri}/objects/${hash}`;
-
-            // Forward the request to S3/MinIO and stream response
-            const response = await axios({
-                method: "GET",
-                url: objectUrl,
-                responseType: "stream", // Stream the response
-                validateStatus: (status) => status < 500, // Don't throw on 4xx
+            // Fetch blob from MinIO using S3 SDK
+            const command = new GetObjectCommand({
+                Bucket: minioObjectsBucketName,
+                Key: hash, // blob hash is the S3 object key
             });
 
-            // Forward status code and headers
-            res.status(response.status);
+            const s3Response = await s3Client.send(command);
 
-            // Forward relevant headers (Content-Type, Content-Length, etc.)
-            const headersToForward = [
-                "content-type",
-                "content-length",
-                "content-disposition",
-                "etag",
-                "last-modified",
-                "cache-control",
-            ];
+            // Set response headers from S3 metadata
+            res.setHeader(
+                "Content-Type",
+                s3Response.ContentType || "application/octet-stream",
+            );
+            if (s3Response.ContentLength) {
+                res.setHeader(
+                    "Content-Length",
+                    s3Response.ContentLength.toString(),
+                );
+            }
 
-            headersToForward.forEach((header) => {
-                const value = response.headers[header];
-                if (value) {
-                    res.setHeader(header, value);
-                }
-            });
+            // Forward additional S3 metadata headers if present
+            if (s3Response.ContentDisposition) {
+                res.setHeader(
+                    "Content-Disposition",
+                    s3Response.ContentDisposition,
+                );
+            }
+            if (s3Response.ETag) {
+                res.setHeader("ETag", s3Response.ETag);
+            }
+            if (s3Response.LastModified) {
+                res.setHeader(
+                    "Last-Modified",
+                    s3Response.LastModified.toUTCString(),
+                );
+            }
+            if (s3Response.CacheControl) {
+                res.setHeader("Cache-Control", s3Response.CacheControl);
+            }
 
-            // Stream the content to the client
-            response.data.pipe(res);
-        } catch (error) {
+            // Stream S3 body to HTTP response
+            if (s3Response.Body) {
+                // @ts-ignore - Body is a Readable stream in Node.js
+                s3Response.Body.pipe(res);
+            } else {
+                return res.status(500).json({
+                    error: "Internal Server Error",
+                    message: "Empty response from storage",
+                });
+            }
+        } catch (error: any) {
             console.error("Error in blob download:", error);
 
             // Return validation errors
@@ -77,16 +108,19 @@ export const createRestRouter = (
                 });
             }
 
-            // Handle axios errors
-            if (axios.isAxiosError(error)) {
-                // If object storage returned an error, forward it
-                const status = error.response?.status || 502;
-                return res.status(status).json({
+            // Handle S3-specific errors
+            if (error.name === "NoSuchKey") {
+                return res.status(404).json({
+                    error: "Not Found",
+                    message: "Blob not found in storage",
+                });
+            }
+
+            // Handle other S3 errors
+            if (error.$metadata) {
+                return res.status(502).json({
                     error: "Storage Error",
-                    message:
-                        status === 404
-                            ? "Blob not found in storage"
-                            : "Error accessing object storage",
+                    message: "Error accessing object storage",
                 });
             }
 

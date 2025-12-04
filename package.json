@@ -28,6 +28,7 @@
   "dependencies": {
     "@apollo/server": "5.0.0",
     "@as-integrations/express5": "^1.1.2",
+    "@aws-sdk/client-s3": "^3.943.0",
     "@graphql-tools/schema": "^10.0.29",
     "@neo4j/graphql": "^5.12.10",
     "@neo4j/graphql-ogm": "5.11.4",

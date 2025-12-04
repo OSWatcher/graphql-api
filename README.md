@@ -19,6 +19,12 @@ AUTH0_AUDIENCE=
 
 # Object Storage (S3/MinIO)
 OBJECT_STORAGE_URI=
+MINIO_ACCESS_KEY=
+MINIO_SECRET_KEY=
+MINIO_OBJECTS_BUCKET_NAME=objects
+
+# Blob Access Control
+RESTRICTED_BRANCH_NAME=
 
 # Optional - PostHog Analytics (production only)
 POSTHOG_HOST=https://us.i.posthog.com
