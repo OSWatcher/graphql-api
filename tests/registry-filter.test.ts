@@ -13,6 +13,12 @@ describe("Registry Filter Configuration", () => {
             expect(isSensitiveValueName("DiGiTaLpRoDuCtId")).toBe(true);
         });
 
+        it("should identify DigitalProductId4 as sensitive (case-insensitive)", () => {
+            expect(isSensitiveValueName("DigitalProductId4")).toBe(true);
+            expect(isSensitiveValueName("digitalproductid4")).toBe(true);
+            expect(isSensitiveValueName("DIGITALPRODUCTID4")).toBe(true);
+        });
+
         it("should identify ProductId as sensitive (case-insensitive)", () => {
             expect(isSensitiveValueName("ProductId")).toBe(true);
             expect(isSensitiveValueName("productid")).toBe(true);
