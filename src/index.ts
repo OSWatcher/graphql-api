@@ -31,8 +31,12 @@ const env = cleanEnv(process.env, {
     AUTH0_AUDIENCE: str({ desc: "Auth0 API audience" }),
     OBJECT_STORAGE_URI: url({ desc: "S3/MinIO object storage endpoint" }),
     RESTRICTED_BRANCH_NAME: str({ desc: "Branch name for restricted blobs" }),
-    MINIO_ACCESS_KEY: str({ desc: "MinIO access key for authenticated requests" }),
-    MINIO_SECRET_KEY: str({ desc: "MinIO secret key for authenticated requests" }),
+    MINIO_ACCESS_KEY: str({
+        desc: "MinIO access key for authenticated requests",
+    }),
+    MINIO_SECRET_KEY: str({
+        desc: "MinIO secret key for authenticated requests",
+    }),
     MINIO_OBJECTS_BUCKET_NAME: str({
         default: "objects",
         desc: "MinIO bucket name for blob storage",
