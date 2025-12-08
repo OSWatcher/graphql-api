@@ -73,6 +73,7 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
             async diffNodesAt(
                 _source: unknown,
                 args: unknown,
+                context: any,
             ): Promise<DiffNodesAtResult> {
                 // Validate input
                 const validatedArgs = DiffNodesArgsSchema.parse(args);
@@ -91,6 +92,18 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                         "Base and diffee node hashes cannot be empty",
                     );
                 }
+                // Restrict recursive diffing to authenticated users only
+                // max_depth === 0 means non-recursive (single level) - allowed for all
+                // Any other value (including null/undefined) requires authentication
+                if (max_depth !== 0 && !context.jwt) {
+                    console.warn(
+                        `Recursive diff denied: Unauthenticated request with max_depth=${max_depth}`,
+                    );
+                    throw new Error(
+                        "Recursive diffing requires authentication. Please provide a valid JWT token.",
+                    );
+                }
+
                 // Convert null max_depth to -1 (unlimited)
                 const resolvedMaxDepth =
                     max_depth === null || max_depth === undefined

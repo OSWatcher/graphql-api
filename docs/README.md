@@ -10,6 +10,7 @@ This documentation follows the [Divio documentation framework](https://documenta
 Reference documentation provides technical specifications and API details.
 
 - [Blob Download API](./reference/blob-api.md) - Complete REST API specification for blob downloads
+- [Access Restrictions](./reference/access-restrictions.md) - Comprehensive catalog of all access control and data filtering mechanisms
 
 ### 📖 [How-To Guides](./how-to/)
 *Problem-oriented - Step-by-step instructions*
@@ -41,6 +42,7 @@ Explanation documentation helps you understand the concepts and design decisions
 
 **Integrating the API?**
 - Check [Blob API Reference](./reference/blob-api.md) for complete endpoint specifications
+- Review [Access Restrictions](./reference/access-restrictions.md) to understand security controls
 - Follow [Frontend Integration Guide](./how-to/integrate-blob-api.md) for client implementation
 
 **Troubleshooting?**
