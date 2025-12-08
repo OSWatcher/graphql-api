@@ -22,8 +22,70 @@ import {
     FetchStructsArgsSchema,
     GetCommitCapabilitiesArgsSchema,
 } from "./validation.js";
+import { GET_NODE_COMMIT_DATES } from "./queries.js";
 
-export const resolvers = (driver: Driver, _ogm: OGM) => {
+/**
+ * Check if a node is allowed by the date limit
+ * Returns true if at least one commit containing the node is from limitYear or older
+ */
+async function isNodeAllowedByDateLimit(
+    driver: Driver,
+    nodeHash: string,
+    parentLabel: string,
+    limitYear: number,
+): Promise<boolean> {
+    // Tree nodes don't need date checking
+    if (parentLabel === "Tree") {
+        return true;
+    }
+
+    const session = driver.session();
+    try {
+        const query = GET_NODE_COMMIT_DATES(parentLabel);
+        const result = await session.executeRead(async (tx) => {
+            return tx.run(query, { node_hash: nodeHash });
+        });
+
+        if (result.records.length === 0) {
+            console.warn(
+                `No commit found for ${parentLabel} node: ${nodeHash}`,
+            );
+            // Fail-open: if no commits found, allow the diff
+            return true;
+        }
+
+        // Get all commit dates
+        const dates = result.records.map(
+            (record) => record.get("date") as string,
+        );
+
+        // Check if AT LEAST ONE commit is from limitYear or older (earlier/equal)
+        // Example: limitYear=2020, commits=[2018,2019,2021] → Allow (2018<=2020)
+        const hasAllowedCommit = dates.some((dateStr) => {
+            try {
+                const date = new Date(dateStr);
+                const year = date.getFullYear();
+                return year <= limitYear;
+            } catch (error) {
+                console.error(`Error parsing date ${dateStr}:`, error);
+                return false;
+            }
+        });
+
+        return hasAllowedCommit;
+    } catch (error) {
+        console.error(
+            `Error fetching commit dates for node ${nodeHash}:`,
+            error,
+        );
+        // Fail-open: on error, allow the diff
+        return true;
+    } finally {
+        await session.close();
+    }
+}
+
+export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
     return {
         Subscription: {
             searchStream: {
@@ -102,6 +164,47 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     throw new Error(
                         "Recursive diffing requires authentication. Please provide a valid JWT token.",
                     );
+                }
+
+                // Date-based restriction for non-filesystem diffs
+                // Check both base and diffee nodes - BOTH must have at least one commit <= limitYear
+                if (parent_label !== "Tree") {
+                    const [baseAllowed, diffeeAllowed] = await Promise.all([
+                        isNodeAllowedByDateLimit(
+                            driver,
+                            base_node_hash,
+                            parent_label,
+                            env.DIFF_DATE_LIMIT_YEAR,
+                        ),
+                        isNodeAllowedByDateLimit(
+                            driver,
+                            diffee_node_hash,
+                            parent_label,
+                            env.DIFF_DATE_LIMIT_YEAR,
+                        ),
+                    ]);
+
+                    if (!baseAllowed) {
+                        console.warn(
+                            `Date-limited diff denied: base node (${parent_label}: ${base_node_hash}) ` +
+                                `has no commits from ${env.DIFF_DATE_LIMIT_YEAR} or older`,
+                        );
+                        throw new Error(
+                            `Diff operations for ${parent_label} nodes from commits ` +
+                                `after ${env.DIFF_DATE_LIMIT_YEAR} are not available.`,
+                        );
+                    }
+
+                    if (!diffeeAllowed) {
+                        console.warn(
+                            `Date-limited diff denied: diffee node (${parent_label}: ${diffee_node_hash}) ` +
+                                `has no commits from ${env.DIFF_DATE_LIMIT_YEAR} or older`,
+                        );
+                        throw new Error(
+                            `Diff operations for ${parent_label} nodes from commits ` +
+                                `after ${env.DIFF_DATE_LIMIT_YEAR} are not available.`,
+                        );
+                    }
                 }
 
                 // Convert null max_depth to -1 (unlimited)
