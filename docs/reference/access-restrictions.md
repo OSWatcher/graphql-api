@@ -504,12 +504,35 @@ When adding new restrictions:
 
 ---
 
+## 3. Recursive Diff Authentication Requirement
+
+### Purpose
+
+Restricts recursive diffing operations to authenticated users only. Single-level diffs (`max_depth: 0`) remain available for anonymous users.
+
+### Implementation
+
+**File:** `src/resolvers.ts` - `diffNodesAt` resolver
+
+**Logic:** Check `max_depth` parameter:
+- `max_depth === 0` → Non-recursive - allowed for all users
+- `max_depth !== 0` (including `null`, `undefined`, or any other value) → Recursive - requires JWT authentication
+
+**Error Message:** "Recursive diffing requires authentication. Please provide a valid JWT token."
+
+### Rationale
+
+Recursive diffs are computationally expensive and can traverse entire filesystem trees. Restricting to authenticated users prevents DoS attacks while allowing basic exploration for anonymous users.
+
+---
+
 ## Summary Table
 
 | Restriction | Type | Scope | Fail-Safe | Configurable |
 |------------|------|-------|-----------|--------------|
 | Blob Download Authorization | REST Endpoint | `GET /blob/:hash` | Block (403) | `RESTRICTED_BRANCH_NAME` |
 | Registry Value Filtering | Response Filter | All GraphQL responses | Allow (fail-open) | `SENSITIVE_REGISTRY_VALUES` |
+| Recursive Diff Authentication | Resolver Check | `diffNodesAt` query | Block (error) | N/A (hardcoded) |
 | Query Complexity | GraphQL Validation | All GraphQL queries | Block (error) | Hardcoded (100 fields) |
 | Rate Limiting | Middleware | All endpoints | Block (429) | Hardcoded (100/min) |
 | Result Set Limits | GraphQL Schema | All paginated queries | Limit to 5000 | `@limit` directive |
