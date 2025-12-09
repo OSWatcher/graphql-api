@@ -534,16 +534,26 @@ Restricts the `HISTORY_WITH_UPDATES` commit search scope to authenticated users 
 
 ### Implementation
 
-**File:** `src/resolvers.ts` - `search` query and `searchStream` subscription resolvers
+**Files:**
+- `src/resolvers.ts` - `search` query and `searchStream` subscription resolvers
+- `src/auth/websocket-jwt.ts` - JWT extraction and verification utilities
+- `src/index.ts` - WebSocket context configuration
 
 **Scope:** Applies to both:
-- `search` query - Returns array of results
-- `searchStream` subscription - Streams results in real-time
+- `search` query - Returns array of results (HTTP/GraphQL)
+- `searchStream` subscription - Streams results in real-time (WebSocket)
 
 **Logic:**
 - Check `commit_range.scope` parameter
 - If `CommitScope.HistoryWithUpdates` and `!context.jwt` → Block request
 - Other scopes (`SINGLE`, `HISTORY`, `RANGE`) → Allowed for all users
+
+**Authentication Methods:**
+- **HTTP Queries**: JWT validated via `express-oauth2-jwt-bearer` middleware from `Authorization: Bearer <token>` header
+- **WebSocket Subscriptions**: JWT validated from `connectionParams` using Auth0 JWKS verification
+  - Client sends: `connectionParams: { authorization: "Bearer <token>" }` or `{ token: "<token>" }`
+  - Server extracts and verifies JWT using `jose` library
+  - Populates `context.jwt` for resolvers
 
 **Error Message:** "HISTORY_WITH_UPDATES search mode requires authentication. Please provide a valid JWT token."
 

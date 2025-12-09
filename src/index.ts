@@ -19,6 +19,10 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
 import { auth } from "express-oauth2-jwt-bearer";
+import {
+    createAuth0JwtVerifier,
+    extractTokenFromConnectionParams,
+} from "./auth/websocket-jwt.js";
 
 dotenv.config();
 
@@ -159,17 +163,56 @@ async function main() {
             perMessageDeflate: false, // Prevent compression bombs
         });
 
+        // Create JWT verifier for WebSocket authentication
+        const verifyWebSocketJwt = createAuth0JwtVerifier(
+            `${env.AUTH0_DOMAIN_URI}/.well-known/jwks.json`,
+            env.AUTH0_AUDIENCE,
+        );
+
         // Set up WebSocket subscription handler with security
         const serverCleanup = useServer(
             {
                 schema,
-                context: async (_ctx) => {
-                    return {};
+                context: async (ctx) => {
+                    // Extract JWT from connectionParams (idiomatic graphql-ws approach)
+                    const token = extractTokenFromConnectionParams(
+                        ctx.connectionParams,
+                    );
+
+                    if (!token) {
+                        // No token provided - return empty context (allow unauthenticated)
+                        return { jwt: null };
+                    }
+
+                    // Verify token using Auth0
+                    const payload = await verifyWebSocketJwt(token);
+
+                    if (!payload) {
+                        // Invalid token - return empty context
+                        console.warn(
+                            "WebSocket connection with invalid JWT token",
+                        );
+                        return { jwt: null };
+                    }
+
+                    // Valid token - populate context (same structure as HTTP context)
+                    return {
+                        jwt: payload,
+                        permissions: payload.permissions,
+                    };
                 },
                 onConnect: async (ctx) => {
-                    // Rate limit connections per IP
+                    // Log authentication status for monitoring
+                    const hasToken = extractTokenFromConnectionParams(
+                        ctx.connectionParams,
+                    );
                     const ip =
                         ctx.extra.request.socket.remoteAddress || "unknown";
+                    console.log(
+                        `WebSocket connecting from ${ip} (${hasToken ? "authenticated" : "unauthenticated"})`,
+                    );
+
+                    // Rate limit connections per IP
                     const currentConnections = wsConnections.get(ip) || 0;
 
                     if (currentConnections >= MAX_WS_CONNECTIONS_PER_IP) {
