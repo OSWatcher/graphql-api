@@ -530,7 +530,7 @@ Recursive diffs are computationally expensive and can traverse entire filesystem
 
 ### Purpose
 
-Restricts non-filesystem diffs (Blob, WinRegKey) to nodes that appear in at least one commit from the configured year or older. Filesystem (Tree) diffs remain available for all commit dates.
+Restricts non-filesystem diffs (Blob, WinRegKey) for **unauthenticated users** to nodes that appear in at least one commit from the configured year or older. Filesystem (Tree) diffs remain available for all commit dates. **Authenticated users bypass this restriction.**
 
 ### Implementation
 
@@ -541,6 +541,7 @@ Restricts non-filesystem diffs (Blob, WinRegKey) to nodes that appear in at leas
 **Configuration:** `DIFF_DATE_LIMIT_YEAR` environment variable (default: 2020)
 
 **Logic:**
+- Check `context.jwt` → If authenticated, **skip all date checks** (bypass restriction)
 - `parent_label === "Tree"` → No date restriction (always allowed)
 - `parent_label === "Blob"` or `"WinRegKey"` → Query Neo4j to find all commits containing the node
 - Allow if **at least one** commit has date ≤ configured year
@@ -558,15 +559,20 @@ RETURN c.date ORDER BY c.date DESC
 
 With `DIFF_DATE_LIMIT_YEAR=2020`:
 
+**Unauthenticated Users:**
+
 | Node Commits | Result |
 |--------------|--------|
 | 2018, 2019 | ✅ Allowed (2018 ≤ 2020) |
 | 2021, 2022 | ❌ Blocked (all > 2020) |
 | 2019, 2021 | ✅ Allowed (2019 ≤ 2020) |
 
+**Authenticated Users:**
+- ✅ All diffs allowed regardless of commit dates
+
 ### Rationale
 
-Historical non-filesystem data (registry, symbols) may be incomplete or less relevant for newer commits. Limiting to nodes with at least one old commit ensures users can access historical data while restricting purely new data.
+Historical non-filesystem data (registry, symbols) may be incomplete or less relevant for newer commits. Limiting unauthenticated access to nodes with at least one old commit ensures public users can access historical data while restricting purely new data. Authenticated users have full access to support research and analysis needs.
 
 ---
 
@@ -576,8 +582,8 @@ Historical non-filesystem data (registry, symbols) may be incomplete or less rel
 |------------|------|-------|-----------|--------------|
 | Blob Download Authorization | REST Endpoint | `GET /blob/:hash` | Block (403) | `RESTRICTED_BRANCH_NAME` |
 | Registry Value Filtering | Response Filter | All GraphQL responses | Allow (fail-open) | `SENSITIVE_REGISTRY_VALUES` |
-| Recursive Diff Authentication | Resolver Check | `diffNodesAt` query | Block (error) | N/A (hardcoded) |
-| Date-Based Diff Limitation | Resolver Check | `diffNodesAt` for Blob/WinRegKey | Allow (fail-open) | `DIFF_DATE_LIMIT_YEAR` |
+| Recursive Diff Authentication | Resolver Check | `diffNodesAt` query (unauthenticated only) | Block (error) | N/A (hardcoded) |
+| Date-Based Diff Limitation | Resolver Check | `diffNodesAt` for Blob/WinRegKey (unauthenticated only) | Allow (fail-open) | `DIFF_DATE_LIMIT_YEAR` |
 | Query Complexity | GraphQL Validation | All GraphQL queries | Block (error) | Hardcoded (100 fields) |
 | Rate Limiting | Middleware | All endpoints | Block (429) | Hardcoded (100/min) |
 | Result Set Limits | GraphQL Schema | All paginated queries | Limit to 5000 | `@limit` directive |
