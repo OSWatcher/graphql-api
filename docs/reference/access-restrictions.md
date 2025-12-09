@@ -526,7 +526,34 @@ Recursive diffs are computationally expensive and can traverse entire filesystem
 
 ---
 
-## 4. Date-Based Diff Limitation
+## 4. HISTORY_WITH_UPDATES Search Mode Authentication Requirement
+
+### Purpose
+
+Restricts the `HISTORY_WITH_UPDATES` commit search scope to authenticated users only. Other search modes (`SINGLE`, `HISTORY`, `RANGE`) remain available for all users.
+
+### Implementation
+
+**File:** `src/resolvers.ts` - `search` query and `searchStream` subscription resolvers
+
+**Scope:** Applies to both:
+- `search` query - Returns array of results
+- `searchStream` subscription - Streams results in real-time
+
+**Logic:**
+- Check `commit_range.scope` parameter
+- If `CommitScope.HistoryWithUpdates` and `!context.jwt` → Block request
+- Other scopes (`SINGLE`, `HISTORY`, `RANGE`) → Allowed for all users
+
+**Error Message:** "HISTORY_WITH_UPDATES search mode requires authentication. Please provide a valid JWT token."
+
+### Rationale
+
+`HISTORY_WITH_UPDATES` performs bidirectional traversal of the commit graph (both backwards through history and forwards through updates), which is significantly more expensive than unidirectional traversal. This scope allows searching across the entire commit timeline in both directions, making it a powerful but resource-intensive operation. Restricting to authenticated users prevents abuse while maintaining basic search functionality for anonymous users.
+
+---
+
+## 5. Date-Based Diff Limitation
 
 ### Purpose
 
@@ -583,6 +610,7 @@ Historical non-filesystem data (registry, symbols) may be incomplete or less rel
 | Blob Download Authorization | REST Endpoint | `GET /blob/:hash` | Block (403) | `RESTRICTED_BRANCH_NAME` |
 | Registry Value Filtering | Response Filter | All GraphQL responses | Allow (fail-open) | `SENSITIVE_REGISTRY_VALUES` |
 | Recursive Diff Authentication | Resolver Check | `diffNodesAt` query (unauthenticated only) | Block (error) | N/A (hardcoded) |
+| HISTORY_WITH_UPDATES Authentication | Resolver Check | `search` query & `searchStream` subscription (unauthenticated only) | Block (error) | N/A (hardcoded) |
 | Date-Based Diff Limitation | Resolver Check | `diffNodesAt` for Blob/WinRegKey (unauthenticated only) | Allow (fail-open) | `DIFF_DATE_LIMIT_YEAR` |
 | Query Complexity | GraphQL Validation | All GraphQL queries | Block (error) | Hardcoded (100 fields) |
 | Rate Limiting | Middleware | All endpoints | Block (429) | Hardcoded (100/min) |
