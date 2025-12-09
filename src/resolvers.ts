@@ -6,6 +6,7 @@ import {
     DiffItem,
     DiffNodesAtResult,
     CommitHistoryDirection,
+    CommitScope,
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { FSSearchResult, search_fs_fullpath } from "./search.js";
@@ -120,10 +121,27 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
     return {
         Subscription: {
             searchStream: {
-                subscribe: async function* (_source: unknown, args: unknown) {
+                subscribe: async function* (
+                    _source: unknown,
+                    args: unknown,
+                    context: any,
+                ) {
                     // Validate input
                     const validatedArgs = SearchArgsSchema.parse(args);
                     const { commit_range, search_term } = validatedArgs;
+
+                    // Restrict HISTORY_WITH_UPDATES to authenticated users only
+                    if (
+                        commit_range.scope === CommitScope.HistoryWithUpdates &&
+                        !context.jwt
+                    ) {
+                        console.warn(
+                            `HISTORY_WITH_UPDATES denied: Unauthenticated request`,
+                        );
+                        throw new Error(
+                            "HISTORY_WITH_UPDATES search mode requires authentication. Please provide a valid JWT token.",
+                        );
+                    }
 
                     // Pure functional core - stream results from Neo4j
                     for await (const result of search_fs_fullpath(
@@ -331,10 +349,23 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                     path,
                 );
             },
-            async search(_source: unknown, args: unknown) {
+            async search(_source: unknown, args: unknown, context: any) {
                 // Validate input
                 const validatedArgs = SearchArgsSchema.parse(args);
                 const { commit_range, search_term } = validatedArgs;
+
+                // Restrict HISTORY_WITH_UPDATES to authenticated users only
+                if (
+                    commit_range.scope === CommitScope.HistoryWithUpdates &&
+                    !context.jwt
+                ) {
+                    console.warn(
+                        `HISTORY_WITH_UPDATES denied: Unauthenticated request`,
+                    );
+                    throw new Error(
+                        "HISTORY_WITH_UPDATES search mode requires authentication. Please provide a valid JWT token.",
+                    );
+                }
 
                 const results: SearchResult[] = [];
                 for await (const result of search_fs_fullpath(
