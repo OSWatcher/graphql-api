@@ -30,6 +30,8 @@ export type Scalars = {
   Int: { input: number; output: number };
   /** The `Float` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point). */
   Float: { input: number; output: number };
+  /** A date and time, represented as an ISO-8601 string */
+  DateTime: { input: any; output: any };
   /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSON: { input: any; output: any };
 };
@@ -758,6 +760,16 @@ export type MutationUpdateWinStructFetchResultsArgs = {
   update?: InputMaybe<WinStructFetchResultUpdateInput>;
 };
 
+export type Subscription = {
+  __typename?: "Subscription";
+  searchStream: SearchResult;
+};
+
+export type SubscriptionSearchStreamArgs = {
+  commit_range: CommitRange;
+  search_term: Scalars["String"]["input"];
+};
+
 export enum CommitHistoryDirection {
   Forward = "FORWARD",
   Backward = "BACKWARD",
@@ -1034,7 +1046,7 @@ export type BranchCommitTracksNodeAggregateSelection = {
   hash: StringAggregateSelection;
   name: StringAggregateSelection;
   description: StringAggregateSelection;
-  date: StringAggregateSelection;
+  date: DateTimeAggregateSelection;
 };
 
 export type BranchEdge = {
@@ -1068,7 +1080,7 @@ export type Commit = Hashable & {
   hash: Scalars["String"]["output"];
   name: Scalars["String"]["output"];
   description?: Maybe<Scalars["String"]["output"]>;
-  date: Scalars["String"]["output"];
+  date: Scalars["DateTime"]["output"];
   previousAggregate?: Maybe<CommitCommitPreviousAggregationSelection>;
   previous?: Maybe<Commit>;
   previousConnection: CommitPreviousConnection;
@@ -1143,7 +1155,7 @@ export type CommitAggregateSelection = {
   hash: StringAggregateSelection;
   name: StringAggregateSelection;
   description: StringAggregateSelection;
-  date: StringAggregateSelection;
+  date: DateTimeAggregateSelection;
 };
 
 export type CommitCommitNextAggregationSelection = {
@@ -1157,7 +1169,7 @@ export type CommitCommitNextNodeAggregateSelection = {
   hash: StringAggregateSelection;
   name: StringAggregateSelection;
   description: StringAggregateSelection;
-  date: StringAggregateSelection;
+  date: DateTimeAggregateSelection;
 };
 
 export type CommitCommitPreviousAggregationSelection = {
@@ -1171,7 +1183,7 @@ export type CommitCommitPreviousNodeAggregateSelection = {
   hash: StringAggregateSelection;
   name: StringAggregateSelection;
   description: StringAggregateSelection;
-  date: StringAggregateSelection;
+  date: DateTimeAggregateSelection;
 };
 
 export type CommitEdge = {
@@ -1346,6 +1358,12 @@ export type CreateWinStructsMutationResponse = {
   __typename?: "CreateWinStructsMutationResponse";
   info: CreateInfo;
   winStructs: Array<WinStruct>;
+};
+
+export type DateTimeAggregateSelection = {
+  __typename?: "DateTimeAggregateSelection";
+  min?: Maybe<Scalars["DateTime"]["output"]>;
+  max?: Maybe<Scalars["DateTime"]["output"]>;
 };
 
 /** Information about the number of nodes and relationships deleted during a delete mutation */
@@ -3374,60 +3392,25 @@ export type BranchTracksNodeAggregationWhereInput = {
   description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  date_EQUAL?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_EQUAL?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_EQUAL?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  date_GT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_GT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_GT?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  date_GTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_GTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_GTE?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  date_LT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_LT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_LT?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  date_LTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_LTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_LTE?: InputMaybe<Scalars["DateTime"]["input"]>;
 };
 
 export type BranchTracksUpdateConnectionInput = {
@@ -3499,7 +3482,7 @@ export type CommitCreateInput = {
   hash: Scalars["String"]["input"];
   name: Scalars["String"]["input"];
   description?: InputMaybe<Scalars["String"]["input"]>;
-  date: Scalars["String"]["input"];
+  date: Scalars["DateTime"]["input"];
   previous?: InputMaybe<CommitPreviousFieldInput>;
   next?: InputMaybe<CommitNextFieldInput>;
   filesystem?: InputMaybe<CommitFilesystemFieldInput>;
@@ -3884,60 +3867,25 @@ export type CommitNextNodeAggregationWhereInput = {
   description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  date_EQUAL?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_EQUAL?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_EQUAL?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  date_GT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_GT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_GT?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  date_GTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_GTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_GTE?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  date_LT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_LT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_LT?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  date_LTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_LTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_LTE?: InputMaybe<Scalars["DateTime"]["input"]>;
 };
 
 export type CommitNextUpdateConnectionInput = {
@@ -3958,7 +3906,7 @@ export type CommitOnCreateInput = {
   hash: Scalars["String"]["input"];
   name: Scalars["String"]["input"];
   description?: InputMaybe<Scalars["String"]["input"]>;
-  date: Scalars["String"]["input"];
+  date: Scalars["DateTime"]["input"];
 };
 
 export type CommitOptions = {
@@ -4199,60 +4147,25 @@ export type CommitPreviousNodeAggregationWhereInput = {
   description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_EQUAL?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars["Int"]["input"]>;
+  date_EQUAL?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_EQUAL?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_EQUAL?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_GT?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_GT?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  date_GT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_GT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_GT?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_GTE?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  date_GTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_GTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_GTE?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_LT?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_LT?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  date_LT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_LT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_LT?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Aggregation filters that are not relying on an aggregating function will be deprecated. */
-  date_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_AVERAGE_LTE?: InputMaybe<Scalars["Float"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_LONGEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Please use the explicit _LENGTH version for string aggregation. */
-  date_SHORTEST_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars["Float"]["input"]>;
-  date_LONGEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  date_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  date_LTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MIN_LTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_MAX_LTE?: InputMaybe<Scalars["DateTime"]["input"]>;
 };
 
 export type CommitPreviousUpdateConnectionInput = {
@@ -4297,7 +4210,7 @@ export type CommitUpdateInput = {
   hash?: InputMaybe<Scalars["String"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
   description?: InputMaybe<Scalars["String"]["input"]>;
-  date?: InputMaybe<Scalars["String"]["input"]>;
+  date?: InputMaybe<Scalars["DateTime"]["input"]>;
   previous?: InputMaybe<CommitPreviousUpdateFieldInput>;
   next?: InputMaybe<Array<CommitNextUpdateFieldInput>>;
   filesystem?: InputMaybe<CommitFilesystemUpdateFieldInput>;
@@ -4351,21 +4264,16 @@ export type CommitWhere = {
   description_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
   description_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  date?: InputMaybe<Scalars["String"]["input"]>;
+  date?: InputMaybe<Scalars["DateTime"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  date_NOT?: InputMaybe<Scalars["String"]["input"]>;
-  date_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  date_NOT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_IN?: InputMaybe<Array<Scalars["DateTime"]["input"]>>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  date_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  date_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  date_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  date_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  date_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  date_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  date_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  date_NOT_IN?: InputMaybe<Array<Scalars["DateTime"]["input"]>>;
+  date_LT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_LTE?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_GT?: InputMaybe<Scalars["DateTime"]["input"]>;
+  date_GTE?: InputMaybe<Scalars["DateTime"]["input"]>;
   OR?: InputMaybe<Array<CommitWhere>>;
   AND?: InputMaybe<Array<CommitWhere>>;
   NOT?: InputMaybe<CommitWhere>;
