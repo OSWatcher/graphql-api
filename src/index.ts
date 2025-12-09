@@ -6,7 +6,7 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import { readFileSync } from "fs";
 import neo4j from "neo4j-driver";
 import * as dotenv from "dotenv";
-import { cleanEnv, str, url } from "envalid";
+import { cleanEnv, str, url, num } from "envalid";
 import { createConstraintsIfNotExists } from "./constraints.js";
 import { resolvers } from "./resolvers.js";
 import { createRestRouter } from "./rest-routes.js";
@@ -61,6 +61,10 @@ const env = cleanEnv(process.env, {
     SENSITIVE_REGISTRY_VALUES: str({
         default: "",
         desc: "Comma-separated list of sensitive registry value names to redact",
+    }),
+    DIFF_DATE_LIMIT_YEAR: num({
+        default: 2020,
+        desc: "Year limit for non-filesystem diffs (Blob/WinRegKey). Diffs for nodes only in commits after this year are restricted.",
     }),
 });
 
@@ -122,7 +126,7 @@ const createRateLimit = (maxRequests: number, windowMs: number) => {
 
 async function main() {
     try {
-        const instanciatedResolvers = resolvers(driver, ogm);
+        const instanciatedResolvers = resolvers(driver, ogm, env);
         const neoSchema = new Neo4jGraphQL({
             typeDefs,
             features: {

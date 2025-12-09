@@ -75,7 +75,7 @@ type Commit implements Hashable @mutation(operations: []) @limit(default: 5000, 
     hash: String! @unique
     name: String!
     description: String
-    date: String!
+    date: DateTime!
     previous: Commit @relationship(type: "HAS_PREVIOUS", direction: OUT)
     next: [Commit!]! @relationship(type: "HAS_PREVIOUS", direction: IN)
     filesystem: Tree @relationship(type: "OWNS_FILESYSTEM", direction: OUT)
