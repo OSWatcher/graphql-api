@@ -113,8 +113,8 @@ export const FetchSymbolsArgsSchema = z.object({
     options: SymbolOptionsSchema,
 });
 
-// Win struct options
-export const WinStructOptionsSchema = z.object({
+// Struct options
+export const StructOptionsSchema = z.object({
     offset: z.number().int().nonnegative().default(0),
     limit: z.number().int().positive().max(1000).default(100),
 });
@@ -122,7 +122,7 @@ export const WinStructOptionsSchema = z.object({
 // Fetch structs arguments
 export const FetchStructsArgsSchema = z.object({
     blob_hash: GitSHA1Schema,
-    options: WinStructOptionsSchema,
+    options: StructOptionsSchema,
 });
 
 // Get commit capabilities arguments

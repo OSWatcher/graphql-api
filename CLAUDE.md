@@ -66,7 +66,7 @@ The main server file that orchestrates all components:
 
 **Schema (`type-defs.graphql`)**
 - Defines filesystem entities: Blob, Tree, Commit, Branch
-- Windows-specific types: WinRegKey, WinRegValue, Symbol, WinStruct, WinStructField, WinDataType
+- Windows-specific types: WinRegKey, WinRegValue, Symbol, Struct, StructField, DataType
 - Custom query types for diff operations, commit history, search, and path traversal
 - Uses `@neo4j/graphql` directives: `@query`, `@mutation`, `@limit`, `@relationship`, `@unique`
 - Default and max limits set to 5000 for most types

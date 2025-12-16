@@ -151,7 +151,7 @@ export const FETCH_SYMBOLS_QUERY = `
 
 // fetch structs
 export const FETCH_STRUCTS_QUERY = `
-MATCH (b:Blob)-[rs:HAS_STRUCT]->(s:WinStruct)-[rf:HAS_FIELD]->(f:WinStructField)
+MATCH (b:Blob)-[rs:HAS_STRUCT]->(s:Struct)-[rf:HAS_FIELD]->(f:StructField)
 WHERE b.hash = $blob_hash
 WITH rs.name as struct_name, s, collect({field_name: rf.name, field: properties(f)}) as fields
 ORDER BY struct_name ASC
