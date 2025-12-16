@@ -4,7 +4,7 @@ export enum NodeType {
     WinRegValue = "WinRegValue",
     WinRegKey = "WinRegKey",
     Symbol = "Symbol",
-    WinStruct = "WinStruct",
-    WinStructField = "WinStructField",
-    WinDataType = "WinDataType",
+    Struct = "Struct",
+    StructField = "StructField",
+    DataType = "DataType",
 }

@@ -5,8 +5,8 @@ import { Driver } from "neo4j-driver";
 import {
     SymbolFetchResult,
     SymbolOptions,
-    WinStructFetchResult,
-    WinStructOptions,
+    StructFetchResult,
+    StructOptions,
 } from "./ogm-types.js";
 import { FETCH_SYMBOLS_QUERY, FETCH_STRUCTS_QUERY } from "./queries.js";
 
@@ -42,8 +42,8 @@ export async function fetch_symbols(
 export async function fetch_structs(
     driver: Driver,
     blob_hash: string,
-    options: WinStructOptions,
-): Promise<WinStructFetchResult[]> {
+    options: StructOptions,
+): Promise<StructFetchResult[]> {
     const session = driver.session();
     try {
         const result = await session.executeRead((tx) =>

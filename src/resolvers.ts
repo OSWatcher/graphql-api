@@ -416,7 +416,7 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                 };
             },
         },
-        WinStructField: {
+        StructField: {
             data_type: (parent: { data_type: string }) => {
                 try {
                     return JSON.parse(parent.data_type);
