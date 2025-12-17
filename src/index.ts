@@ -82,6 +82,9 @@ const checkJwt = auth({
 const driver = neo4j.driver(
     env.NEO4J_URI,
     neo4j.auth.basic(env.NEO4J_USER, env.NEO4J_PASSWORD),
+    {
+        disableLosslessIntegers: true, // Auto-convert Neo4j Integers to JS numbers
+    },
 );
 
 // ensure Neo4j constraints are applied
