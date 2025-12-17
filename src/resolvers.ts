@@ -86,8 +86,8 @@ async function isNodeAllowedByDateLimit(
         // Check if AT LEAST ONE commit is from limitYear or older (earlier/equal)
         // Example: limitYear=2020, commits=[2018,2019,2021] → Allow (2018<=2020)
         const hasAllowedCommit = dates.some((dateTime) => {
-            // dateTime.year is a Neo4j Integer
-            const year = dateTime.year.toNumber();
+            // dateTime.year is auto-converted to number by disableLosslessIntegers
+            const year = dateTime.year as unknown as number;
             const allowed = year <= limitYear;
 
             console.log(
