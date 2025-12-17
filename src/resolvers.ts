@@ -387,13 +387,26 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                 const validatedArgs = FetchSymbolsArgsSchema.parse(args);
                 const { blob_hash, options } = validatedArgs;
 
-                return await fetch_symbols(driver, blob_hash, options);
+                // Provide defaults for null/undefined options
+                const finalOptions = {
+                    offset: options?.offset ?? 0,
+                    limit: options?.limit ?? 100,
+                };
+
+                return await fetch_symbols(driver, blob_hash, finalOptions);
             },
             async fetchStructs(_source: unknown, args: unknown) {
                 // Validate input
                 const validatedArgs = FetchStructsArgsSchema.parse(args);
                 const { blob_hash, options } = validatedArgs;
-                return await fetch_structs(driver, blob_hash, options);
+
+                // Provide defaults for null/undefined options
+                const finalOptions = {
+                    offset: options?.offset ?? 0,
+                    limit: options?.limit ?? 100,
+                };
+
+                return await fetch_structs(driver, blob_hash, finalOptions);
             },
         },
         DiffItem: {

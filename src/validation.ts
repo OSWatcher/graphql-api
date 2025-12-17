@@ -101,28 +101,28 @@ export const DiffNodesArgsSchema = z.object({
         .optional(),
 });
 
-// Symbol options
+// Symbol options - matches Neo4j GraphQL generated type where all fields are optional
 export const SymbolOptionsSchema = z.object({
-    offset: z.number().int().nonnegative().default(0),
-    limit: z.number().int().positive().max(1000).default(100),
+    offset: z.number().int().nonnegative().optional(),
+    limit: z.number().int().positive().max(1000).optional(),
 });
 
 // Fetch symbols arguments
 export const FetchSymbolsArgsSchema = z.object({
     blob_hash: GitSHA1Schema,
-    options: SymbolOptionsSchema,
+    options: SymbolOptionsSchema.nullish(),
 });
 
-// Struct options
+// Struct options - matches Neo4j GraphQL generated type where all fields are optional
 export const StructOptionsSchema = z.object({
-    offset: z.number().int().nonnegative().default(0),
-    limit: z.number().int().positive().max(1000).default(100),
+    offset: z.number().int().nonnegative().optional(),
+    limit: z.number().int().positive().max(1000).optional(),
 });
 
 // Fetch structs arguments
 export const FetchStructsArgsSchema = z.object({
     blob_hash: GitSHA1Schema,
-    options: StructOptionsSchema,
+    options: StructOptionsSchema.nullish(),
 });
 
 // Get commit capabilities arguments
