@@ -79,7 +79,7 @@ export const GET_NODE_COMMIT_DATES = (label: string) => {
     // Validate label against whitelist to prevent Cypher injection
     const safeLabel = LABEL_MAP[label];
     if (!safeLabel) {
-        throw new Error("Invalid label type for commit lookup: " + label);
+        throw new Error(`Invalid label type for commit lookup: ${label}`);
     }
 
     // Single query pattern that works for all node types:
