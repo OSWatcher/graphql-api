@@ -86,8 +86,8 @@ async function isNodeAllowedByDateLimit(
         // Check if AT LEAST ONE commit is from limitYear or older (earlier/equal)
         // Example: limitYear=2020, commits=[2018,2019,2021] → Allow (2018<=2020)
         const hasAllowedCommit = dates.some((dateTime) => {
-            // dateTime.year is a Neo4j Integer
-            const year = dateTime.year.toNumber();
+            // dateTime.year is auto-converted to number by disableLosslessIntegers
+            const year = dateTime.year as unknown as number;
             const allowed = year <= limitYear;
 
             console.log(
@@ -270,20 +270,32 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                 }
                 try {
                     // traverse the given path on both filesystems with get_path_entry()
-                    const [base_entry_at, diffee_entry_at] = await Promise.all([
-                        get_path_entry(
-                            driver,
-                            parent_label,
-                            base_node_hash,
-                            at_path,
-                        ),
-                        get_path_entry(
-                            driver,
-                            parent_label,
-                            diffee_node_hash,
-                            at_path,
-                        ),
-                    ]);
+                    const [base_entry_result, diffee_entry_result] =
+                        await Promise.all([
+                            get_path_entry(
+                                driver,
+                                parent_label,
+                                base_node_hash,
+                                at_path,
+                            ),
+                            get_path_entry(
+                                driver,
+                                parent_label,
+                                diffee_node_hash,
+                                at_path,
+                            ),
+                        ]);
+
+                    // Extract hashes (compatible with existing code)
+                    const base_entry_at = base_entry_result?.hash ?? null;
+                    const diffee_entry_at = diffee_entry_result?.hash ?? null;
+
+                    // Determine the actual label to use for diffing
+                    // Use the label from whichever node exists (prefer base if both exist)
+                    const actualLabel =
+                        base_entry_result?.label ??
+                        diffee_entry_result?.label ??
+                        parent_label; // Fallback to original if both are null
 
                     const diff_nodes_at_result: DiffNodesAtResult = {
                         total_count: 0,
@@ -296,7 +308,7 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
 
                     for await (const diff_obj of diffTreesIterative(
                         driver,
-                        parent_label,
+                        actualLabel,
                         at_path,
                         base_entry_at,
                         diffee_entry_at,
@@ -342,12 +354,13 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                 // Validate input
                 const validatedArgs = TraversePathArgsSchema.parse(args);
                 const { parent_label, tree_hash, path } = validatedArgs;
-                return await get_path_entry(
+                const result = await get_path_entry(
                     driver,
                     parent_label,
                     tree_hash,
                     path,
                 );
+                return result?.hash ?? null;
             },
             async search(_source: unknown, args: unknown, context: any) {
                 // Validate input

@@ -57,6 +57,7 @@ const LABEL_MAP: Record<string, string> = {
     Tree: "Tree",
     Blob: "Blob",
     WinRegKey: "WinRegKey",
+    Struct: "Struct",
 } as const;
 
 export const GET_CHILD_NODE = (label: string) => {
@@ -70,7 +71,7 @@ export const GET_CHILD_NODE = (label: string) => {
     return `
 MATCH (p:${safeLabel})-[r]->(c)
 WHERE p.hash = $parent_hash AND r.name = $filename
-RETURN c
+RETURN c, labels(c) as child_labels
 `;
 };
 
@@ -78,7 +79,7 @@ export const GET_NODE_COMMIT_DATES = (label: string) => {
     // Validate label against whitelist to prevent Cypher injection
     const safeLabel = LABEL_MAP[label];
     if (!safeLabel) {
-        throw new Error("Invalid label type for commit lookup");
+        throw new Error(`Invalid label type for commit lookup: ${label}`);
     }
 
     // Single query pattern that works for all node types:
