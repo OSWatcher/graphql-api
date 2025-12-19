@@ -34,17 +34,27 @@ export const createRestRouter = (
 
             console.log(`Blob download requested: ${hash}`);
 
-            // Check authorization: deny access to restricted blobs
-            const restricted = await isBlobRestricted(
-                driver,
-                hash,
-                restrictedBranchName,
-            );
-            if (restricted) {
-                return res.status(403).json({
-                    error: "Forbidden",
-                    message: "This blob is restricted",
-                });
+            // Check if user has permission to bypass restriction
+            // req.auth is populated by express-oauth2-jwt-bearer middleware
+            const permissions = (req as any).auth?.payload?.permissions as
+                | string[]
+                | undefined;
+            const hasRestrictedAccess =
+                permissions?.includes("download:restricted") ?? false;
+
+            // Only check blob restriction for users without the permission
+            if (!hasRestrictedAccess) {
+                const restricted = await isBlobRestricted(
+                    driver,
+                    hash,
+                    restrictedBranchName,
+                );
+                if (restricted) {
+                    return res.status(403).json({
+                        error: "Forbidden",
+                        message: "This blob is restricted",
+                    });
+                }
             }
 
             // Fetch blob from MinIO using S3 SDK
