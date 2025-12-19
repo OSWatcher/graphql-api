@@ -71,7 +71,7 @@ export const GET_CHILD_NODE = (label: string) => {
     return `
 MATCH (p:${safeLabel})-[r]->(c)
 WHERE p.hash = $parent_hash AND r.name = $filename
-RETURN c
+RETURN c, labels(c) as child_labels
 `;
 };
 
