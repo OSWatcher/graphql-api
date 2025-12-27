@@ -1,6 +1,6 @@
 // diff
 export const NODES_DIFF_QUERY = `
-CALL example.diffTreesRecursive($parentLabel, $base, $diffee, $basePath, $filter, $maxDepth, $withIntermediates)
+CALL example.diffTreesRecursive($parentLabel, $base, $diffee, $basePath, $filter, $maxDepth, $withIntermediates, $statusFilter)
 YIELD status, type, path, old_props, new_props
 RETURN status, type, path, old_props, new_props
 `;
