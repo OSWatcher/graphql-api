@@ -786,6 +786,7 @@ export enum DiffStatus {
   New = "NEW",
   Mod = "MOD",
   Del = "DEL",
+  Unchanged = "UNCHANGED",
 }
 
 export enum HashableImplementation {
