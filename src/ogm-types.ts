@@ -4920,6 +4920,7 @@ export type DiffNodesAtResultWhere = {
 export type DiffNodesOptions = {
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   offset?: InputMaybe<Scalars["Int"]["input"]>;
+  status_filter?: InputMaybe<Array<DiffStatus>>;
 };
 
 export type HasFilenameRelAggregationWhereInput = {

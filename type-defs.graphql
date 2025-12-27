@@ -191,6 +191,7 @@ type StructFetchResult @query(read: false, aggregate: false) @mutation(operation
 input DiffNodesOptions {
     limit: Int
     offset: Int
+    status_filter: [DiffStatus!]
 }
 
 input CommitRange {
