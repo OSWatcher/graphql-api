@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { CommitScope, CommitHistoryDirection } from "./ogm-types.js";
+import {
+    CommitScope,
+    CommitHistoryDirection,
+    DiffStatus,
+} from "./ogm-types.js";
 
 // Git commit hash validation (40 character hex string)
 const GitSHA1Schema = z
@@ -96,6 +100,7 @@ export const DiffNodesArgsSchema = z.object({
         .object({
             limit: z.number().int().positive().max(10000).optional(),
             offset: z.number().int().nonnegative().optional(),
+            status_filter: z.array(z.nativeEnum(DiffStatus)).optional(),
         })
         .nullable()
         .optional(),

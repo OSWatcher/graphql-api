@@ -305,6 +305,9 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                     let added = 0;
                     const limit = options?.limit ?? Infinity;
                     const offset = options?.offset ?? 0;
+                    // Convert DiffStatus enum values to strings for Neo4j procedure
+                    const status_filter =
+                        options?.status_filter?.map((s) => String(s)) ?? [];
 
                     for await (const diff_obj of diffTreesIterative(
                         driver,
@@ -315,6 +318,7 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                         resolvedMaxDepth,
                         filter,
                         with_intermediates,
+                        status_filter,
                     )) {
                         if (skipped < offset) {
                             skipped++;
