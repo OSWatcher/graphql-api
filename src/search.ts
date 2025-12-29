@@ -6,8 +6,8 @@ import {
 } from "./queries.js";
 import { CommitRange, SearchEntityType } from "./ogm-types.js";
 
-// Unified search result type
-export type SearchResult = {
+// Unified search result type (internal)
+type OmniSearchResult = {
     type: SearchEntityType;
     commit_name: string;
     commit_hash: string;
@@ -17,8 +17,8 @@ export type SearchResult = {
     node_hash: string;
 };
 
-// Input for search
-export type SearchInput = {
+// Input for search (internal)
+type OmniSearchInput = {
     commit_range: CommitRange;
     search_term: string;
     entity_types?: SearchEntityType[];
@@ -28,7 +28,7 @@ async function* search_fs_fullpath(
     driver: Driver,
     search_expr: string,
     commit_range: CommitRange,
-): AsyncGenerator<SearchResult> {
+): AsyncGenerator<OmniSearchResult> {
     const session = driver.session();
     const tx = session.beginTransaction();
 
@@ -79,7 +79,7 @@ async function* search_registry(
     driver: Driver,
     search_expr: string,
     commit_range: CommitRange,
-): AsyncGenerator<SearchResult> {
+): AsyncGenerator<OmniSearchResult> {
     const session = driver.session();
     const tx = session.beginTransaction();
 
@@ -126,8 +126,8 @@ async function* search_registry(
 
 async function* search(
     driver: Driver,
-    input: SearchInput,
-): AsyncGenerator<SearchResult> {
+    input: OmniSearchInput,
+): AsyncGenerator<OmniSearchResult> {
     // Determine which entity types to search
     const entityTypes = input.entity_types ?? [
         SearchEntityType.Filesystem,
@@ -152,4 +152,4 @@ async function* search(
     }
 }
 
-export { search, SearchResult, SearchInput };
+export { search };
