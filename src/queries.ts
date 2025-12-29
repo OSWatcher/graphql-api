@@ -42,6 +42,24 @@ WHERE full_path CONTAINS $search_expr
 RETURN commit_name, commit_hash, blob_hash, full_path
 `;
 
+// search registry within specific commits
+export const searchRegistryInCommitsQuery = `
+UNWIND $commit_hashes AS commit_hash
+MATCH (c:Commit {hash: commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
+      -[:HAS_WINREG]->(reg_root:WinRegKey)
+      -[reg_rels:HAS_CHILD*]->(v:WinRegValue)
+// Build entity_path first, keep fs_rels raw
+WITH c, b, v, fs_rels,
+     apoc.text.join([rel in reg_rels | rel.name], '/') AS entity_path
+WHERE entity_path CONTAINS $search_expr
+// Only now build blob_path for matches
+RETURN c.name as commit_name, c.hash as commit_hash,
+       b.hash as blob_hash,
+       '/' + apoc.text.join([rel in fs_rels | rel.name], '/') AS blob_path,
+       entity_path, v.hash as node_hash
+`;
+
 // search (legacy - all commits)
 export const searchFSFullPathQuery = `
 MATCH (c:Commit)-[:OWNS_FILESYSTEM]->(root:Tree)-[r:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
