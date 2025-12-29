@@ -9,14 +9,14 @@ import {
     CommitScope,
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
-import { FSSearchResult, search_fs_fullpath } from "./search.js";
+import { search } from "./search.js";
 import { fetch_symbols, fetch_structs } from "./fetch.js";
 import path from "path";
 import { Driver } from "neo4j-driver";
 import neo4j, { DateTime } from "neo4j-driver";
 import { OGM } from "@neo4j/graphql-ogm";
 import {
-    SearchArgsSchema,
+    SearchInputSchema,
     FetchCommitHistoryArgsSchema,
     TraversePathArgsSchema,
     DiffNodesArgsSchema,
@@ -127,12 +127,13 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                     context: any,
                 ) {
                     // Validate input
-                    const validatedArgs = SearchArgsSchema.parse(args);
-                    const { commit_range, search_term } = validatedArgs;
+                    const argsObj = args as { input: any };
+                    const input = SearchInputSchema.parse(argsObj.input);
 
                     // Restrict HISTORY_WITH_UPDATES to authenticated users only
                     if (
-                        commit_range.scope === CommitScope.HistoryWithUpdates &&
+                        input.commit_range.scope ===
+                            CommitScope.HistoryWithUpdates &&
                         !context.jwt
                     ) {
                         console.warn(
@@ -143,20 +144,11 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                         );
                     }
 
-                    // Pure functional core - stream results from Neo4j
-                    for await (const result of search_fs_fullpath(
-                        driver,
-                        search_term,
-                        commit_range,
-                    ) as AsyncGenerator<FSSearchResult>) {
+                    // Stream results from Neo4j
+                    for await (const result of search(driver, input)) {
                         // Wrap each result in subscription envelope
                         yield {
-                            searchStream: {
-                                commit_name: result.commit_name,
-                                commit_hash: result.commit_hash,
-                                hash: result.blob_hash,
-                                path: result.full_path,
-                            },
+                            searchStream: result,
                         };
                     }
                 },
@@ -368,12 +360,13 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
             },
             async search(_source: unknown, args: unknown, context: any) {
                 // Validate input
-                const validatedArgs = SearchArgsSchema.parse(args);
-                const { commit_range, search_term } = validatedArgs;
+                const argsObj = args as { input: any };
+                const input = SearchInputSchema.parse(argsObj.input);
 
                 // Restrict HISTORY_WITH_UPDATES to authenticated users only
                 if (
-                    commit_range.scope === CommitScope.HistoryWithUpdates &&
+                    input.commit_range.scope ===
+                        CommitScope.HistoryWithUpdates &&
                     !context.jwt
                 ) {
                     console.warn(
@@ -385,17 +378,8 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                 }
 
                 const results: SearchResult[] = [];
-                for await (const result of search_fs_fullpath(
-                    driver,
-                    search_term,
-                    commit_range,
-                ) as AsyncGenerator<FSSearchResult>) {
-                    results.push({
-                        commit_name: result.commit_name,
-                        commit_hash: result.commit_hash,
-                        hash: result.blob_hash,
-                        path: result.full_path,
-                    });
+                for await (const result of search(driver, input)) {
+                    results.push(result);
                 }
                 return results;
             },
