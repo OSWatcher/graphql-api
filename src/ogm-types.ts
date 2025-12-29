@@ -128,8 +128,7 @@ export type QueryGetCommitExtractedDataLabelsArgs = {
 };
 
 export type QuerySearchArgs = {
-  commit_range: CommitRange;
-  search_term: Scalars["String"]["input"];
+  input: SearchInput;
 };
 
 export type QueryFetchSymbolsArgs = {
@@ -766,8 +765,7 @@ export type Subscription = {
 };
 
 export type SubscriptionSearchStreamArgs = {
-  commit_range: CommitRange;
-  search_term: Scalars["String"]["input"];
+  input: SearchInput;
 };
 
 export enum CommitHistoryDirection {
@@ -810,6 +808,11 @@ export enum NodeType {
   Struct = "Struct",
   StructField = "StructField",
   DataType = "DataType",
+}
+
+export enum SearchEntityType {
+  Filesystem = "FILESYSTEM",
+  Registry = "REGISTRY",
 }
 
 /** An enum for sorting in either ascending or descending order. */
@@ -1603,10 +1606,13 @@ export type PageInfo = {
 
 export type SearchResult = {
   __typename?: "SearchResult";
+  type: SearchEntityType;
   commit_name: Scalars["String"]["output"];
   commit_hash: Scalars["String"]["output"];
-  hash: Scalars["String"]["output"];
-  path: Scalars["String"]["output"];
+  blob_path: Scalars["String"]["output"];
+  blob_hash: Scalars["String"]["output"];
+  entity_path?: Maybe<Scalars["String"]["output"]>;
+  node_hash: Scalars["String"]["output"];
 };
 
 export type SearchResultAggregateSelection = {
@@ -1614,8 +1620,10 @@ export type SearchResultAggregateSelection = {
   count: Scalars["Int"]["output"];
   commit_name: StringAggregateSelection;
   commit_hash: StringAggregateSelection;
-  hash: StringAggregateSelection;
-  path: StringAggregateSelection;
+  blob_path: StringAggregateSelection;
+  blob_hash: StringAggregateSelection;
+  entity_path: StringAggregateSelection;
+  node_hash: StringAggregateSelection;
 };
 
 export type SearchResultEdge = {
@@ -5196,11 +5204,20 @@ export type HasNameRelWhere = {
   NOT?: InputMaybe<HasNameRelWhere>;
 };
 
+export type SearchInput = {
+  commit_range: CommitRange;
+  search_term: Scalars["String"]["input"];
+  entity_types?: InputMaybe<Array<SearchEntityType>>;
+};
+
 export type SearchResultCreateInput = {
+  type: SearchEntityType;
   commit_name: Scalars["String"]["input"];
   commit_hash: Scalars["String"]["input"];
-  hash: Scalars["String"]["input"];
-  path: Scalars["String"]["input"];
+  blob_path: Scalars["String"]["input"];
+  blob_hash: Scalars["String"]["input"];
+  entity_path?: InputMaybe<Scalars["String"]["input"]>;
+  node_hash: Scalars["String"]["input"];
 };
 
 export type SearchResultOptions = {
@@ -5212,20 +5229,32 @@ export type SearchResultOptions = {
 
 /** Fields to sort SearchResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one SearchResultSort object. */
 export type SearchResultSort = {
+  type?: InputMaybe<SortDirection>;
   commit_name?: InputMaybe<SortDirection>;
   commit_hash?: InputMaybe<SortDirection>;
-  hash?: InputMaybe<SortDirection>;
-  path?: InputMaybe<SortDirection>;
+  blob_path?: InputMaybe<SortDirection>;
+  blob_hash?: InputMaybe<SortDirection>;
+  entity_path?: InputMaybe<SortDirection>;
+  node_hash?: InputMaybe<SortDirection>;
 };
 
 export type SearchResultUpdateInput = {
+  type?: InputMaybe<SearchEntityType>;
   commit_name?: InputMaybe<Scalars["String"]["input"]>;
   commit_hash?: InputMaybe<Scalars["String"]["input"]>;
-  hash?: InputMaybe<Scalars["String"]["input"]>;
-  path?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash?: InputMaybe<Scalars["String"]["input"]>;
+  entity_path?: InputMaybe<Scalars["String"]["input"]>;
+  node_hash?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 export type SearchResultWhere = {
+  type?: InputMaybe<SearchEntityType>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT?: InputMaybe<SearchEntityType>;
+  type_IN?: InputMaybe<Array<SearchEntityType>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  type_NOT_IN?: InputMaybe<Array<SearchEntityType>>;
   commit_name?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
   commit_name_NOT?: InputMaybe<Scalars["String"]["input"]>;
@@ -5256,36 +5285,68 @@ export type SearchResultWhere = {
   commit_hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
   commit_hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  hash?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
-  hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  blob_path_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  blob_path_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  path?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  path_NOT?: InputMaybe<Scalars["String"]["input"]>;
-  path_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  blob_hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  path_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  path_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  path_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  path_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  blob_hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  path_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  path_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  path_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  entity_path?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  entity_path_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  entity_path_IN?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  entity_path_NOT_IN?: InputMaybe<
+    Array<InputMaybe<Scalars["String"]["input"]>>
+  >;
+  entity_path_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  entity_path_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  entity_path_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  entity_path_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  entity_path_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  entity_path_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  node_hash?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  node_hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  node_hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  node_hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  node_hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  node_hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
   OR?: InputMaybe<Array<SearchResultWhere>>;
   AND?: InputMaybe<Array<SearchResultWhere>>;
   NOT?: InputMaybe<SearchResultWhere>;
@@ -8255,8 +8316,10 @@ export interface SearchResultAggregateSelectionInput {
   count?: boolean;
   commit_name?: boolean;
   commit_hash?: boolean;
-  hash?: boolean;
-  path?: boolean;
+  blob_path?: boolean;
+  blob_hash?: boolean;
+  entity_path?: boolean;
+  node_hash?: boolean;
 }
 
 export declare class SearchResultModel {
