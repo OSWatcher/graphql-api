@@ -3,6 +3,7 @@ import {
     CommitScope,
     CommitHistoryDirection,
     DiffStatus,
+    SearchEntityType,
 } from "./ogm-types.js";
 
 // Git commit hash validation (40 character hex string)
@@ -40,6 +41,19 @@ const CommitHistoryDirectionSchema = z
         }
     });
 
+// Search entity type enum - map to OGM enum
+const SearchEntityTypeSchema = z
+    .enum(["FILESYSTEM", "REGISTRY"])
+    .transform((val) => {
+        switch (val) {
+            case "FILESYSTEM":
+                return SearchEntityType.Filesystem;
+            case "REGISTRY":
+                return SearchEntityType.Registry;
+            // No default case needed; enum validation ensures only valid values.
+        }
+    });
+
 // Commit range validation
 export const CommitRangeSchema = z
     .object({
@@ -61,13 +75,14 @@ export const CommitRangeSchema = z
         },
     );
 
-// Search arguments validation
-export const SearchArgsSchema = z.object({
+// Search input validation
+export const SearchInputSchema = z.object({
     commit_range: CommitRangeSchema,
     search_term: z
         .string()
         .min(1, "Search term cannot be empty")
         .max(500, "Search term too long (max 500 characters)"),
+    entity_types: z.array(SearchEntityTypeSchema).optional(),
 });
 
 // Fetch commit history arguments

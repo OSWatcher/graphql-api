@@ -42,6 +42,38 @@ WHERE full_path CONTAINS $search_expr
 RETURN commit_name, commit_hash, blob_hash, full_path
 `;
 
+// Registry search query - uses CALL {} subquery for performance optimization
+//
+// IMPORTANT: Without CALL {}, Neo4j's query planner uses NodeHashJoin to combine
+// the two variable-length path traversals (filesystem and registry), resulting in
+// cardinality explosion (32+ trillion estimated rows → 450+ second queries).
+//
+// The CALL {} subquery isolates the registry traversal, forcing a linear
+// execution plan that processes registry paths one hive at a time (4s execution).
+//
+// See: docs/explanation/query-optimization.md for full analysis
+export const searchRegistryInCommitsQuery = `
+UNWIND $commit_hashes AS commit_hash
+MATCH (c:Commit {hash: commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
+      -[hive:HAS_WINREG]->(reg_root:WinRegKey)
+WITH c, b, fs_rels, reg_root
+
+CALL {
+  WITH reg_root
+  MATCH (reg_root)-[r:HAS_CHILD*]->(v:WinRegValue)
+  WITH v, [rel IN r | rel.name] AS path_parts
+  WITH v, apoc.text.join(path_parts, '/') AS full_path
+  WHERE full_path CONTAINS $search_expr
+  RETURN full_path, v.hash AS node_hash
+}
+
+RETURN c.name AS commit_name, c.hash AS commit_hash,
+       b.hash AS blob_hash,
+       '/' + apoc.text.join([rel in fs_rels | rel.name], '/') AS blob_path,
+       full_path AS entity_path, node_hash
+`;
+
 // search (legacy - all commits)
 export const searchFSFullPathQuery = `
 MATCH (c:Commit)-[:OWNS_FILESYSTEM]->(root:Tree)-[r:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
