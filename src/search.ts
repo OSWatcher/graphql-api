@@ -22,12 +22,14 @@ type OmniSearchInput = {
     commit_range: CommitRange;
     search_term: string;
     entity_types?: SearchEntityType[];
+    case_sensitive?: boolean;
 };
 
 async function* search_fs_fullpath(
     driver: Driver,
     search_expr: string,
     commit_range: CommitRange,
+    case_sensitive: boolean = false,
 ): AsyncGenerator<OmniSearchResult> {
     const session = driver.session();
     const tx = session.beginTransaction();
@@ -48,6 +50,7 @@ async function* search_fs_fullpath(
         const result = tx.run(searchFSInCommitsQuery, {
             commit_hashes,
             search_expr,
+            case_sensitive,
         });
 
         // Stream results as they arrive from Neo4j
@@ -79,6 +82,7 @@ async function* search_registry(
     driver: Driver,
     search_expr: string,
     commit_range: CommitRange,
+    case_sensitive: boolean = false,
 ): AsyncGenerator<OmniSearchResult> {
     const session = driver.session();
     const tx = session.beginTransaction();
@@ -99,6 +103,7 @@ async function* search_registry(
         const result = tx.run(searchRegistryInCommitsQuery, {
             commit_hashes,
             search_expr,
+            case_sensitive,
         });
 
         // Stream results as they arrive from Neo4j
@@ -133,6 +138,7 @@ async function* search(
         SearchEntityType.Filesystem,
         SearchEntityType.Registry,
     ];
+    const caseSensitive = input.case_sensitive ?? false;
 
     // Search each entity type and yield results
     for (const entityType of entityTypes) {
@@ -141,12 +147,14 @@ async function* search(
                 driver,
                 input.search_term,
                 input.commit_range,
+                caseSensitive,
             );
         } else if (entityType === SearchEntityType.Registry) {
             yield* search_registry(
                 driver,
                 input.search_term,
                 input.commit_range,
+                caseSensitive,
             );
         }
     }

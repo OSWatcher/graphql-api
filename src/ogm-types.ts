@@ -5208,6 +5208,7 @@ export type SearchInput = {
   commit_range: CommitRange;
   search_term: Scalars["String"]["input"];
   entity_types?: InputMaybe<Array<SearchEntityType>>;
+  case_sensitive?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export type SearchResultCreateInput = {

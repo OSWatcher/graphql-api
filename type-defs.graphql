@@ -220,6 +220,8 @@ input SearchInput {
     search_term: String!
     # Entity types to search (null = search all types)
     entity_types: [SearchEntityType!]
+    # Case sensitive search (default: false = case-insensitive)
+    case_sensitive: Boolean = false
 }
 
 # custom Queries
