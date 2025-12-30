@@ -786,6 +786,7 @@ export enum DiffStatus {
   New = "NEW",
   Mod = "MOD",
   Del = "DEL",
+  Unchanged = "UNCHANGED",
 }
 
 export enum HashableImplementation {
@@ -4920,6 +4921,7 @@ export type DiffNodesAtResultWhere = {
 export type DiffNodesOptions = {
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   offset?: InputMaybe<Scalars["Int"]["input"]>;
+  status_filter?: InputMaybe<Array<DiffStatus>>;
 };
 
 export type HasFilenameRelAggregationWhereInput = {

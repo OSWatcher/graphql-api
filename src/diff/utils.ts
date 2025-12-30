@@ -18,6 +18,8 @@ export function getDiffStatusFromString(status_str: string): DiffStatus {
             return DiffStatus.Mod
         case "DEL":
             return DiffStatus.Del
+        case "UNCHANGED":
+            return DiffStatus.Unchanged
         default:
             throw Error(`Unexpected status string: ${status_str}`)
     }
