@@ -38,7 +38,10 @@ UNWIND $commit_hashes AS commit_hash
 MATCH (c:Commit {hash: commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)-[r:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
 WITH c.name as commit_name, c.hash as commit_hash, b, [rel in r | rel.name] AS path_parts
 WITH commit_name, commit_hash, b.hash AS blob_hash, apoc.text.join(path_parts, '/') AS full_path
-WHERE full_path CONTAINS $search_expr
+WHERE CASE
+  WHEN $case_sensitive THEN full_path CONTAINS $search_expr
+  ELSE toLower(full_path) CONTAINS toLower($search_expr)
+END
 RETURN commit_name, commit_hash, blob_hash, full_path
 `;
 
@@ -64,7 +67,10 @@ CALL {
   MATCH (reg_root)-[r:HAS_CHILD*]->(v:WinRegValue)
   WITH v, [rel IN r | rel.name] AS path_parts
   WITH v, apoc.text.join(path_parts, '/') AS full_path
-  WHERE full_path CONTAINS $search_expr
+  WHERE CASE
+    WHEN $case_sensitive THEN full_path CONTAINS $search_expr
+    ELSE toLower(full_path) CONTAINS toLower($search_expr)
+  END
   RETURN full_path, v.hash AS node_hash
 }
 

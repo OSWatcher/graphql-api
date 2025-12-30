@@ -83,6 +83,7 @@ export const SearchInputSchema = z.object({
         .min(1, "Search term cannot be empty")
         .max(500, "Search term too long (max 500 characters)"),
     entity_types: z.array(SearchEntityTypeSchema).optional(),
+    case_sensitive: z.boolean().optional().default(false),
 });
 
 // Fetch commit history arguments
