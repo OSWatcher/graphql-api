@@ -60,7 +60,7 @@ UNWIND $commit_hashes AS commit_hash
 MATCH (c:Commit {hash: commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)
       -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
       -[hive:HAS_WINREG]->(reg_root:WinRegKey)
-WITH c, b, fs_rels, reg_root
+WITH c, b, fs_rels, hive, reg_root
 
 CALL {
   WITH reg_root
@@ -77,7 +77,7 @@ CALL {
 RETURN c.name AS commit_name, c.hash AS commit_hash,
        b.hash AS blob_hash,
        '/' + apoc.text.join([rel in fs_rels | rel.name], '/') AS blob_path,
-       full_path AS entity_path, node_hash
+       '/' + hive.name + '/' + full_path AS entity_path, node_hash
 `;
 
 // search (legacy - all commits)
