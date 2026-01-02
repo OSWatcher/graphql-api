@@ -6,6 +6,44 @@ import {
 } from "./queries.js";
 import { CommitRange, SearchEntityType } from "./ogm-types.js";
 
+// Merge multiple async generators, yielding results as they arrive from any source
+async function* mergeAsyncGenerators<T>(
+    ...generators: AsyncGenerator<T>[]
+): AsyncGenerator<T> {
+    const queue: T[] = [];
+    let activeCount = generators.length;
+    let resolve: (() => void) | null = null;
+
+    // Start consuming all generators in parallel
+    const consumers = generators.map(async (gen) => {
+        for await (const value of gen) {
+            queue.push(value);
+            if (resolve) {
+                resolve();
+                resolve = null;
+            }
+        }
+        activeCount--;
+        if (resolve) {
+            resolve();
+            resolve = null;
+        }
+    });
+
+    // Yield from queue as values arrive
+    while (activeCount > 0 || queue.length > 0) {
+        if (queue.length > 0) {
+            yield queue.shift()!;
+        } else if (activeCount > 0) {
+            await new Promise<void>((r) => {
+                resolve = r;
+            });
+        }
+    }
+
+    await Promise.all(consumers);
+}
+
 // Unified search result type (internal)
 type OmniSearchResult = {
     type: SearchEntityType;
@@ -133,31 +171,39 @@ async function* search(
     driver: Driver,
     input: OmniSearchInput,
 ): AsyncGenerator<OmniSearchResult> {
-    // Determine which entity types to search
     const entityTypes = input.entity_types ?? [
         SearchEntityType.Filesystem,
         SearchEntityType.Registry,
     ];
     const caseSensitive = input.case_sensitive ?? false;
 
-    // Search each entity type and yield results
+    // Build array of generators to run in parallel
+    const generators: AsyncGenerator<OmniSearchResult>[] = [];
+
     for (const entityType of entityTypes) {
         if (entityType === SearchEntityType.Filesystem) {
-            yield* search_fs_fullpath(
-                driver,
-                input.search_term,
-                input.commit_range,
-                caseSensitive,
+            generators.push(
+                search_fs_fullpath(
+                    driver,
+                    input.search_term,
+                    input.commit_range,
+                    caseSensitive,
+                ),
             );
         } else if (entityType === SearchEntityType.Registry) {
-            yield* search_registry(
-                driver,
-                input.search_term,
-                input.commit_range,
-                caseSensitive,
+            generators.push(
+                search_registry(
+                    driver,
+                    input.search_term,
+                    input.commit_range,
+                    caseSensitive,
+                ),
             );
         }
     }
+
+    // Merge and yield results as they arrive from any source
+    yield* mergeAsyncGenerators(...generators);
 }
 
 export { search };
