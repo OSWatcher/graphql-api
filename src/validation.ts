@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { CommitScope, CommitHistoryDirection } from "./ogm-types.js";
+import {
+    CommitScope,
+    CommitHistoryDirection,
+    DiffStatus,
+    SearchEntityType,
+} from "./ogm-types.js";
 
 // Git commit hash validation (40 character hex string)
 const GitSHA1Schema = z
@@ -36,6 +41,19 @@ const CommitHistoryDirectionSchema = z
         }
     });
 
+// Search entity type enum - map to OGM enum
+const SearchEntityTypeSchema = z
+    .enum(["FILESYSTEM", "REGISTRY"])
+    .transform((val) => {
+        switch (val) {
+            case "FILESYSTEM":
+                return SearchEntityType.Filesystem;
+            case "REGISTRY":
+                return SearchEntityType.Registry;
+            // No default case needed; enum validation ensures only valid values.
+        }
+    });
+
 // Commit range validation
 export const CommitRangeSchema = z
     .object({
@@ -57,13 +75,15 @@ export const CommitRangeSchema = z
         },
     );
 
-// Search arguments validation
-export const SearchArgsSchema = z.object({
+// Search input validation
+export const SearchInputSchema = z.object({
     commit_range: CommitRangeSchema,
     search_term: z
         .string()
         .min(1, "Search term cannot be empty")
         .max(500, "Search term too long (max 500 characters)"),
+    entity_types: z.array(SearchEntityTypeSchema).optional(),
+    case_sensitive: z.boolean().optional().default(false),
 });
 
 // Fetch commit history arguments
@@ -96,6 +116,7 @@ export const DiffNodesArgsSchema = z.object({
         .object({
             limit: z.number().int().positive().max(10000).optional(),
             offset: z.number().int().nonnegative().optional(),
+            status_filter: z.array(z.nativeEnum(DiffStatus)).optional(),
         })
         .nullable()
         .optional(),
