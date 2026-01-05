@@ -256,7 +256,8 @@ async function main() {
             schema,
             plugins: [
                 {
-                    async requestDidStart() {
+                    async requestDidStart({ contextValue }: any) {
+                        const isAuthenticated = !!contextValue?.jwt;
                         return {
                             async willSendResponse({ response }: any) {
                                 if (
@@ -266,6 +267,7 @@ async function main() {
                                     try {
                                         filterSensitiveRegistryValues(
                                             response.body.singleResult.data,
+                                            isAuthenticated,
                                         );
                                     } catch (error) {
                                         console.error(
