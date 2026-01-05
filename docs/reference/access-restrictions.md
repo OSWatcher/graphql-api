@@ -124,7 +124,9 @@ Result: isBlobRestricted(Y, "windows-10") = false → 200 OK
 
 ### Purpose
 
-Prevents exposure of sensitive Windows product keys and license identifiers in API responses while allowing registry structure exploration.
+Protects Windows registry data through two mechanisms:
+1. **Sensitive value redaction** - Always redacts product keys and license identifiers (e.g., ProductId)
+2. **Authentication-based hiding** - Hides all registry values from unauthenticated users
 
 ### Scope
 
@@ -132,24 +134,32 @@ Prevents exposure of sensitive Windows product keys and license identifiers in A
 - **Enforced at:** Response time (after query execution, before sending to client)
 - **Implementation:** Apollo Server plugin with `willSendResponse` hook
 
+### Behavior Summary
+
+| User Type       | Sensitive Value | Non-Sensitive Value |
+|-----------------|-----------------|---------------------|
+| Authenticated   | `[REDACTED]`    | Actual value        |
+| Unauthenticated | `[REDACTED]`    | `[HIDDEN]`          |
+
 ### Implementation
 
 **Files:**
 - `src/registry-response-filter.ts` - Filtering logic
 - `src/registry-filter-config.ts` - Configuration and sensitive value list
 
-**Function:** `filterSensitiveRegistryValues(responseData)`
+**Function:** `filterSensitiveRegistryValues(responseData, isAuthenticated)`
 
 **Hook Location:** `src/index.ts` Apollo Server plugin
 
 ```typescript
 {
-  async requestDidStart() {
+  async requestDidStart({ contextValue }: any) {
+    const isAuthenticated = !!contextValue?.jwt;
     return {
       async willSendResponse({ response }: any) {
         if (response?.body?.kind === 'single' && response.body.singleResult?.data) {
           try {
-            filterSensitiveRegistryValues(response.body.singleResult.data);
+            filterSensitiveRegistryValues(response.body.singleResult.data, isAuthenticated);
           } catch (error) {
             console.error('Registry filter error:', error);
             // Fail-open: don't break API if filtering fails
@@ -618,7 +628,8 @@ Historical non-filesystem data (registry, symbols) may be incomplete or less rel
 | Restriction | Type | Scope | Fail-Safe | Configurable |
 |------------|------|-------|-----------|--------------|
 | Blob Download Authorization | REST Endpoint | `GET /blob/:hash` | Block (403) | `RESTRICTED_BRANCH_NAME` |
-| Registry Value Filtering | Response Filter | All GraphQL responses | Allow (fail-open) | `SENSITIVE_REGISTRY_VALUES` |
+| Registry Value Filtering (Sensitive) | Response Filter | All GraphQL responses | Allow (fail-open) | `SENSITIVE_REGISTRY_VALUES` |
+| Registry Value Hiding (Auth) | Response Filter | All GraphQL responses (unauthenticated only) | Allow (fail-open) | N/A (hardcoded) |
 | Recursive Diff Authentication | Resolver Check | `diffNodesAt` query (unauthenticated only) | Block (error) | N/A (hardcoded) |
 | HISTORY_WITH_UPDATES Authentication | Resolver Check | `search` query & `searchStream` subscription (unauthenticated only) | Block (error) | N/A (hardcoded) |
 | Date-Based Diff Limitation | Resolver Check | `diffNodesAt` for Blob/WinRegKey (unauthenticated only) | Allow (fail-open) | `DIFF_DATE_LIMIT_YEAR` |
