@@ -13,7 +13,7 @@ import { buildCommitRangeQuery } from "../queries.js";
 import { resolveRef } from "../commits.js";
 import { get_path_entry, PathEntryResult } from "../filesystem.js";
 import { get_entity_root } from "./path-resolvers.js";
-import { GitLogEntry, GitLogOptions } from "./types.js";
+import { GitLogEntry, GitLogOptions, EntityRootResult } from "./types.js";
 
 /**
  * Convert a node label to NodeType enum
