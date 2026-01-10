@@ -71,13 +71,26 @@ export function buildCommitRangeQuery(
     }
 
     // Build query
-    let query = `
+let query = `
 MATCH (start:Commit {hash: $startHash})`;
 
+    // Add branch filter if specified - must aggregate before traversal
+    // Get all commits reachable from the branch, not just the HEAD commit
+    if (branch) {
+        query += `
+MATCH (branch:Branch {name: $branch})-[:TRACKS_COMMIT]->(branchHead:Commit)
+MATCH (branchHead)-[:HAS_PREVIOUS*0..]->(tracked:Commit)
+WITH start, COLLECT(tracked) as trackedCommits`;
+    }
     // Add end ref for range queries
     if (hasEndRef) {
         query += `
 MATCH (end:Commit {hash: $endHash})`;
+        // Preserve trackedCommits in WITH clause if branch filter exists
+        if (branch) {
+            query += `
+WITH start, end, trackedCommits`;
+        }
     }
 
     // Add traversal pattern
@@ -88,9 +101,7 @@ MATCH (start)${relationshipPattern}`;
     const whereClauses: string[] = [];
 
     if (branch) {
-        whereClauses.push(
-            "EXISTS { MATCH (:Branch {name: $branch})-[:TRACKS_COMMIT]->(c) }",
-        );
+        whereClauses.push("c IN trackedCommits");
     }
 
     if (hasEndRef) {
