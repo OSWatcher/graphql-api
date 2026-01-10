@@ -34,11 +34,7 @@ export async function get_entity_root(
                 return await get_filesystem_root(session, commit_hash, path);
 
             case EntityType.Registry:
-                // TODO: Implement registry root resolution
-                // - Parse hive name from first path component
-                // - Query: (Commit)-[:OWNS_FILESYSTEM]->...-[:HAS_WINREG]->(WinRegKey)
-                // - Return hive WinRegKey + remaining path after hive
-                throw new Error("Registry entity type not yet implemented");
+                return await get_registry_root(session, commit_hash, path);
 
             case EntityType.Struct:
                 // TODO: Implement struct root resolution
@@ -88,5 +84,52 @@ async function get_filesystem_root(
         root_hash,
         root_label: "Tree",
         remaining_path,
+    };
+}
+
+/**
+ * Get registry root for a commit.
+ * Finds the registry hive blob and returns the WinRegKey root node.
+ * Path format: SYSTEM/CurrentControlSet/Services/... where SYSTEM is the hive name.
+ */
+async function get_registry_root(
+    session: any,
+    commit_hash: string,
+    path: string,
+): Promise<EntityRootResult> {
+    // Parse hive name from first path component
+    const pathParts = path.split("/").filter(Boolean);
+    if (pathParts.length === 0) {
+        throw new Error("Registry path cannot be empty");
+    }
+
+    const hiveName = pathParts[0]; // e.g., "SYSTEM", "SOFTWARE"
+    const remainingPath = pathParts.slice(1).join("/");
+
+    // Query: filesystem → hive blob → registry root
+    const GET_REGISTRY_ROOT_QUERY = `
+        MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(fsRoot:Tree)
+              -[:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(hive:Blob)
+              -[:HAS_WINREG]->(regRoot:WinRegKey)
+        WHERE hive.name = $hiveName
+        RETURN regRoot.hash as root_hash
+    `;
+
+    const result = await session.executeRead((tx: any) =>
+        tx.run(GET_REGISTRY_ROOT_QUERY, { commit_hash, hiveName }),
+    );
+
+    if (result.records.length === 0) {
+        throw new Error(
+            `Registry hive ${hiveName} not found in commit ${commit_hash}`,
+        );
+    }
+
+    const root_hash = result.records[0].get("root_hash");
+
+    return {
+        root_hash,
+        root_label: "WinRegKey",
+        remaining_path: remainingPath,
     };
 }
