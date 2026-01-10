@@ -43,6 +43,9 @@ export type Query = {
   traversePath?: Maybe<Scalars["String"]["output"]>;
   getCommitExtractedDataLabels: Array<Scalars["String"]["output"]>;
   search: Array<SearchResult>;
+  gitLog: GitLogResult;
+  fetchSymbols: Array<SymbolFetchResult>;
+  fetchStructs: Array<StructFetchResult>;
   hashables: Array<Hashable>;
   hashablesConnection: HashablesConnection;
   hashablesAggregate: HashableAggregateSelection;
@@ -85,9 +88,24 @@ export type Query = {
   diffItems: Array<DiffItem>;
   diffItemsConnection: DiffItemsConnection;
   diffItemsAggregate: DiffItemAggregateSelection;
+  gitLogEntries: Array<GitLogEntry>;
+  gitLogEntriesConnection: GitLogEntriesConnection;
+  gitLogEntriesAggregate: GitLogEntryAggregateSelection;
+  gitLogResults: Array<GitLogResult>;
+  gitLogResultsConnection: GitLogResultsConnection;
+  gitLogResultsAggregate: GitLogResultAggregateSelection;
   searchResults: Array<SearchResult>;
   searchResultsConnection: SearchResultsConnection;
   searchResultsAggregate: SearchResultAggregateSelection;
+  symbolFetchResults: Array<SymbolFetchResult>;
+  symbolFetchResultsConnection: SymbolFetchResultsConnection;
+  symbolFetchResultsAggregate: SymbolFetchResultAggregateSelection;
+  structFieldFetchResults: Array<StructFieldFetchResult>;
+  structFieldFetchResultsConnection: StructFieldFetchResultsConnection;
+  structFieldFetchResultsAggregate: StructFieldFetchResultAggregateSelection;
+  structFetchResults: Array<StructFetchResult>;
+  structFetchResultsConnection: StructFetchResultsConnection;
+  structFetchResultsAggregate: StructFetchResultAggregateSelection;
 };
 
 export type QueryDiffNodesAtArgs = {
@@ -118,6 +136,23 @@ export type QueryGetCommitExtractedDataLabelsArgs = {
 
 export type QuerySearchArgs = {
   input: SearchInput;
+};
+
+export type QueryGitLogArgs = {
+  path: Scalars["String"]["input"];
+  context: EntityType;
+  commit_range: CommitRange;
+  options?: InputMaybe<GitLogOptions>;
+};
+
+export type QueryFetchSymbolsArgs = {
+  blob_hash: Scalars["String"]["input"];
+  options?: InputMaybe<SymbolOptions>;
+};
+
+export type QueryFetchStructsArgs = {
+  blob_hash: Scalars["String"]["input"];
+  options?: InputMaybe<StructOptions>;
 };
 
 export type QueryHashablesArgs = {
@@ -344,6 +379,37 @@ export type QueryDiffItemsAggregateArgs = {
   where?: InputMaybe<DiffItemWhere>;
 };
 
+export type QueryGitLogEntriesArgs = {
+  where?: InputMaybe<GitLogEntryWhere>;
+  options?: InputMaybe<GitLogEntryOptions>;
+};
+
+export type QueryGitLogEntriesConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<GitLogEntryWhere>;
+};
+
+export type QueryGitLogEntriesAggregateArgs = {
+  where?: InputMaybe<GitLogEntryWhere>;
+};
+
+export type QueryGitLogResultsArgs = {
+  where?: InputMaybe<GitLogResultWhere>;
+  options?: InputMaybe<GitLogResultOptions>;
+};
+
+export type QueryGitLogResultsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<GitLogResultWhere>;
+  sort?: InputMaybe<Array<InputMaybe<GitLogResultSort>>>;
+};
+
+export type QueryGitLogResultsAggregateArgs = {
+  where?: InputMaybe<GitLogResultWhere>;
+};
+
 export type QuerySearchResultsArgs = {
   where?: InputMaybe<SearchResultWhere>;
   options?: InputMaybe<SearchResultOptions>;
@@ -358,6 +424,54 @@ export type QuerySearchResultsConnectionArgs = {
 
 export type QuerySearchResultsAggregateArgs = {
   where?: InputMaybe<SearchResultWhere>;
+};
+
+export type QuerySymbolFetchResultsArgs = {
+  where?: InputMaybe<SymbolFetchResultWhere>;
+  options?: InputMaybe<SymbolFetchResultOptions>;
+};
+
+export type QuerySymbolFetchResultsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<SymbolFetchResultWhere>;
+  sort?: InputMaybe<Array<InputMaybe<SymbolFetchResultSort>>>;
+};
+
+export type QuerySymbolFetchResultsAggregateArgs = {
+  where?: InputMaybe<SymbolFetchResultWhere>;
+};
+
+export type QueryStructFieldFetchResultsArgs = {
+  where?: InputMaybe<StructFieldFetchResultWhere>;
+  options?: InputMaybe<StructFieldFetchResultOptions>;
+};
+
+export type QueryStructFieldFetchResultsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<StructFieldFetchResultWhere>;
+  sort?: InputMaybe<Array<InputMaybe<StructFieldFetchResultSort>>>;
+};
+
+export type QueryStructFieldFetchResultsAggregateArgs = {
+  where?: InputMaybe<StructFieldFetchResultWhere>;
+};
+
+export type QueryStructFetchResultsArgs = {
+  where?: InputMaybe<StructFetchResultWhere>;
+  options?: InputMaybe<StructFetchResultOptions>;
+};
+
+export type QueryStructFetchResultsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<StructFetchResultWhere>;
+  sort?: InputMaybe<Array<InputMaybe<StructFetchResultSort>>>;
+};
+
+export type QueryStructFetchResultsAggregateArgs = {
+  where?: InputMaybe<StructFetchResultWhere>;
 };
 
 export type Mutation = {
@@ -401,9 +515,24 @@ export type Mutation = {
   createDiffItems: CreateDiffItemsMutationResponse;
   deleteDiffItems: DeleteInfo;
   updateDiffItems: UpdateDiffItemsMutationResponse;
+  createGitLogEntries: CreateGitLogEntriesMutationResponse;
+  deleteGitLogEntries: DeleteInfo;
+  updateGitLogEntries: UpdateGitLogEntriesMutationResponse;
+  createGitLogResults: CreateGitLogResultsMutationResponse;
+  deleteGitLogResults: DeleteInfo;
+  updateGitLogResults: UpdateGitLogResultsMutationResponse;
   createSearchResults: CreateSearchResultsMutationResponse;
   deleteSearchResults: DeleteInfo;
   updateSearchResults: UpdateSearchResultsMutationResponse;
+  createSymbolFetchResults: CreateSymbolFetchResultsMutationResponse;
+  deleteSymbolFetchResults: DeleteInfo;
+  updateSymbolFetchResults: UpdateSymbolFetchResultsMutationResponse;
+  createStructFieldFetchResults: CreateStructFieldFetchResultsMutationResponse;
+  deleteStructFieldFetchResults: DeleteInfo;
+  updateStructFieldFetchResults: UpdateStructFieldFetchResultsMutationResponse;
+  createStructFetchResults: CreateStructFetchResultsMutationResponse;
+  deleteStructFetchResults: DeleteInfo;
+  updateStructFetchResults: UpdateStructFetchResultsMutationResponse;
 };
 
 export type MutationCreateBlobsArgs = {
@@ -629,6 +758,32 @@ export type MutationUpdateDiffItemsArgs = {
   update?: InputMaybe<DiffItemUpdateInput>;
 };
 
+export type MutationCreateGitLogEntriesArgs = {
+  input: Array<GitLogEntryCreateInput>;
+};
+
+export type MutationDeleteGitLogEntriesArgs = {
+  where?: InputMaybe<GitLogEntryWhere>;
+};
+
+export type MutationUpdateGitLogEntriesArgs = {
+  where?: InputMaybe<GitLogEntryWhere>;
+  update?: InputMaybe<GitLogEntryUpdateInput>;
+};
+
+export type MutationCreateGitLogResultsArgs = {
+  input: Array<GitLogResultCreateInput>;
+};
+
+export type MutationDeleteGitLogResultsArgs = {
+  where?: InputMaybe<GitLogResultWhere>;
+};
+
+export type MutationUpdateGitLogResultsArgs = {
+  where?: InputMaybe<GitLogResultWhere>;
+  update?: InputMaybe<GitLogResultUpdateInput>;
+};
+
 export type MutationCreateSearchResultsArgs = {
   input: Array<SearchResultCreateInput>;
 };
@@ -640,6 +795,45 @@ export type MutationDeleteSearchResultsArgs = {
 export type MutationUpdateSearchResultsArgs = {
   where?: InputMaybe<SearchResultWhere>;
   update?: InputMaybe<SearchResultUpdateInput>;
+};
+
+export type MutationCreateSymbolFetchResultsArgs = {
+  input: Array<SymbolFetchResultCreateInput>;
+};
+
+export type MutationDeleteSymbolFetchResultsArgs = {
+  where?: InputMaybe<SymbolFetchResultWhere>;
+};
+
+export type MutationUpdateSymbolFetchResultsArgs = {
+  where?: InputMaybe<SymbolFetchResultWhere>;
+  update?: InputMaybe<SymbolFetchResultUpdateInput>;
+};
+
+export type MutationCreateStructFieldFetchResultsArgs = {
+  input: Array<StructFieldFetchResultCreateInput>;
+};
+
+export type MutationDeleteStructFieldFetchResultsArgs = {
+  where?: InputMaybe<StructFieldFetchResultWhere>;
+};
+
+export type MutationUpdateStructFieldFetchResultsArgs = {
+  where?: InputMaybe<StructFieldFetchResultWhere>;
+  update?: InputMaybe<StructFieldFetchResultUpdateInput>;
+};
+
+export type MutationCreateStructFetchResultsArgs = {
+  input: Array<StructFetchResultCreateInput>;
+};
+
+export type MutationDeleteStructFetchResultsArgs = {
+  where?: InputMaybe<StructFetchResultWhere>;
+};
+
+export type MutationUpdateStructFetchResultsArgs = {
+  where?: InputMaybe<StructFetchResultWhere>;
+  update?: InputMaybe<StructFetchResultUpdateInput>;
 };
 
 export type Subscription = {
@@ -1167,6 +1361,18 @@ export type CreateDiffNodesAtResultsMutationResponse = {
   diffNodesAtResults: Array<DiffNodesAtResult>;
 };
 
+export type CreateGitLogEntriesMutationResponse = {
+  __typename?: "CreateGitLogEntriesMutationResponse";
+  info: CreateInfo;
+  gitLogEntries: Array<GitLogEntry>;
+};
+
+export type CreateGitLogResultsMutationResponse = {
+  __typename?: "CreateGitLogResultsMutationResponse";
+  info: CreateInfo;
+  gitLogResults: Array<GitLogResult>;
+};
+
 export type CreateHashableNodePropsMutationResponse = {
   __typename?: "CreateHashableNodePropsMutationResponse";
   info: CreateInfo;
@@ -1188,6 +1394,18 @@ export type CreateSearchResultsMutationResponse = {
   searchResults: Array<SearchResult>;
 };
 
+export type CreateStructFetchResultsMutationResponse = {
+  __typename?: "CreateStructFetchResultsMutationResponse";
+  info: CreateInfo;
+  structFetchResults: Array<StructFetchResult>;
+};
+
+export type CreateStructFieldFetchResultsMutationResponse = {
+  __typename?: "CreateStructFieldFetchResultsMutationResponse";
+  info: CreateInfo;
+  structFieldFetchResults: Array<StructFieldFetchResult>;
+};
+
 export type CreateStructFieldsMutationResponse = {
   __typename?: "CreateStructFieldsMutationResponse";
   info: CreateInfo;
@@ -1198,6 +1416,12 @@ export type CreateStructsMutationResponse = {
   __typename?: "CreateStructsMutationResponse";
   info: CreateInfo;
   structs: Array<Struct>;
+};
+
+export type CreateSymbolFetchResultsMutationResponse = {
+  __typename?: "CreateSymbolFetchResultsMutationResponse";
+  info: CreateInfo;
+  symbolFetchResults: Array<SymbolFetchResult>;
 };
 
 export type CreateSymbolsMutationResponse = {
@@ -1375,6 +1599,57 @@ export type DiffNodesAtResultsConnection = {
   totalCount: Scalars["Int"]["output"];
   pageInfo: PageInfo;
   edges: Array<DiffNodesAtResultEdge>;
+};
+
+export type GitLogEntriesConnection = {
+  __typename?: "GitLogEntriesConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<GitLogEntryEdge>;
+};
+
+export type GitLogEntry = {
+  __typename?: "GitLogEntry";
+  base_commit?: Maybe<Commit>;
+  diffee_commit: Commit;
+  diff: DiffItem;
+};
+
+export type GitLogEntryAggregateSelection = {
+  __typename?: "GitLogEntryAggregateSelection";
+  count: Scalars["Int"]["output"];
+};
+
+export type GitLogEntryEdge = {
+  __typename?: "GitLogEntryEdge";
+  cursor: Scalars["String"]["output"];
+  node: GitLogEntry;
+};
+
+export type GitLogResult = {
+  __typename?: "GitLogResult";
+  total_count: Scalars["Int"]["output"];
+  entries: Array<GitLogEntry>;
+  has_more: Scalars["Boolean"]["output"];
+};
+
+export type GitLogResultAggregateSelection = {
+  __typename?: "GitLogResultAggregateSelection";
+  count: Scalars["Int"]["output"];
+  total_count: IntAggregateSelection;
+};
+
+export type GitLogResultEdge = {
+  __typename?: "GitLogResultEdge";
+  cursor: Scalars["String"]["output"];
+  node: GitLogResult;
+};
+
+export type GitLogResultsConnection = {
+  __typename?: "GitLogResultsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<GitLogResultEdge>;
 };
 
 /**
@@ -1601,6 +1876,35 @@ export type StructEdge = {
   node: Struct;
 };
 
+export type StructFetchResult = {
+  __typename?: "StructFetchResult";
+  name: Scalars["String"]["output"];
+  size: Scalars["Int"]["output"];
+  kind: Scalars["String"]["output"];
+  fields: Array<StructFieldFetchResult>;
+};
+
+export type StructFetchResultAggregateSelection = {
+  __typename?: "StructFetchResultAggregateSelection";
+  count: Scalars["Int"]["output"];
+  name: StringAggregateSelection;
+  size: IntAggregateSelection;
+  kind: StringAggregateSelection;
+};
+
+export type StructFetchResultEdge = {
+  __typename?: "StructFetchResultEdge";
+  cursor: Scalars["String"]["output"];
+  node: StructFetchResult;
+};
+
+export type StructFetchResultsConnection = {
+  __typename?: "StructFetchResultsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<StructFetchResultEdge>;
+};
+
 export type StructField = Hashable & {
   __typename?: "StructField";
   hash: Scalars["String"]["output"];
@@ -1641,6 +1945,33 @@ export type StructFieldEdge = {
   __typename?: "StructFieldEdge";
   cursor: Scalars["String"]["output"];
   node: StructField;
+};
+
+export type StructFieldFetchResult = {
+  __typename?: "StructFieldFetchResult";
+  name: Scalars["String"]["output"];
+  offset: Scalars["Int"]["output"];
+  data_type: Scalars["JSON"]["output"];
+};
+
+export type StructFieldFetchResultAggregateSelection = {
+  __typename?: "StructFieldFetchResultAggregateSelection";
+  count: Scalars["Int"]["output"];
+  name: StringAggregateSelection;
+  offset: IntAggregateSelection;
+};
+
+export type StructFieldFetchResultEdge = {
+  __typename?: "StructFieldFetchResultEdge";
+  cursor: Scalars["String"]["output"];
+  node: StructFieldFetchResult;
+};
+
+export type StructFieldFetchResultsConnection = {
+  __typename?: "StructFieldFetchResultsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<StructFieldFetchResultEdge>;
 };
 
 export type StructFieldsConnection = {
@@ -1785,6 +2116,32 @@ export type SymbolEdge = {
   __typename?: "SymbolEdge";
   cursor: Scalars["String"]["output"];
   node: Symbol;
+};
+
+export type SymbolFetchResult = {
+  __typename?: "SymbolFetchResult";
+  name: Scalars["String"]["output"];
+  address: Scalars["String"]["output"];
+};
+
+export type SymbolFetchResultAggregateSelection = {
+  __typename?: "SymbolFetchResultAggregateSelection";
+  count: Scalars["Int"]["output"];
+  name: StringAggregateSelection;
+  address: StringAggregateSelection;
+};
+
+export type SymbolFetchResultEdge = {
+  __typename?: "SymbolFetchResultEdge";
+  cursor: Scalars["String"]["output"];
+  node: SymbolFetchResult;
+};
+
+export type SymbolFetchResultsConnection = {
+  __typename?: "SymbolFetchResultsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<SymbolFetchResultEdge>;
 };
 
 export type SymbolsConnection = {
@@ -1960,6 +2317,18 @@ export type UpdateDiffNodesAtResultsMutationResponse = {
   diffNodesAtResults: Array<DiffNodesAtResult>;
 };
 
+export type UpdateGitLogEntriesMutationResponse = {
+  __typename?: "UpdateGitLogEntriesMutationResponse";
+  info: UpdateInfo;
+  gitLogEntries: Array<GitLogEntry>;
+};
+
+export type UpdateGitLogResultsMutationResponse = {
+  __typename?: "UpdateGitLogResultsMutationResponse";
+  info: UpdateInfo;
+  gitLogResults: Array<GitLogResult>;
+};
+
 export type UpdateHashableNodePropsMutationResponse = {
   __typename?: "UpdateHashableNodePropsMutationResponse";
   info: UpdateInfo;
@@ -1983,6 +2352,18 @@ export type UpdateSearchResultsMutationResponse = {
   searchResults: Array<SearchResult>;
 };
 
+export type UpdateStructFetchResultsMutationResponse = {
+  __typename?: "UpdateStructFetchResultsMutationResponse";
+  info: UpdateInfo;
+  structFetchResults: Array<StructFetchResult>;
+};
+
+export type UpdateStructFieldFetchResultsMutationResponse = {
+  __typename?: "UpdateStructFieldFetchResultsMutationResponse";
+  info: UpdateInfo;
+  structFieldFetchResults: Array<StructFieldFetchResult>;
+};
+
 export type UpdateStructFieldsMutationResponse = {
   __typename?: "UpdateStructFieldsMutationResponse";
   info: UpdateInfo;
@@ -1993,6 +2374,12 @@ export type UpdateStructsMutationResponse = {
   __typename?: "UpdateStructsMutationResponse";
   info: UpdateInfo;
   structs: Array<Struct>;
+};
+
+export type UpdateSymbolFetchResultsMutationResponse = {
+  __typename?: "UpdateSymbolFetchResultsMutationResponse";
+  info: UpdateInfo;
+  symbolFetchResults: Array<SymbolFetchResult>;
 };
 
 export type UpdateSymbolsMutationResponse = {
@@ -4694,6 +5081,78 @@ export type DiffNodesOptions = {
   status_filter?: InputMaybe<Array<DiffStatus>>;
 };
 
+export type GitLogEntryCreateInput = {
+  /** Appears because this input type would be empty otherwise because this type is composed of just generated and/or relationship properties. See https://neo4j.com/docs/graphql-manual/current/troubleshooting/faqs/ */
+  _emptyInput?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type GitLogEntryOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type GitLogEntryUpdateInput = {
+  /** Appears because this input type would be empty otherwise because this type is composed of just generated and/or relationship properties. See https://neo4j.com/docs/graphql-manual/current/troubleshooting/faqs/ */
+  _emptyInput?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type GitLogEntryWhere = {
+  OR?: InputMaybe<Array<GitLogEntryWhere>>;
+  AND?: InputMaybe<Array<GitLogEntryWhere>>;
+  NOT?: InputMaybe<GitLogEntryWhere>;
+};
+
+export type GitLogOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  status_filter?: InputMaybe<Array<DiffStatus>>;
+  direction?: InputMaybe<CommitHistoryDirection>;
+};
+
+export type GitLogResultCreateInput = {
+  total_count: Scalars["Int"]["input"];
+  has_more: Scalars["Boolean"]["input"];
+};
+
+export type GitLogResultOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more GitLogResultSort objects to sort GitLogResults by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<GitLogResultSort>>;
+};
+
+/** Fields to sort GitLogResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one GitLogResultSort object. */
+export type GitLogResultSort = {
+  total_count?: InputMaybe<SortDirection>;
+  has_more?: InputMaybe<SortDirection>;
+};
+
+export type GitLogResultUpdateInput = {
+  total_count?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  has_more?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type GitLogResultWhere = {
+  total_count?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  total_count_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  total_count_NOT_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  total_count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  has_more?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  has_more_NOT?: InputMaybe<Scalars["Boolean"]["input"]>;
+  OR?: InputMaybe<Array<GitLogResultWhere>>;
+  AND?: InputMaybe<Array<GitLogResultWhere>>;
+  NOT?: InputMaybe<GitLogResultWhere>;
+};
+
 export type HasFilenameRelAggregationWhereInput = {
   AND?: InputMaybe<Array<HasFilenameRelAggregationWhereInput>>;
   OR?: InputMaybe<Array<HasFilenameRelAggregationWhereInput>>;
@@ -5296,6 +5755,80 @@ export type StructDisconnectInput = {
   blob?: InputMaybe<StructBlobDisconnectFieldInput>;
 };
 
+export type StructFetchResultCreateInput = {
+  name: Scalars["String"]["input"];
+  size: Scalars["Int"]["input"];
+  kind: Scalars["String"]["input"];
+};
+
+export type StructFetchResultOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more StructFetchResultSort objects to sort StructFetchResults by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<StructFetchResultSort>>;
+};
+
+/** Fields to sort StructFetchResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one StructFetchResultSort object. */
+export type StructFetchResultSort = {
+  name?: InputMaybe<SortDirection>;
+  size?: InputMaybe<SortDirection>;
+  kind?: InputMaybe<SortDirection>;
+};
+
+export type StructFetchResultUpdateInput = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  size?: InputMaybe<Scalars["Int"]["input"]>;
+  size_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  kind?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type StructFetchResultWhere = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  size?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  size_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  size_NOT_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  size_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  size_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  size_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  kind?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  kind_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  kind_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  kind_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  kind_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  kind_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  OR?: InputMaybe<Array<StructFetchResultWhere>>;
+  AND?: InputMaybe<Array<StructFetchResultWhere>>;
+  NOT?: InputMaybe<StructFetchResultWhere>;
+};
+
 export type StructFieldConnectInput = {
   struct?: InputMaybe<StructFieldStructConnectFieldInput>;
 };
@@ -5325,6 +5858,71 @@ export type StructFieldDeleteInput = {
 
 export type StructFieldDisconnectInput = {
   struct?: InputMaybe<StructFieldStructDisconnectFieldInput>;
+};
+
+export type StructFieldFetchResultCreateInput = {
+  name: Scalars["String"]["input"];
+  offset: Scalars["Int"]["input"];
+  data_type: Scalars["JSON"]["input"];
+};
+
+export type StructFieldFetchResultOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more StructFieldFetchResultSort objects to sort StructFieldFetchResults by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<StructFieldFetchResultSort>>;
+};
+
+/** Fields to sort StructFieldFetchResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one StructFieldFetchResultSort object. */
+export type StructFieldFetchResultSort = {
+  name?: InputMaybe<SortDirection>;
+  offset?: InputMaybe<SortDirection>;
+  data_type?: InputMaybe<SortDirection>;
+};
+
+export type StructFieldFetchResultUpdateInput = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  data_type?: InputMaybe<Scalars["JSON"]["input"]>;
+};
+
+export type StructFieldFetchResultWhere = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  offset_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  offset_NOT_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  offset_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  offset_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  data_type?: InputMaybe<Scalars["JSON"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  data_type_NOT?: InputMaybe<Scalars["JSON"]["input"]>;
+  data_type_IN?: InputMaybe<Array<Scalars["JSON"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  data_type_NOT_IN?: InputMaybe<Array<Scalars["JSON"]["input"]>>;
+  OR?: InputMaybe<Array<StructFieldFetchResultWhere>>;
+  AND?: InputMaybe<Array<StructFieldFetchResultWhere>>;
+  NOT?: InputMaybe<StructFieldFetchResultWhere>;
 };
 
 export type StructFieldOnCreateInput = {
@@ -6099,6 +6697,65 @@ export type SymbolDeleteInput = {
 
 export type SymbolDisconnectInput = {
   blob?: InputMaybe<SymbolBlobDisconnectFieldInput>;
+};
+
+export type SymbolFetchResultCreateInput = {
+  name: Scalars["String"]["input"];
+  address: Scalars["String"]["input"];
+};
+
+export type SymbolFetchResultOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more SymbolFetchResultSort objects to sort SymbolFetchResults by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<SymbolFetchResultSort>>;
+};
+
+/** Fields to sort SymbolFetchResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one SymbolFetchResultSort object. */
+export type SymbolFetchResultSort = {
+  name?: InputMaybe<SortDirection>;
+  address?: InputMaybe<SortDirection>;
+};
+
+export type SymbolFetchResultUpdateInput = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  address?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type SymbolFetchResultWhere = {
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  address?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  address_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  address_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  address_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  address_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  address_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  address_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  address_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  address_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  address_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  OR?: InputMaybe<Array<SymbolFetchResultWhere>>;
+  AND?: InputMaybe<Array<SymbolFetchResultWhere>>;
+  NOT?: InputMaybe<SymbolFetchResultWhere>;
 };
 
 export type SymbolOnCreateInput = {
@@ -7877,6 +8534,97 @@ export declare class DiffItemModel {
   }): Promise<DiffItemAggregateSelection>;
 }
 
+export interface GitLogEntryAggregateSelectionInput {
+  count?: boolean;
+}
+
+export declare class GitLogEntryModel {
+  public find(args?: {
+    where?: GitLogEntryWhere;
+
+    options?: GitLogEntryOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<GitLogEntry[]>;
+  public create(args: {
+    input: GitLogEntryCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateGitLogEntriesMutationResponse>;
+  public update(args: {
+    where?: GitLogEntryWhere;
+    update?: GitLogEntryUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateGitLogEntriesMutationResponse>;
+  public delete(args: {
+    where?: GitLogEntryWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: GitLogEntryWhere;
+
+    aggregate: GitLogEntryAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<GitLogEntryAggregateSelection>;
+}
+
+export interface GitLogResultAggregateSelectionInput {
+  count?: boolean;
+  total_count?: boolean;
+}
+
+export declare class GitLogResultModel {
+  public find(args?: {
+    where?: GitLogResultWhere;
+
+    options?: GitLogResultOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<GitLogResult[]>;
+  public create(args: {
+    input: GitLogResultCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateGitLogResultsMutationResponse>;
+  public update(args: {
+    where?: GitLogResultWhere;
+    update?: GitLogResultUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateGitLogResultsMutationResponse>;
+  public delete(args: {
+    where?: GitLogResultWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: GitLogResultWhere;
+
+    aggregate: GitLogResultAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<GitLogResultAggregateSelection>;
+}
+
 export interface SearchResultAggregateSelectionInput {
   count?: boolean;
   commit_name?: boolean;
@@ -7928,6 +8676,148 @@ export declare class SearchResultModel {
   }): Promise<SearchResultAggregateSelection>;
 }
 
+export interface SymbolFetchResultAggregateSelectionInput {
+  count?: boolean;
+  name?: boolean;
+  address?: boolean;
+}
+
+export declare class SymbolFetchResultModel {
+  public find(args?: {
+    where?: SymbolFetchResultWhere;
+
+    options?: SymbolFetchResultOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<SymbolFetchResult[]>;
+  public create(args: {
+    input: SymbolFetchResultCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateSymbolFetchResultsMutationResponse>;
+  public update(args: {
+    where?: SymbolFetchResultWhere;
+    update?: SymbolFetchResultUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateSymbolFetchResultsMutationResponse>;
+  public delete(args: {
+    where?: SymbolFetchResultWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: SymbolFetchResultWhere;
+
+    aggregate: SymbolFetchResultAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<SymbolFetchResultAggregateSelection>;
+}
+
+export interface StructFieldFetchResultAggregateSelectionInput {
+  count?: boolean;
+  name?: boolean;
+  offset?: boolean;
+}
+
+export declare class StructFieldFetchResultModel {
+  public find(args?: {
+    where?: StructFieldFetchResultWhere;
+
+    options?: StructFieldFetchResultOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<StructFieldFetchResult[]>;
+  public create(args: {
+    input: StructFieldFetchResultCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateStructFieldFetchResultsMutationResponse>;
+  public update(args: {
+    where?: StructFieldFetchResultWhere;
+    update?: StructFieldFetchResultUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateStructFieldFetchResultsMutationResponse>;
+  public delete(args: {
+    where?: StructFieldFetchResultWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: StructFieldFetchResultWhere;
+
+    aggregate: StructFieldFetchResultAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<StructFieldFetchResultAggregateSelection>;
+}
+
+export interface StructFetchResultAggregateSelectionInput {
+  count?: boolean;
+  name?: boolean;
+  size?: boolean;
+  kind?: boolean;
+}
+
+export declare class StructFetchResultModel {
+  public find(args?: {
+    where?: StructFetchResultWhere;
+
+    options?: StructFetchResultOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<StructFetchResult[]>;
+  public create(args: {
+    input: StructFetchResultCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateStructFetchResultsMutationResponse>;
+  public update(args: {
+    where?: StructFetchResultWhere;
+    update?: StructFetchResultUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateStructFetchResultsMutationResponse>;
+  public delete(args: {
+    where?: StructFetchResultWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: StructFetchResultWhere;
+
+    aggregate: StructFetchResultAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<StructFetchResultAggregateSelection>;
+}
+
 export interface ModelMap {
   Blob: BlobModel;
   Tree: TreeModel;
@@ -7942,5 +8832,10 @@ export interface ModelMap {
   HashableNodeProps: HashableNodePropsModel;
   DiffNodesAtResult: DiffNodesAtResultModel;
   DiffItem: DiffItemModel;
+  GitLogEntry: GitLogEntryModel;
+  GitLogResult: GitLogResultModel;
   SearchResult: SearchResultModel;
+  SymbolFetchResult: SymbolFetchResultModel;
+  StructFieldFetchResult: StructFieldFetchResultModel;
+  StructFetchResult: StructFetchResultModel;
 }

@@ -10,9 +10,12 @@ import {
     DiffItem,
     DiffNodesAtResult,
     CommitHistoryDirection,
+    GitLogResult,
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { search } from "./search.js";
+import { fetch_symbols, fetch_structs } from "./fetch.js";
+import { git_log } from "./git-log/index.js";
 import path from "path";
 import { Driver } from "neo4j-driver";
 import neo4j, { DateTime } from "neo4j-driver";
@@ -24,6 +27,7 @@ import {
     DiffNodesArgsSchema,
     GetCommitCapabilitiesArgsSchema,
     GetBlobsWithSymbolsArgsSchema,
+    GitLogArgsSchema,
 } from "./validation.js";
 import { GET_NODE_COMMIT_DATES } from "./queries.js";
 
@@ -397,6 +401,64 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                     results.push(result);
                 }
                 return results;
+            },
+            async gitLog(
+                _source: unknown,
+                args: unknown,
+                context: any,
+            ): Promise<GitLogResult> {
+                // Validate input
+                const validatedArgs = GitLogArgsSchema.parse(args);
+                const {
+                    path,
+                    context: entity_type,
+                    commit_range,
+                    options,
+                } = validatedArgs;
+
+                // Restrict include_updates to authenticated users only
+                if (commit_range.include_updates === true && !context.jwt) {
+                    console.warn(
+                        `include_updates denied: Unauthenticated request`,
+                    );
+                    throw new Error(
+                        "Git log with include_updates requires authentication. Please provide a valid JWT token.",
+                    );
+                }
+
+                return await git_log(
+                    driver,
+                    path,
+                    entity_type,
+                    commit_range,
+                    options,
+                );
+            },
+            async fetchSymbols(_source: unknown, args: unknown) {
+                // Validate input
+                const validatedArgs = FetchSymbolsArgsSchema.parse(args);
+                const { blob_hash, options } = validatedArgs;
+
+                // Provide defaults for null/undefined options
+                const finalOptions = {
+                    offset: options?.offset ?? 0,
+                    limit: options?.limit ?? 100,
+                };
+
+                return await fetch_symbols(driver, blob_hash, finalOptions);
+            },
+            async fetchStructs(_source: unknown, args: unknown) {
+                // Validate input
+                const validatedArgs = FetchStructsArgsSchema.parse(args);
+                const { blob_hash, options } = validatedArgs;
+
+                // Provide defaults for null/undefined options
+                const finalOptions = {
+                    offset: options?.offset ?? 0,
+                    limit: options?.limit ?? 100,
+                };
+
+                return await fetch_structs(driver, blob_hash, finalOptions);
             },
         },
         DiffItem: {

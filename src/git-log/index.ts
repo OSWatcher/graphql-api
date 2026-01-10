@@ -1,6 +1,5 @@
 import { Driver } from "neo4j-driver";
 import {
-    CommitScope,
     CommitRange,
     EntityType,
     DiffStatus,
@@ -8,8 +7,10 @@ import {
     GitLogResult,
     NodeType,
     Commit,
+    CommitHistoryDirection,
 } from "../ogm-types.js";
-import { getCommitsInRangeQuery } from "../queries.js";
+import { buildCommitRangeQuery } from "../queries.js";
+import { resolveRef } from "../commits.js";
 import { get_path_entry, PathEntryResult } from "../filesystem.js";
 import { get_entity_root } from "./path-resolvers.js";
 import { GitLogEntry, GitLogOptions } from "./types.js";
@@ -55,22 +56,29 @@ export async function* git_log_stream(
     commit_range: CommitRange,
     options?: GitLogOptions | null,
 ): AsyncGenerator<GitLogEntry> {
-    // Validate: git log requires multiple commits
-    if (commit_range.scope === CommitScope.Single) {
-        throw new Error(
-            "git log requires multiple commits (SINGLE scope not supported)",
-        );
-    }
+    // Resolve refs to commit hashes
+    const startHash = await resolveRef(driver, commit_range.startRef);
+    const endHash = commit_range.endRef
+        ? await resolveRef(driver, commit_range.endRef)
+        : null;
+
+    // Build commit range query
+    const query = buildCommitRangeQuery(
+        commit_range.direction,
+        commit_range.include_updates ?? false,
+        commit_range.branch ?? null,
+        endHash !== null,
+    );
 
     // Get commits in range
     const session = driver.session();
     const tx = session.beginTransaction();
 
     try {
-        const commitsResult = await tx.run(getCommitsInRangeQuery, {
-            startCommit: commit_range.startCommit,
-            scope: commit_range.scope,
-            endCommit: commit_range.endCommit,
+        const commitsResult = await tx.run(query, {
+            startHash,
+            endHash,
+            branch: commit_range.branch,
         });
 
         const commits = commitsResult.records.map((record) => {
@@ -109,16 +117,24 @@ export async function* git_log_stream(
             return;
         }
 
-        // Process consecutive commit pairs going BACKWARD in time
-        // base = current position, diffee = next position (older)
-        // commits[0] is newest, commits[commits.length-1] is oldest
+        // Handle direction: commits from query are in newest→oldest order
+        const direction = options?.direction ?? CommitHistoryDirection.Backward;
+
+        // For FORWARD direction, reverse the array to get oldest→newest order
+        if (direction === CommitHistoryDirection.Forward) {
+            commits.reverse();
+        }
+
+        // Process consecutive commit pairs based on direction:
+        // BACKWARD (default): commits[0]=newest, base=current(newer), diffee=next(older)
+        // FORWARD: commits[0]=oldest, base=current(older), diffee=next(newer)
         let entriesYielded = 0;
         const offset = options?.offset ?? 0;
         const limit = options?.limit ?? 50;
 
         for (let i = 0; i < commits.length - 1; i++) {
-            const base_commit = commits[i]; // Current position (newer, where we are)
-            const diffee_commit = commits[i + 1]; // Next position (older, where we're going)
+            const base_commit = commits[i]; // Current position
+            const diffee_commit = commits[i + 1]; // Next position in traversal order
 
             try {
                 // Resolve entity root for both commits

@@ -167,6 +167,30 @@ type BlobWithSymbols @query(read: false, aggregate: false) @mutation(operations:
     blob_path: String!
 }
 
+type GitLogEntry @query(read: false, aggregate: false) @mutation(operations: []) {
+    # Older commit (null for first appearance in history)
+    base_commit: Commit
+    # Newer commit where change is visible
+    diffee_commit: Commit!
+    # The change details
+    diff: DiffItem!
+}
+
+type GitLogResult @query(read: false, aggregate: false) @mutation(operations: []) {
+    total_count: Int!
+    entries: [GitLogEntry!]!
+    has_more: Boolean!
+}
+
+input GitLogOptions {
+    limit: Int = 50
+    offset: Int = 0
+    # Filter to specific change types
+    status_filter: [DiffStatus!]
+    # Direction of traversal (BACKWARD = newest to oldest, FORWARD = oldest to newest)
+    direction: CommitHistoryDirection = BACKWARD
+}
+
 type SearchResult @query(read: false, aggregate: false) @mutation(operations: []) {
     type: EntityType!
     commit_name: String!
@@ -229,6 +253,17 @@ type Query {
     search(input: SearchInput!): [SearchResult!]!
     # get blobs that have symbols or structs for a given commit
     getBlobsWithSymbols(commit_hash: String!): [BlobWithSymbols!]!
+    # git log - track entity changes across commit history
+    gitLog(
+        path: String!
+        context: EntityType!
+        commit_range: CommitRange!
+        options: GitLogOptions = null
+    ): GitLogResult!
+    # fetch symbols
+    fetchSymbols(blob_hash: String!, options: SymbolOptions): [SymbolFetchResult!]!
+    # fetch structs
+    fetchStructs(blob_hash: String!, options: StructOptions): [StructFetchResult!]!
 }
 
 # custom Subscriptions
