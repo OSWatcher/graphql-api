@@ -106,10 +106,6 @@ async function get_registry_root(
     const hiveName = pathParts[0]; // e.g., "SYSTEM", "SOFTWARE"
     const remainingPath = pathParts.slice(1).join("/");
 
-    console.log(
-        `[get_registry_root] Searching for hive "${hiveName}" in commit ${commit_hash}`,
-    );
-
     // Query: filesystem → hive blob → registry root
     // Note: Blob doesn't have .name property - filenames are in relationship properties
     const GET_REGISTRY_ROOT_QUERY = `
