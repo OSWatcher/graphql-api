@@ -125,6 +125,40 @@ export async function* git_log_stream(
             commits.reverse();
         }
 
+        // Filter commits to only those where the entity exists
+        // This allows skipping commits without the hive and comparing only valid commits
+        type CommitWithRoot = {
+            commit: Commit;
+            root: NonNullable<EntityRootResult>;
+        };
+        const commitsWithEntity: CommitWithRoot[] = [];
+
+        for (const commit of commits) {
+            try {
+                const root = await get_entity_root(
+                    driver,
+                    commit.hash,
+                    entity_type,
+                    path,
+                );
+                if (root) {
+                    commitsWithEntity.push({ commit, root });
+                }
+                // If root is null (e.g., hive not extracted), skip this commit
+            } catch (error) {
+                // Log error but continue processing other commits
+                console.error(
+                    `Error resolving entity root for commit ${commit.hash}:`,
+                    error,
+                );
+            }
+        }
+
+        if (commitsWithEntity.length < 2) {
+            // Not enough valid commits to compare
+            return;
+        }
+
         // Process consecutive commit pairs based on direction:
         // BACKWARD (default): commits[0]=newest, base=current(newer), diffee=next(older)
         // FORWARD: commits[0]=oldest, base=current(older), diffee=next(newer)
@@ -132,54 +166,34 @@ export async function* git_log_stream(
         const offset = options?.offset ?? 0;
         const limit = options?.limit ?? 50;
 
-        for (let i = 0; i < commits.length - 1; i++) {
-            const base_commit = commits[i]; // Current position
-            const diffee_commit = commits[i + 1]; // Next position in traversal order
+        for (let i = 0; i < commitsWithEntity.length - 1; i++) {
+            const { commit: base_commit, root: base_root } =
+                commitsWithEntity[i];
+            const { commit: diffee_commit, root: diffee_root } =
+                commitsWithEntity[i + 1];
 
             try {
-                // Resolve entity root for both commits
-                const diffee_root = await get_entity_root(
-                    driver,
-                    diffee_commit.hash,
-                    entity_type,
-                    path,
-                );
-                const base_root = await get_entity_root(
-                    driver,
-                    base_commit.hash,
-                    entity_type,
-                    path,
-                );
+                // Traverse path to get final nodes
+                const diffee_node: PathEntryResult = diffee_root.remaining_path
+                    ? await get_path_entry(
+                          driver,
+                          diffee_root.root_label,
+                          diffee_root.root_hash,
+                          "/" + diffee_root.remaining_path,
+                      )
+                    : {
+                          hash: diffee_root.root_hash,
+                          label: diffee_root.root_label,
+                      };
 
-                // Handle cases where entity doesn't exist in one or both commits
-                // (e.g., registry hive not extracted in early Windows versions)
-                if (!diffee_root && !base_root) {
-                    // Entity doesn't exist in either commit - skip this pair
-                    continue;
-                }
-
-                // Traverse path to get final nodes (only if root exists)
-                const diffee_node: PathEntryResult = diffee_root
-                    ? diffee_root.remaining_path
-                        ? await get_path_entry(
-                              driver,
-                              diffee_root.root_label,
-                              diffee_root.root_hash,
-                              "/" + diffee_root.remaining_path,
-                          )
-                        : { hash: diffee_root.root_hash, label: diffee_root.root_label }
-                    : null;
-
-                const base_node: PathEntryResult = base_root
-                    ? base_root.remaining_path
-                        ? await get_path_entry(
-                              driver,
-                              base_root.root_label,
-                              base_root.root_hash,
-                              "/" + base_root.remaining_path,
-                          )
-                        : { hash: base_root.root_hash, label: base_root.root_label }
-                    : null;
+                const base_node: PathEntryResult = base_root.remaining_path
+                    ? await get_path_entry(
+                          driver,
+                          base_root.root_label,
+                          base_root.root_hash,
+                          "/" + base_root.remaining_path,
+                      )
+                    : { hash: base_root.root_hash, label: base_root.root_label };
 
                 // Compare nodes to determine diff status
                 const diffee_hash = diffee_node?.hash ?? null;
