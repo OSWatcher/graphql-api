@@ -138,12 +138,17 @@ See README.md for complete `.env` setup. Key variables:
 The project includes comprehensive documentation in the `docs/` directory following the [Divio documentation framework](https://documentation.divio.com/):
 
 - **Reference** (`docs/reference/`) - API specifications
+  - [Data Model](docs/reference/data-model.md) - **Core graph structure, merkle tree architecture, CRITICAL for Cypher queries**
   - [Blob Download API](docs/reference/blob-api.md) - Complete REST API spec with error codes, rate limits, examples
+  - [Access Restrictions](docs/reference/access-restrictions.md) - Security controls and filtering mechanisms
 - **How-To Guides** (`docs/how-to/`) - Step-by-step task instructions
   - [Configure Blob Restrictions](docs/how-to/configure-blob-restrictions.md) - Set up branch-based access control
   - [Integrate Blob API](docs/how-to/integrate-blob-api.md) - Frontend integration guide
 - **Explanation** (`docs/explanation/`) - Conceptual deep dives
   - [Blob Authorization Deep Dive](docs/explanation/blob-authorization.md) - Comprehensive explanation of restriction logic, Cypher queries, design decisions, and security considerations
+  - [Query Optimization](docs/explanation/query-optimization.md) - CALL {} subquery pattern for variable-length path queries
+
+**When working on Cypher queries or the graph data model, ALWAYS consult [docs/reference/data-model.md](docs/reference/data-model.md) first.**
 
 **When working on blob authorization or downloads, always consult the docs/ directory first.**
 
