@@ -3,6 +3,7 @@ import { Commit, DiffItem, CommitHistoryDirection } from "../ogm-types.js";
 /**
  * Result of resolving an entity root for a given commit and entity type.
  * The root node is the starting point for path traversal.
+ * Returns null if the entity doesn't exist in the commit (e.g., registry hive not extracted).
  */
 export type EntityRootResult = {
     /** Hash of the root node to start traversal from */
@@ -11,7 +12,7 @@ export type EntityRootResult = {
     root_label: string;
     /** Remaining path to traverse from the root node */
     remaining_path: string;
-};
+} | null;
 
 /**
  * Internal type for git log entries during processing.

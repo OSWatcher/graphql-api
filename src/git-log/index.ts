@@ -151,25 +151,35 @@ export async function* git_log_stream(
                     path,
                 );
 
-                // Traverse path to get final nodes
-                const diffee_node: PathEntryResult = diffee_root
-                    .remaining_path
-                    ? await get_path_entry(
-                          driver,
-                          diffee_root.root_label,
-                          diffee_root.root_hash,
-                          "/" + diffee_root.remaining_path,
-                      )
-                    : { hash: diffee_root.root_hash, label: diffee_root.root_label };
+                // Handle cases where entity doesn't exist in one or both commits
+                // (e.g., registry hive not extracted in early Windows versions)
+                if (!diffee_root && !base_root) {
+                    // Entity doesn't exist in either commit - skip this pair
+                    continue;
+                }
 
-                const base_node: PathEntryResult = base_root.remaining_path
-                    ? await get_path_entry(
-                          driver,
-                          base_root.root_label,
-                          base_root.root_hash,
-                          "/" + base_root.remaining_path,
-                      )
-                    : { hash: base_root.root_hash, label: base_root.root_label };
+                // Traverse path to get final nodes (only if root exists)
+                const diffee_node: PathEntryResult = diffee_root
+                    ? diffee_root.remaining_path
+                        ? await get_path_entry(
+                              driver,
+                              diffee_root.root_label,
+                              diffee_root.root_hash,
+                              "/" + diffee_root.remaining_path,
+                          )
+                        : { hash: diffee_root.root_hash, label: diffee_root.root_label }
+                    : null;
+
+                const base_node: PathEntryResult = base_root
+                    ? base_root.remaining_path
+                        ? await get_path_entry(
+                              driver,
+                              base_root.root_label,
+                              base_root.root_hash,
+                              "/" + base_root.remaining_path,
+                          )
+                        : { hash: base_root.root_hash, label: base_root.root_label }
+                    : null;
 
                 // Compare nodes to determine diff status
                 const diffee_hash = diffee_node?.hash ?? null;

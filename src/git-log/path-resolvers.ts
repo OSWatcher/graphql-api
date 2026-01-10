@@ -120,9 +120,9 @@ async function get_registry_root(
     );
 
     if (result.records.length === 0) {
-        throw new Error(
-            `Registry hive ${hiveName} not found in commit ${commit_hash}`,
-        );
+        // Hive doesn't exist in this commit - return null to indicate absence
+        // This allows git log to properly show NEW/DEL status across commits
+        return null;
     }
 
     const root_hash = result.records[0].get("root_hash");
