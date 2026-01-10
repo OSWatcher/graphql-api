@@ -190,6 +190,10 @@ export async function* git_log_stream(
             const { commit: diffee_commit, root: diffee_root } =
                 commitsWithEntity[i + 1];
 
+            console.log(
+                `[git_log_stream] Processing pair ${i + 1}/${commitsWithEntity.length - 1}: ${base_commit.hash.substring(0, 8)} <-> ${diffee_commit.hash.substring(0, 8)}`,
+            );
+
             try {
                 // Traverse path to get final nodes
                 const diffee_node: PathEntryResult = diffee_root.remaining_path
@@ -217,8 +221,15 @@ export async function* git_log_stream(
                 const diffee_hash = diffee_node?.hash ?? null;
                 const base_hash = base_node?.hash ?? null;
 
+                console.log(
+                    `[git_log_stream] Nodes: diffee=${diffee_hash ? diffee_hash.substring(0, 8) : "null"}, base=${base_hash ? base_hash.substring(0, 8) : "null"}`,
+                );
+
                 // Skip if no change
                 if (diffee_hash === base_hash) {
+                    console.log(
+                        "[git_log_stream] Skipping - no change (same hash)",
+                    );
                     continue;
                 }
 
@@ -232,22 +243,33 @@ export async function* git_log_stream(
                     status = DiffStatus.Mod;
                 }
 
+                console.log(`[git_log_stream] Status: ${status}`);
+
                 // Apply status filter if provided
                 if (
                     options?.status_filter &&
                     !options.status_filter.includes(status)
                 ) {
+                    console.log(
+                        `[git_log_stream] Skipping - filtered by status (want: ${options.status_filter.join(",")})`,
+                    );
                     continue;
                 }
 
                 // Apply offset
                 if (entriesYielded < offset) {
+                    console.log(
+                        `[git_log_stream] Skipping - offset (yielded ${entriesYielded} < ${offset})`,
+                    );
                     entriesYielded++;
                     continue;
                 }
 
                 // Apply limit
                 if (entriesYielded >= offset + limit) {
+                    console.log(
+                        `[git_log_stream] Stopping - limit reached (${entriesYielded} >= ${offset + limit})`,
+                    );
                     return;
                 }
 
@@ -267,6 +289,9 @@ export async function* git_log_stream(
                 };
 
                 // Yield entry
+                console.log(
+                    `[git_log_stream] ✓ Yielding entry #${entriesYielded + 1}: ${status} at ${path}`,
+                );
                 yield {
                     base_commit,
                     diffee_commit,
