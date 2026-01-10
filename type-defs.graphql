@@ -270,4 +270,12 @@ type Query {
 type Subscription {
     # search (streaming) - results are streamed as they are found
     searchStream(input: SearchInput!): SearchResult!
+
+    # git log (streaming) - entries are streamed as they are computed
+    gitLogStream(
+        path: String!
+        context: EntityType!
+        commit_range: CommitRange!
+        options: GitLogOptions = null
+    ): GitLogEntry!
 }

@@ -15,7 +15,7 @@ import {
 import { get_path_entry } from "./filesystem.js";
 import { search } from "./search.js";
 import { fetch_symbols, fetch_structs } from "./fetch.js";
-import { git_log } from "./git-log/index.js";
+import { git_log, git_log_stream } from "./git-log/index.js";
 import { Driver } from "neo4j-driver";
 import neo4j, { DateTime } from "neo4j-driver";
 import { OGM } from "@neo4j/graphql-ogm";
@@ -153,6 +153,43 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                         yield {
                             searchStream: result,
                         };
+                    }
+                },
+            },
+            gitLogStream: {
+                subscribe: async function* (
+                    _source: unknown,
+                    args: unknown,
+                    context: any,
+                ) {
+                    // Validate input
+                    const validatedArgs = GitLogArgsSchema.parse(args);
+                    const {
+                        path,
+                        context: entity_type,
+                        commit_range,
+                        options,
+                    } = validatedArgs;
+
+                    // Restrict include_updates to authenticated users only
+                    if (commit_range.include_updates === true && !context.jwt) {
+                        console.warn(
+                            `include_updates denied: Unauthenticated request`,
+                        );
+                        throw new Error(
+                            "Commit traversal with include_updates requires authentication. Please provide a valid JWT token.",
+                        );
+                    }
+
+                    // Stream results from git_log_stream
+                    for await (const entry of git_log_stream(
+                        driver,
+                        path,
+                        entity_type,
+                        commit_range,
+                        options,
+                    )) {
+                        yield { gitLogStream: entry };
                     }
                 },
             },
