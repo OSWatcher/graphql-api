@@ -56,6 +56,13 @@ export async function* git_log_stream(
     commit_range: CommitRange,
     options?: GitLogOptions | null,
 ): AsyncGenerator<GitLogEntry> {
+    console.log("[git_log_stream] Entry params:", {
+        path,
+        entity_type,
+        commit_range,
+        options,
+    });
+
     // Resolve refs to commit hashes
     const startHash = await resolveRef(driver, commit_range.startRef);
     const endHash = commit_range.endRef
@@ -141,6 +148,10 @@ export async function* git_log_stream(
                     entity_type,
                     path,
                 );
+                console.log(
+                    `[git_log_stream] get_entity_root for commit ${commit.hash}:`,
+                    root,
+                );
                 if (root) {
                     commitsWithEntity.push({ commit, root });
                 }
@@ -154,8 +165,15 @@ export async function* git_log_stream(
             }
         }
 
+        console.log(
+            `[git_log_stream] Filtered commits: ${commitsWithEntity.length} out of ${commits.length} have entity`,
+        );
+
         if (commitsWithEntity.length < 2) {
             // Not enough valid commits to compare
+            console.log(
+                "[git_log_stream] Not enough commits with entity to compare",
+            );
             return;
         }
 
