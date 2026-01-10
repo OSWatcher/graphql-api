@@ -98,116 +98,97 @@ export async function* git_log_stream(
             commits.reverse();
         }
 
-        // Filter commits to only those where the entity exists
-        // This allows skipping commits without the hive and comparing only valid commits
+        // Process commits with a sliding window approach for streaming
+        // This yields results as soon as we have a valid pair, without waiting
+        // for all get_entity_root() calls to complete first
         type CommitWithRoot = {
             commit: Commit;
             root: NonNullable<EntityRootResult>;
         };
-        const commitsWithEntity: CommitWithRoot[] = [];
+
+        let entriesYielded = 0;
+        const offset = options?.offset ?? 0;
+        const limit = options?.limit ?? 50;
+        const status_filter =
+            options?.status_filter?.map((s) => String(s)) ?? [];
+
+        let prevCommitWithRoot: CommitWithRoot | null = null;
 
         for (const commit of commits) {
+            // Resolve entity root for this commit
+            let root: EntityRootResult;
             try {
-                const root = await get_entity_root(
-                    driver,
-                    commit.hash,
-                    entity_type,
-                    path,
-                );
-                if (root) {
-                    commitsWithEntity.push({ commit, root });
+                root = await get_entity_root(driver, commit.hash, entity_type, path);
+                if (!root) {
+                    // Entity doesn't exist in this commit (e.g., hive not extracted)
+                    continue;
                 }
-                // If root is null (e.g., hive not extracted), skip this commit
             } catch (error) {
-                // Log error but continue processing other commits
                 console.error(
                     `Error resolving entity root for commit ${commit.hash}:`,
                     error,
                 );
-            }
-        }
-
-        if (commitsWithEntity.length < 2) {
-            // Not enough valid commits to compare
-            return;
-        }
-
-        // Process consecutive commit pairs based on direction:
-        // BACKWARD (default): commits[0]=newest, base=current(newer), diffee=next(older)
-        // FORWARD: commits[0]=oldest, base=current(older), diffee=next(newer)
-        let entriesYielded = 0;
-        const offset = options?.offset ?? 0;
-        const limit = options?.limit ?? 50;
-
-        for (let i = 0; i < commitsWithEntity.length - 1; i++) {
-            const { commit: base_commit, root: base_root } =
-                commitsWithEntity[i];
-            const { commit: diffee_commit, root: diffee_root } =
-                commitsWithEntity[i + 1];
-
-            try {
-                // Build the at_path for diffNodesAtInternal
-                // Use remaining_path from base (they should be the same for the same entity path)
-                const at_path = base_root.remaining_path
-                    ? "/" + base_root.remaining_path
-                    : "/";
-
-                // Convert status filter to strings for the stored procedure
-                const status_filter =
-                    options?.status_filter?.map((s) => String(s)) ?? [];
-
-                // Call diffNodesAtInternal which handles path resolution and diffing
-                const diffResult = await diffNodesAtInternal(driver, {
-                    parent_label: base_root.root_label,
-                    base_node_hash: base_root.root_hash,
-                    diffee_node_hash: diffee_root.root_hash,
-                    at_path,
-                    max_depth: 0, // Non-recursive, just this node
-                    filter: [],
-                    with_intermediates: false,
-                    options: {
-                        status_filter,
-                    },
-                });
-
-                // If no diff items, the node didn't change
-                if (diffResult.items.length === 0) {
-                    continue;
-                }
-
-                // Apply offset
-                if (entriesYielded < offset) {
-                    entriesYielded++;
-                    continue;
-                }
-
-                // Apply limit
-                if (entriesYielded >= offset + limit) {
-                    return;
-                }
-
-                // Yield entry with the diff item from the stored procedure
-                // (includes proper old_props/new_props)
-                const diff_item = diffResult.items[0];
-
-                yield {
-                    base_commit,
-                    diffee_commit,
-                    diff: {
-                        ...diff_item,
-                        path, // Use the original full path
-                    },
-                };
-
-                entriesYielded++;
-            } catch (error) {
-                // Log error but continue processing other commits
-                console.error(
-                    `Error processing commits ${diffee_commit.hash} -> ${base_commit.hash}:`,
-                    error,
-                );
                 continue;
             }
+
+            const currentCommitWithRoot: CommitWithRoot = { commit, root };
+
+            // If we have a previous valid commit, we can diff and yield
+            if (prevCommitWithRoot) {
+                try {
+                    const base_commit = prevCommitWithRoot.commit;
+                    const base_root = prevCommitWithRoot.root;
+                    const diffee_commit = currentCommitWithRoot.commit;
+                    const diffee_root = currentCommitWithRoot.root;
+
+                    const at_path = base_root.remaining_path
+                        ? "/" + base_root.remaining_path
+                        : "/";
+
+                    const diffResult = await diffNodesAtInternal(driver, {
+                        parent_label: base_root.root_label,
+                        base_node_hash: base_root.root_hash,
+                        diffee_node_hash: diffee_root.root_hash,
+                        at_path,
+                        max_depth: 0,
+                        filter: [],
+                        with_intermediates: false,
+                        options: { status_filter },
+                    });
+
+                    // If diff found changes, yield the entry
+                    if (diffResult.items.length > 0) {
+                        // Apply offset
+                        if (entriesYielded < offset) {
+                            entriesYielded++;
+                        } else if (entriesYielded < offset + limit) {
+                            const diff_item = diffResult.items[0];
+                            yield {
+                                base_commit,
+                                diffee_commit,
+                                diff: {
+                                    ...diff_item,
+                                    path,
+                                },
+                            };
+                            entriesYielded++;
+                        }
+
+                        // Check if we've reached the limit
+                        if (entriesYielded >= offset + limit) {
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error(
+                        `Error processing commits ${prevCommitWithRoot.commit.hash} -> ${commit.hash}:`,
+                        error,
+                    );
+                }
+            }
+
+            // Slide the window forward
+            prevCommitWithRoot = currentCommitWithRoot;
         }
     } catch (error) {
         await tx.rollback();
