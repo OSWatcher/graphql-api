@@ -3,7 +3,7 @@ import {
     get_commit_capabilities,
     get_blobs_with_symbols,
 } from "./commits.js";
-import { diffTreesIterative } from "./diff/diff.js";
+import { diffNodesAtInternal } from "./diff/diff.js";
 import {
     Commit,
     SearchResult,
@@ -16,7 +16,6 @@ import { get_path_entry } from "./filesystem.js";
 import { search } from "./search.js";
 import { fetch_symbols, fetch_structs } from "./fetch.js";
 import { git_log } from "./git-log/index.js";
-import path from "path";
 import { Driver } from "neo4j-driver";
 import neo4j, { DateTime } from "neo4j-driver";
 import { OGM } from "@neo4j/graphql-ogm";
@@ -275,75 +274,26 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                         "Max depth should be -1 (unlimited), 0 (node comparison), or a positive integer",
                     );
                 }
+
+                // Convert DiffStatus enum values to strings for Neo4j procedure
+                const status_filter =
+                    options?.status_filter?.map((s) => String(s)) ?? [];
+
                 try {
-                    // traverse the given path on both filesystems with get_path_entry()
-                    const [base_entry_result, diffee_entry_result] =
-                        await Promise.all([
-                            get_path_entry(
-                                driver,
-                                parent_label,
-                                base_node_hash,
-                                at_path,
-                            ),
-                            get_path_entry(
-                                driver,
-                                parent_label,
-                                diffee_node_hash,
-                                at_path,
-                            ),
-                        ]);
-
-                    // Extract hashes (compatible with existing code)
-                    const base_entry_at = base_entry_result?.hash ?? null;
-                    const diffee_entry_at = diffee_entry_result?.hash ?? null;
-
-                    // Determine the actual label to use for diffing
-                    // Use the label from whichever node exists (prefer base if both exist)
-                    const actualLabel =
-                        base_entry_result?.label ??
-                        diffee_entry_result?.label ??
-                        parent_label; // Fallback to original if both are null
-
-                    const diff_nodes_at_result: DiffNodesAtResult = {
-                        total_count: 0,
-                        items: [],
-                    };
-                    let skipped = 0;
-                    let added = 0;
-                    const limit = options?.limit ?? Infinity;
-                    const offset = options?.offset ?? 0;
-                    // Convert DiffStatus enum values to strings for Neo4j procedure
-                    const status_filter =
-                        options?.status_filter?.map((s) => String(s)) ?? [];
-
-                    for await (const diff_obj of diffTreesIterative(
-                        driver,
-                        actualLabel,
+                    return await diffNodesAtInternal(driver, {
+                        parent_label,
+                        base_node_hash,
+                        diffee_node_hash,
                         at_path,
-                        base_entry_at,
-                        diffee_entry_at,
-                        resolvedMaxDepth,
+                        max_depth: resolvedMaxDepth,
                         filter,
                         with_intermediates,
-                        status_filter,
-                    )) {
-                        if (skipped < offset) {
-                            skipped++;
-                            diff_nodes_at_result.total_count++;
-                            continue;
-                        }
-
-                        if (added < limit) {
-                            diff_nodes_at_result.items.push({
-                                ...diff_obj,
-                                path: path.relative(at_path, diff_obj.path),
-                            });
-                            added++;
-                        }
-                        diff_nodes_at_result.total_count++;
-                    }
-
-                    return diff_nodes_at_result;
+                        options: {
+                            limit: options?.limit,
+                            offset: options?.offset,
+                            status_filter,
+                        },
+                    });
                 } catch (error) {
                     console.error("Error in diffCommits: ", error);
                     throw new Error(

@@ -2,42 +2,15 @@ import { Driver } from "neo4j-driver";
 import {
     CommitRange,
     EntityType,
-    DiffStatus,
-    DiffItem,
     GitLogResult,
-    NodeType,
     Commit,
     CommitHistoryDirection,
 } from "../ogm-types.js";
 import { buildCommitRangeQuery } from "../queries.js";
 import { resolveRef } from "../commits.js";
-import { get_path_entry, PathEntryResult } from "../filesystem.js";
+import { diffNodesAtInternal } from "../diff/diff.js";
 import { get_entity_root } from "./path-resolvers.js";
 import { GitLogEntry, GitLogOptions, EntityRootResult } from "./types.js";
-
-/**
- * Convert a node label to NodeType enum
- */
-function getNodeTypeFromLabel(label: string): NodeType {
-    switch (label) {
-        case "Blob":
-            return NodeType.Blob;
-        case "Tree":
-            return NodeType.Tree;
-        case "WinRegKey":
-            return NodeType.WinRegKey;
-        case "WinRegValue":
-            return NodeType.WinRegValue;
-        case "Symbol":
-            return NodeType.Symbol;
-        case "Struct":
-            return NodeType.Struct;
-        case "StructField":
-            return NodeType.StructField;
-        default:
-            throw new Error(`Unknown node label: ${label}`);
-    }
-}
 
 /**
  * Async generator that yields git log entries for an entity across commit history.
@@ -173,52 +146,32 @@ export async function* git_log_stream(
                 commitsWithEntity[i + 1];
 
             try {
-                // Traverse path to get final nodes
-                const diffee_node: PathEntryResult = diffee_root.remaining_path
-                    ? await get_path_entry(
-                          driver,
-                          diffee_root.root_label,
-                          diffee_root.root_hash,
-                          "/" + diffee_root.remaining_path,
-                      )
-                    : {
-                          hash: diffee_root.root_hash,
-                          label: diffee_root.root_label,
-                      };
+                // Build the at_path for diffNodesAtInternal
+                // Use remaining_path from base (they should be the same for the same entity path)
+                const at_path = base_root.remaining_path
+                    ? "/" + base_root.remaining_path
+                    : "/";
 
-                const base_node: PathEntryResult = base_root.remaining_path
-                    ? await get_path_entry(
-                          driver,
-                          base_root.root_label,
-                          base_root.root_hash,
-                          "/" + base_root.remaining_path,
-                      )
-                    : { hash: base_root.root_hash, label: base_root.root_label };
+                // Convert status filter to strings for the stored procedure
+                const status_filter =
+                    options?.status_filter?.map((s) => String(s)) ?? [];
 
-                // Compare nodes to determine diff status
-                const diffee_hash = diffee_node?.hash ?? null;
-                const base_hash = base_node?.hash ?? null;
+                // Call diffNodesAtInternal which handles path resolution and diffing
+                const diffResult = await diffNodesAtInternal(driver, {
+                    parent_label: base_root.root_label,
+                    base_node_hash: base_root.root_hash,
+                    diffee_node_hash: diffee_root.root_hash,
+                    at_path,
+                    max_depth: 0, // Non-recursive, just this node
+                    filter: [],
+                    with_intermediates: false,
+                    options: {
+                        status_filter,
+                    },
+                });
 
-                // Skip if no change
-                if (diffee_hash === base_hash) {
-                    continue;
-                }
-
-                // Determine status
-                let status: DiffStatus;
-                if (diffee_hash && !base_hash) {
-                    status = DiffStatus.New;
-                } else if (!diffee_hash && base_hash) {
-                    status = DiffStatus.Del;
-                } else {
-                    status = DiffStatus.Mod;
-                }
-
-                // Apply status filter if provided
-                if (
-                    options?.status_filter &&
-                    !options.status_filter.includes(status)
-                ) {
+                // If no diff items, the node didn't change
+                if (diffResult.items.length === 0) {
                     continue;
                 }
 
@@ -233,26 +186,17 @@ export async function* git_log_stream(
                     return;
                 }
 
-                // Build diff item
-                const diff_item: DiffItem = {
-                    status,
-                    path,
-                    type: diffee_node
-                        ? getNodeTypeFromLabel(diffee_node.label)
-                        : getNodeTypeFromLabel(base_node!.label),
-                    old_props: base_hash
-                        ? { hash: base_hash, properties: {} }
-                        : null,
-                    new_props: diffee_hash
-                        ? { hash: diffee_hash, properties: {} }
-                        : null,
-                };
+                // Yield entry with the diff item from the stored procedure
+                // (includes proper old_props/new_props)
+                const diff_item = diffResult.items[0];
 
-                // Yield entry
                 yield {
                     base_commit,
                     diffee_commit,
-                    diff: diff_item,
+                    diff: {
+                        ...diff_item,
+                        path, // Use the original full path
+                    },
                 };
 
                 entriesYielded++;
