@@ -64,7 +64,7 @@ export async function* git_log_stream(
 
     // Build commit range query
     const query = buildCommitRangeQuery(
-        commit_range.direction,
+        commit_range.direction ?? CommitHistoryDirection.Backward,
         commit_range.include_updates ?? false,
         commit_range.branch ?? null,
         endHash !== null,
