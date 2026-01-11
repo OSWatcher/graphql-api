@@ -5,16 +5,111 @@ import {
     GitLogResult,
     Commit,
     CommitHistoryDirection,
+    DiffItem,
 } from "../ogm-types.js";
 import { buildCommitRangeQuery } from "../queries.js";
 import { resolveRef } from "../commits.js";
 import { diffNodesAtInternal } from "../diff/diff.js";
 import { get_entity_root } from "./path-resolvers.js";
 import { GitLogEntry, GitLogOptions, EntityRootResult } from "./types.js";
+import { mapNodeToCommit } from "./commit-mapper.js";
+import { PaginationTracker } from "./pagination.js";
+
+/**
+ * Internal type for tracking commits with their resolved entity roots.
+ */
+type CommitWithRoot = {
+    commit: Commit;
+    root: NonNullable<EntityRootResult>;
+};
+
+/**
+ * Fetches commits in the specified range from Neo4j.
+ *
+ * @param driver Neo4j driver instance
+ * @param startHash Starting commit hash
+ * @param endHash Ending commit hash (or null for open-ended)
+ * @param commit_range Commit range parameters
+ * @returns Array of Commit objects in query order (newest to oldest for BACKWARD)
+ */
+async function fetchCommitsInRange(
+    driver: Driver,
+    startHash: string,
+    endHash: string | null,
+    commit_range: CommitRange,
+): Promise<Commit[]> {
+    const query = buildCommitRangeQuery(
+        commit_range.direction ?? CommitHistoryDirection.Backward,
+        commit_range.include_updates ?? false,
+        commit_range.branch ?? null,
+        endHash !== null,
+    );
+
+    const session = driver.session();
+    try {
+        const result = await session.executeRead((tx) =>
+            tx.run(query, {
+                startHash,
+                endHash,
+                branch: commit_range.branch,
+            }),
+        );
+
+        return result.records.map((record) => mapNodeToCommit(record.get("commit")));
+    } finally {
+        await session.close();
+    }
+}
+
+/**
+ * Process a pair of commits to find differences at the specified path.
+ *
+ * @param driver Neo4j driver instance
+ * @param prev Previous commit with its entity root
+ * @param current Current commit with its entity root
+ * @param path Original entity path (for output)
+ * @param status_filter Filter for diff statuses
+ * @returns DiffItem if changes were found, null otherwise
+ */
+async function processCommitPair(
+    driver: Driver,
+    prev: CommitWithRoot,
+    current: CommitWithRoot,
+    path: string,
+    status_filter: string[],
+): Promise<DiffItem | null> {
+    const at_path = prev.root.remaining_path
+        ? "/" + prev.root.remaining_path
+        : "/";
+
+    const diffResult = await diffNodesAtInternal(driver, {
+        parent_label: prev.root.root_label,
+        base_node_hash: prev.root.root_hash,
+        diffee_node_hash: current.root.root_hash,
+        at_path,
+        max_depth: 0,
+        filter: [],
+        with_intermediates: false,
+        options: { status_filter },
+    });
+
+    if (diffResult.items.length === 0) {
+        return null;
+    }
+
+    // Return the diff item with the original path
+    return {
+        ...diffResult.items[0],
+        path,
+    };
+}
 
 /**
  * Async generator that yields git log entries for an entity across commit history.
  * Tracks changes to a specific entity path across multiple commits.
+ *
+ * Uses a sliding window approach for streaming - yields results as soon as
+ * we have a valid pair, without waiting for all entity root resolutions.
  *
  * @param driver Neo4j driver instance
  * @param path Entity path to track
@@ -30,171 +125,78 @@ export async function* git_log_stream(
     options?: GitLogOptions | null,
 ): AsyncGenerator<GitLogEntry> {
     // Resolve refs to commit hashes
-    const startHash = await resolveRef(driver, commit_range.startRef);
-    const endHash = commit_range.endRef
-        ? await resolveRef(driver, commit_range.endRef)
-        : null;
+    const [startHash, endHash] = await Promise.all([
+        resolveRef(driver, commit_range.startRef),
+        commit_range.endRef
+            ? resolveRef(driver, commit_range.endRef)
+            : Promise.resolve(null),
+    ]);
 
-    // Build commit range query
-    const query = buildCommitRangeQuery(
-        commit_range.direction ?? CommitHistoryDirection.Backward,
-        commit_range.include_updates ?? false,
-        commit_range.branch ?? null,
-        endHash !== null,
+    // Fetch commits in range
+    const commits = await fetchCommitsInRange(driver, startHash, endHash, commit_range);
+
+    if (commits.length < 2) {
+        // Not enough commits to compare
+        return;
+    }
+
+    // Handle direction: commits from query are in newest→oldest order
+    // For FORWARD direction, reverse the array to get oldest→newest order
+    const direction = options?.direction ?? CommitHistoryDirection.Backward;
+    if (direction === CommitHistoryDirection.Forward) {
+        commits.reverse();
+    }
+
+    // Initialize pagination and filters
+    const pagination = new PaginationTracker(
+        options?.offset ?? 0,
+        options?.limit ?? 50,
     );
+    const status_filter = options?.status_filter?.map((s) => String(s)) ?? [];
 
-    // Get commits in range
-    const session = driver.session();
-    const tx = session.beginTransaction();
+    // Sliding window processing
+    let prevCommitWithRoot: CommitWithRoot | null = null;
 
-    try {
-        const commitsResult = await tx.run(query, {
-            startHash,
-            endHash,
-            branch: commit_range.branch,
-        });
-
-        const commits = commitsResult.records.map((record) => {
-            const commitNode = record.get("commit");
-            const commitProps = commitNode.properties;
-
-            // Construct a minimal Commit object with required connection fields
-            const commit: Commit = {
-                ...commitProps,
-                next: [],
-                previous: null,
-                nextConnection: {
-                    edges: [],
-                    totalCount: 0,
-                    pageInfo: { hasNextPage: false, hasPreviousPage: false },
-                },
-                previousConnection: {
-                    edges: [],
-                    totalCount: 0,
-                    pageInfo: { hasNextPage: false, hasPreviousPage: false },
-                },
-                filesystemConnection: {
-                    edges: [],
-                    totalCount: 0,
-                    pageInfo: { hasNextPage: false, hasPreviousPage: false },
-                },
-            };
-
-            return commit;
-        });
-
-        await tx.commit();
-
-        if (commits.length < 2) {
-            // Not enough commits to compare
-            return;
+    for (const commit of commits) {
+        // Resolve entity root for this commit
+        const root = await get_entity_root(driver, commit.hash, entity_type, path);
+        if (!root) {
+            // Entity doesn't exist in this commit (e.g., hive not extracted)
+            continue;
         }
 
-        // Handle direction: commits from query are in newest→oldest order
-        const direction = options?.direction ?? CommitHistoryDirection.Backward;
+        const currentCommitWithRoot: CommitWithRoot = { commit, root };
 
-        // For FORWARD direction, reverse the array to get oldest→newest order
-        if (direction === CommitHistoryDirection.Forward) {
-            commits.reverse();
-        }
+        // If we have a previous valid commit, we can diff and yield
+        if (prevCommitWithRoot) {
+            const diff = await processCommitPair(
+                driver,
+                prevCommitWithRoot,
+                currentCommitWithRoot,
+                path,
+                status_filter,
+            );
 
-        // Process commits with a sliding window approach for streaming
-        // This yields results as soon as we have a valid pair, without waiting
-        // for all get_entity_root() calls to complete first
-        type CommitWithRoot = {
-            commit: Commit;
-            root: NonNullable<EntityRootResult>;
-        };
+            if (diff) {
+                const action = pagination.process();
 
-        let entriesYielded = 0;
-        const offset = options?.offset ?? 0;
-        const limit = options?.limit ?? 50;
-        const status_filter =
-            options?.status_filter?.map((s) => String(s)) ?? [];
+                if (action === "yield" || action === "stop") {
+                    yield {
+                        base_commit: prevCommitWithRoot.commit,
+                        diffee_commit: currentCommitWithRoot.commit,
+                        diff,
+                    };
 
-        let prevCommitWithRoot: CommitWithRoot | null = null;
-
-        for (const commit of commits) {
-            // Resolve entity root for this commit
-            let root: EntityRootResult;
-            try {
-                root = await get_entity_root(driver, commit.hash, entity_type, path);
-                if (!root) {
-                    // Entity doesn't exist in this commit (e.g., hive not extracted)
-                    continue;
-                }
-            } catch (error) {
-                console.error(
-                    `Error resolving entity root for commit ${commit.hash}:`,
-                    error,
-                );
-                continue;
-            }
-
-            const currentCommitWithRoot: CommitWithRoot = { commit, root };
-
-            // If we have a previous valid commit, we can diff and yield
-            if (prevCommitWithRoot) {
-                try {
-                    const base_commit = prevCommitWithRoot.commit;
-                    const base_root = prevCommitWithRoot.root;
-                    const diffee_commit = currentCommitWithRoot.commit;
-                    const diffee_root = currentCommitWithRoot.root;
-
-                    const at_path = base_root.remaining_path
-                        ? "/" + base_root.remaining_path
-                        : "/";
-
-                    const diffResult = await diffNodesAtInternal(driver, {
-                        parent_label: base_root.root_label,
-                        base_node_hash: base_root.root_hash,
-                        diffee_node_hash: diffee_root.root_hash,
-                        at_path,
-                        max_depth: 0,
-                        filter: [],
-                        with_intermediates: false,
-                        options: { status_filter },
-                    });
-
-                    // If diff found changes, yield the entry
-                    if (diffResult.items.length > 0) {
-                        // Apply offset
-                        if (entriesYielded < offset) {
-                            entriesYielded++;
-                        } else if (entriesYielded < offset + limit) {
-                            const diff_item = diffResult.items[0];
-                            yield {
-                                base_commit,
-                                diffee_commit,
-                                diff: {
-                                    ...diff_item,
-                                    path,
-                                },
-                            };
-                            entriesYielded++;
-                        }
-
-                        // Check if we've reached the limit
-                        if (entriesYielded >= offset + limit) {
-                            return;
-                        }
+                    if (action === "stop") {
+                        return;
                     }
-                } catch (error) {
-                    console.error(
-                        `Error processing commits ${prevCommitWithRoot.commit.hash} -> ${commit.hash}:`,
-                        error,
-                    );
                 }
+                // "skip" - continue to next iteration without yielding
             }
-
-            // Slide the window forward
-            prevCommitWithRoot = currentCommitWithRoot;
         }
-    } catch (error) {
-        await tx.rollback();
-        throw error;
-    } finally {
-        await session.close();
+
+        // Slide the window forward
+        prevCommitWithRoot = currentCommitWithRoot;
     }
 }
 
