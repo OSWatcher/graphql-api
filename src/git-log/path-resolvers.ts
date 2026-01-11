@@ -1,14 +1,10 @@
-import { Driver } from "neo4j-driver";
+import { Driver, Session, ManagedTransaction } from "neo4j-driver";
 import { EntityType } from "../ogm-types.js";
 import { EntityRootResult } from "./types.js";
-
-/**
- * Query to get the filesystem root for a commit
- */
-const GET_FS_ROOT_QUERY = `
-MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)
-RETURN root.hash as root_hash
-`;
+import {
+    GET_FILESYSTEM_ROOT_QUERY,
+    GET_REGISTRY_ROOT_QUERY,
+} from "../queries.js";
 
 /**
  * Resolves the entity root for a given commit, entity type, and path.
@@ -63,12 +59,12 @@ export async function get_entity_root(
  * Returns the root Tree node and the full path (minus leading slash) as remaining path.
  */
 async function get_filesystem_root(
-    session: any,
+    session: Session,
     commit_hash: string,
     path: string,
 ): Promise<EntityRootResult> {
-    const result = await session.executeRead((tx: any) =>
-        tx.run(GET_FS_ROOT_QUERY, { commit_hash }),
+    const result = await session.executeRead((tx: ManagedTransaction) =>
+        tx.run(GET_FILESYSTEM_ROOT_QUERY, { commit_hash }),
     );
 
     if (result.records.length === 0) {
@@ -93,7 +89,7 @@ async function get_filesystem_root(
  * Path format: SYSTEM/CurrentControlSet/Services/... where SYSTEM is the hive name.
  */
 async function get_registry_root(
-    session: any,
+    session: Session,
     commit_hash: string,
     path: string,
 ): Promise<EntityRootResult> {
@@ -106,17 +102,7 @@ async function get_registry_root(
     const hiveName = pathParts[0]; // e.g., "SYSTEM", "SOFTWARE"
     const remainingPath = pathParts.slice(1).join("/");
 
-    // Query: filesystem → hive blob → registry root
-    // Note: Blob doesn't have .name property - filenames are in relationship properties
-    const GET_REGISTRY_ROOT_QUERY = `
-        MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(fsRoot:Tree)
-              -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(hive:Blob)
-              -[:HAS_WINREG]->(regRoot:WinRegKey)
-        WHERE last(fs_rels).name = $hiveName
-        RETURN regRoot.hash as root_hash
-    `;
-
-    const result = await session.executeRead((tx: any) =>
+    const result = await session.executeRead((tx: ManagedTransaction) =>
         tx.run(GET_REGISTRY_ROOT_QUERY, { commit_hash, hiveName }),
     );
 

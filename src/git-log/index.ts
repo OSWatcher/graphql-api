@@ -216,23 +216,33 @@ export async function git_log(
     options?: GitLogOptions | null,
 ): Promise<GitLogResult> {
     const entries: GitLogEntry[] = [];
+    const limit = options?.limit ?? 50;
+
+    // Request one extra entry to determine if more results exist
+    const internalOptions: GitLogOptions = {
+        ...options,
+        limit: limit + 1,
+    };
 
     for await (const entry of git_log_stream(
         driver,
         path,
         entity_type,
         commit_range,
-        options,
+        internalOptions,
     )) {
         entries.push(entry);
     }
 
-    const limit = options?.limit ?? 50;
-    const has_more = entries.length >= limit;
+    // If we got more than the requested limit, there are more results
+    const has_more = entries.length > limit;
+
+    // Trim to the requested limit
+    const trimmedEntries = entries.slice(0, limit);
 
     return {
-        total_count: entries.length,
-        entries,
+        total_count: trimmedEntries.length,
+        entries: trimmedEntries,
         has_more,
     };
 }

@@ -336,3 +336,19 @@ WHERE br.name = $branch_name
 WITH commit_list_where_hash, collect(c) as branch_reachable_commit_list
 RETURN all(c IN commit_list_where_hash WHERE c IN branch_reachable_commit_list) as is_restricted
 `;
+
+// git log - filesystem root resolution
+export const GET_FILESYSTEM_ROOT_QUERY = `
+MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)
+RETURN root.hash as root_hash
+`;
+
+// git log - registry root resolution
+// Note: Uses last(fs_rels).name to get hive filename from relationship property
+export const GET_REGISTRY_ROOT_QUERY = `
+MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(fsRoot:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(hive:Blob)
+      -[:HAS_WINREG]->(regRoot:WinRegKey)
+WHERE last(fs_rels).name = $hiveName
+RETURN regRoot.hash as root_hash
+`;
