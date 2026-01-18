@@ -1,10 +1,15 @@
 import { Driver } from "neo4j-driver";
 import {
-    getCommitsInRangeQuery,
+    buildCommitRangeQuery,
     searchFSInCommitsQuery,
     searchRegistryInCommitsQuery,
 } from "./queries.js";
-import { CommitRange, SearchEntityType } from "./ogm-types.js";
+import {
+    CommitRange,
+    EntityType,
+    CommitHistoryDirection,
+} from "./ogm-types.js";
+import { resolveRef } from "./commits.js";
 
 // Merge multiple async generators, yielding results as they arrive from any source
 async function* mergeAsyncGenerators<T>(
@@ -46,7 +51,7 @@ async function* mergeAsyncGenerators<T>(
 
 // Unified search result type (internal)
 type OmniSearchResult = {
-    type: SearchEntityType;
+    type: EntityType;
     commit_name: string;
     commit_hash: string;
     blob_path: string;
@@ -59,7 +64,7 @@ type OmniSearchResult = {
 type OmniSearchInput = {
     commit_range: CommitRange;
     search_term: string;
-    entity_types?: SearchEntityType[];
+    entity_types?: EntityType[];
     case_sensitive?: boolean;
 };
 
@@ -69,15 +74,29 @@ async function* search_fs_fullpath(
     commit_range: CommitRange,
     case_sensitive: boolean = false,
 ): AsyncGenerator<OmniSearchResult> {
+    // Resolve refs to commit hashes
+    const startHash = await resolveRef(driver, commit_range.startRef);
+    const endHash = commit_range.endRef
+        ? await resolveRef(driver, commit_range.endRef)
+        : null;
+
+    // Build commit range query
+    const query = buildCommitRangeQuery(
+        commit_range.direction ?? CommitHistoryDirection.Backward,
+        commit_range.include_updates ?? false,
+        commit_range.branch ?? null,
+        endHash !== null,
+    );
+
     const session = driver.session();
     const tx = session.beginTransaction();
 
     try {
         // First, get the commits in the specified range
-        const commitsResult = await tx.run(getCommitsInRangeQuery, {
-            startCommit: commit_range.startCommit,
-            scope: commit_range.scope,
-            endCommit: commit_range.endCommit,
+        const commitsResult = await tx.run(query, {
+            startHash,
+            endHash,
+            branch: commit_range.branch,
         });
 
         const commit_hashes = commitsResult.records.map(
@@ -96,7 +115,7 @@ async function* search_fs_fullpath(
             const full_path = "/" + record.get("full_path");
             const blob_hash = record.get("blob_hash");
             yield {
-                type: SearchEntityType.Filesystem,
+                type: EntityType.Filesystem,
                 commit_name: record.get("commit_name"),
                 commit_hash: record.get("commit_hash"),
                 blob_path: full_path,
@@ -122,15 +141,29 @@ async function* search_registry(
     commit_range: CommitRange,
     case_sensitive: boolean = false,
 ): AsyncGenerator<OmniSearchResult> {
+    // Resolve refs to commit hashes
+    const startHash = await resolveRef(driver, commit_range.startRef);
+    const endHash = commit_range.endRef
+        ? await resolveRef(driver, commit_range.endRef)
+        : null;
+
+    // Build commit range query
+    const query = buildCommitRangeQuery(
+        commit_range.direction ?? CommitHistoryDirection.Backward,
+        commit_range.include_updates ?? false,
+        commit_range.branch ?? null,
+        endHash !== null,
+    );
+
     const session = driver.session();
     const tx = session.beginTransaction();
 
     try {
         // First, get the commits in the specified range
-        const commitsResult = await tx.run(getCommitsInRangeQuery, {
-            startCommit: commit_range.startCommit,
-            scope: commit_range.scope,
-            endCommit: commit_range.endCommit,
+        const commitsResult = await tx.run(query, {
+            startHash,
+            endHash,
+            branch: commit_range.branch,
         });
 
         const commit_hashes = commitsResult.records.map(
@@ -147,7 +180,7 @@ async function* search_registry(
         // Stream results as they arrive from Neo4j
         for await (const record of result) {
             yield {
-                type: SearchEntityType.Registry,
+                type: EntityType.Registry,
                 commit_name: record.get("commit_name"),
                 commit_hash: record.get("commit_hash"),
                 blob_path: record.get("blob_path"),
@@ -172,8 +205,8 @@ async function* search(
     input: OmniSearchInput,
 ): AsyncGenerator<OmniSearchResult> {
     const entityTypes = input.entity_types ?? [
-        SearchEntityType.Filesystem,
-        SearchEntityType.Registry,
+        EntityType.Filesystem,
+        EntityType.Registry,
     ];
     const caseSensitive = input.case_sensitive ?? false;
 
@@ -181,7 +214,7 @@ async function* search(
     const generators: AsyncGenerator<OmniSearchResult>[] = [];
 
     for (const entityType of entityTypes) {
-        if (entityType === SearchEntityType.Filesystem) {
+        if (entityType === EntityType.Filesystem) {
             generators.push(
                 search_fs_fullpath(
                     driver,
@@ -190,7 +223,7 @@ async function* search(
                     caseSensitive,
                 ),
             );
-        } else if (entityType === SearchEntityType.Registry) {
+        } else if (entityType === EntityType.Registry) {
             generators.push(
                 search_registry(
                     driver,

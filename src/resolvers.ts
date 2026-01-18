@@ -6,7 +6,6 @@ import {
     DiffItem,
     DiffNodesAtResult,
     CommitHistoryDirection,
-    CommitScope,
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { search } from "./search.js";
@@ -130,17 +129,16 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                     const argsObj = args as { input: any };
                     const input = SearchInputSchema.parse(argsObj.input);
 
-                    // Restrict HISTORY_WITH_UPDATES to authenticated users only
+                    // Restrict include_updates to authenticated users only
                     if (
-                        input.commit_range.scope ===
-                            CommitScope.HistoryWithUpdates &&
+                        input.commit_range.include_updates === true &&
                         !context.jwt
                     ) {
                         console.warn(
-                            `HISTORY_WITH_UPDATES denied: Unauthenticated request`,
+                            `include_updates denied: Unauthenticated request`,
                         );
                         throw new Error(
-                            "HISTORY_WITH_UPDATES search mode requires authentication. Please provide a valid JWT token.",
+                            "Commit traversal with include_updates requires authentication. Please provide a valid JWT token.",
                         );
                     }
 
@@ -363,17 +361,16 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                 const argsObj = args as { input: any };
                 const input = SearchInputSchema.parse(argsObj.input);
 
-                // Restrict HISTORY_WITH_UPDATES to authenticated users only
+                // Restrict include_updates to authenticated users only
                 if (
-                    input.commit_range.scope ===
-                        CommitScope.HistoryWithUpdates &&
+                    input.commit_range.include_updates === true &&
                     !context.jwt
                 ) {
                     console.warn(
-                        `HISTORY_WITH_UPDATES denied: Unauthenticated request`,
+                        `include_updates denied: Unauthenticated request`,
                     );
                     throw new Error(
-                        "HISTORY_WITH_UPDATES search mode requires authentication. Please provide a valid JWT token.",
+                        "Commit traversal with include_updates requires authentication. Please provide a valid JWT token.",
                     );
                 }
 

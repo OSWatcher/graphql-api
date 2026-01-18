@@ -29,21 +29,13 @@ enum CommitHistoryDirection {
     BACKWARD
 }
 
-enum CommitScope {
-    # Search within a single commit only
-    SINGLE
-    # Search within the commit and all its reachable history (backwards traversal)
-    HISTORY
-    # Search within the commit, its history, and all updates (bidirectional traversal)
-    HISTORY_WITH_UPDATES
-    # Search within a range of commits from startCommit to endCommit (inclusive)
-    RANGE
-}
+# CommitScope enum removed - replaced by direction + include_updates parameters in CommitRange
 
-enum SearchEntityType {
+enum EntityType {
     FILESYSTEM
     REGISTRY
-    # Future: SYMBOL, STRUCT
+    STRUCT
+    SYMBOL
 }
 
 # read: needed for HAS_WINREG
@@ -171,7 +163,7 @@ type DiffItem @query(read: false, aggregate: false) @mutation(operations: []) {
 }
 
 type SearchResult @query(read: false, aggregate: false) @mutation(operations: []) {
-    type: SearchEntityType!
+    type: EntityType!
     commit_name: String!
     commit_hash: String!
     blob_path: String!
@@ -205,12 +197,16 @@ input DiffNodesOptions {
 }
 
 input CommitRange {
-    # The starting commit hash for the search range
-    startCommit: String!
-    # Defines the scope of commits to search within
-    scope: CommitScope!
-    # The ending commit hash (required when scope is RANGE, ignored otherwise)
-    endCommit: String = null
+    # Starting point: commit hash (40 hex chars) OR branch name
+    startRef: String!
+    # Direction of traversal (defaults to BACKWARD for safety and git convention)
+    direction: CommitHistoryDirection = BACKWARD
+    # Whether to include update/patch branches
+    include_updates: Boolean = false
+    # Filter to specific branch name (recommended for FORWARD)
+    branch: String = null
+    # Optional end point for range queries
+    endRef: String = null
 }
 
 input SearchInput {
@@ -219,7 +215,7 @@ input SearchInput {
     # The search term to match
     search_term: String!
     # Entity types to search (null = search all types)
-    entity_types: [SearchEntityType!]
+    entity_types: [EntityType!]
     # Case sensitive search (default: false = case-insensitive)
     case_sensitive: Boolean = false
 }

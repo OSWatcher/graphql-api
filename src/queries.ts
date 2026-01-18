@@ -1,3 +1,5 @@
+import { CommitHistoryDirection } from "./ogm-types.js";
+
 // diff
 export const NODES_DIFF_QUERY = `
 CALL example.diffTreesRecursive($parentLabel, $base, $diffee, $basePath, $filter, $maxDepth, $withIntermediates, $statusFilter)
@@ -5,7 +7,7 @@ YIELD status, type, path, old_props, new_props
 RETURN status, type, path, old_props, new_props
 `;
 
-// get commits in range
+// get commits in range (DEPRECATED - replaced by buildCommitRangeQuery)
 export const getCommitsInRangeQuery = `
 MATCH (start:Commit {hash: $startCommit})
 OPTIONAL MATCH (end:Commit {hash: $endCommit})
@@ -31,6 +33,85 @@ WITH coalesce(single, history, historyWithUpdates, range) AS commit
 WHERE commit IS NOT NULL
 RETURN commit
 `;
+
+// Resolve branch name to commit hash
+export const RESOLVE_BRANCH_REF_QUERY = `
+MATCH (b:Branch {name: $branchName})-[:TRACKS_COMMIT]->(c:Commit)
+RETURN c.hash as hash
+`;
+
+/**
+ * Build Cypher query for fetching commits based on CommitRange parameters
+ * Replaces the old scope-based getCommitsInRangeQuery
+ *
+ * @param direction - FORWARD or BACKWARD traversal
+ * @param include_updates - Whether to include update/patch branches
+ * @param branch - Optional branch name to filter commits
+ * @param hasEndRef - Whether an endRef was provided (for range queries)
+ */
+export function buildCommitRangeQuery(
+    direction: CommitHistoryDirection,
+    include_updates: boolean,
+    branch: string | null,
+    hasEndRef: boolean,
+): string {
+    // Determine relationship pattern
+    let relationshipPattern: string;
+
+    if (direction === CommitHistoryDirection.Backward) {
+        // BACKWARD: follow HAS_PREVIOUS forward
+        relationshipPattern = include_updates
+            ? "-[:HAS_PREVIOUS*0..]-(c)" // Undirected (includes update branches)
+            : "-[:HAS_PREVIOUS*0..]->(c)"; // Directed (releases only)
+    } else {
+        // FORWARD: follow HAS_PREVIOUS backward
+        relationshipPattern = include_updates
+            ? "-[:HAS_PREVIOUS*0..]-(c)" // Undirected
+            : "<-[:HAS_PREVIOUS*0..]-(c)"; // Reverse directed
+    }
+
+    // Build query
+    let query = `
+MATCH (start:Commit {hash: $startHash})`;
+
+    // Add end ref for range queries
+    if (hasEndRef) {
+        query += `
+MATCH (end:Commit {hash: $endHash})`;
+    }
+
+    // Add traversal pattern
+    query += `
+MATCH (start)${relationshipPattern}`;
+
+    // Add WHERE clauses
+    const whereClauses: string[] = [];
+
+    if (branch) {
+        whereClauses.push(
+            "EXISTS { MATCH (:Branch {name: $branch})-[:TRACKS_COMMIT]->(c) }",
+        );
+    }
+
+    if (hasEndRef) {
+        // Range query: ensure c is between start and end
+        if (direction === CommitHistoryDirection.Backward) {
+            whereClauses.push("(c = end OR (c)-[:HAS_PREVIOUS*0..]->(end))");
+        } else {
+            whereClauses.push("(c = end OR (end)-[:HAS_PREVIOUS*0..]->(c))");
+        }
+    }
+
+    if (whereClauses.length > 0) {
+        query += `
+WHERE ${whereClauses.join(" AND ")}`;
+    }
+
+    query += `
+RETURN c as commit`;
+
+    return query;
+}
 
 // search within specific commits
 export const searchFSInCommitsQuery = `
