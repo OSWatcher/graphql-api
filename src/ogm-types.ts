@@ -773,18 +773,18 @@ export enum CommitHistoryDirection {
   Backward = "BACKWARD",
 }
 
-export enum CommitScope {
-  Single = "SINGLE",
-  History = "HISTORY",
-  HistoryWithUpdates = "HISTORY_WITH_UPDATES",
-  Range = "RANGE",
-}
-
 export enum DiffStatus {
   New = "NEW",
   Mod = "MOD",
   Del = "DEL",
   Unchanged = "UNCHANGED",
+}
+
+export enum EntityType {
+  Filesystem = "FILESYSTEM",
+  Registry = "REGISTRY",
+  Struct = "STRUCT",
+  Symbol = "SYMBOL",
 }
 
 export enum HashableImplementation {
@@ -808,11 +808,6 @@ export enum NodeType {
   Struct = "Struct",
   StructField = "StructField",
   DataType = "DataType",
-}
-
-export enum SearchEntityType {
-  Filesystem = "FILESYSTEM",
-  Registry = "REGISTRY",
 }
 
 /** An enum for sorting in either ascending or descending order. */
@@ -1606,7 +1601,7 @@ export type PageInfo = {
 
 export type SearchResult = {
   __typename?: "SearchResult";
-  type: SearchEntityType;
+  type: EntityType;
   commit_name: Scalars["String"]["output"];
   commit_hash: Scalars["String"]["output"];
   blob_path: Scalars["String"]["output"];
@@ -4192,9 +4187,11 @@ export type CommitPreviousUpdateFieldInput = {
 };
 
 export type CommitRange = {
-  startCommit: Scalars["String"]["input"];
-  scope: CommitScope;
-  endCommit?: InputMaybe<Scalars["String"]["input"]>;
+  startRef: Scalars["String"]["input"];
+  direction?: InputMaybe<CommitHistoryDirection>;
+  include_updates?: InputMaybe<Scalars["Boolean"]["input"]>;
+  branch?: InputMaybe<Scalars["String"]["input"]>;
+  endRef?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 export type CommitRelationInput = {
@@ -5207,12 +5204,12 @@ export type HasNameRelWhere = {
 export type SearchInput = {
   commit_range: CommitRange;
   search_term: Scalars["String"]["input"];
-  entity_types?: InputMaybe<Array<SearchEntityType>>;
+  entity_types?: InputMaybe<Array<EntityType>>;
   case_sensitive?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export type SearchResultCreateInput = {
-  type: SearchEntityType;
+  type: EntityType;
   commit_name: Scalars["String"]["input"];
   commit_hash: Scalars["String"]["input"];
   blob_path: Scalars["String"]["input"];
@@ -5240,7 +5237,7 @@ export type SearchResultSort = {
 };
 
 export type SearchResultUpdateInput = {
-  type?: InputMaybe<SearchEntityType>;
+  type?: InputMaybe<EntityType>;
   commit_name?: InputMaybe<Scalars["String"]["input"]>;
   commit_hash?: InputMaybe<Scalars["String"]["input"]>;
   blob_path?: InputMaybe<Scalars["String"]["input"]>;
@@ -5250,12 +5247,12 @@ export type SearchResultUpdateInput = {
 };
 
 export type SearchResultWhere = {
-  type?: InputMaybe<SearchEntityType>;
+  type?: InputMaybe<EntityType>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  type_NOT?: InputMaybe<SearchEntityType>;
-  type_IN?: InputMaybe<Array<SearchEntityType>>;
+  type_NOT?: InputMaybe<EntityType>;
+  type_IN?: InputMaybe<Array<EntityType>>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  type_NOT_IN?: InputMaybe<Array<SearchEntityType>>;
+  type_NOT_IN?: InputMaybe<Array<EntityType>>;
   commit_name?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
   commit_name_NOT?: InputMaybe<Scalars["String"]["input"]>;
