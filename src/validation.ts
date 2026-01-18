@@ -1,32 +1,12 @@
 import { z } from "zod";
-import {
-    CommitScope,
-    CommitHistoryDirection,
-    DiffStatus,
-    SearchEntityType,
-} from "./ogm-types.js";
+import { CommitHistoryDirection, DiffStatus, EntityType } from "./ogm-types.js";
 
 // Git commit hash validation (40 character hex string)
 const GitSHA1Schema = z
     .string()
     .regex(/^[a-f0-9]{40}$/i, "Invalid commit hash format");
 
-// Commit scope enum - map to OGM enum
-const CommitScopeSchema = z
-    .enum(["SINGLE", "HISTORY", "HISTORY_WITH_UPDATES", "RANGE"])
-    .transform((val) => {
-        switch (val) {
-            case "SINGLE":
-                return CommitScope.Single;
-            case "HISTORY":
-                return CommitScope.History;
-            case "HISTORY_WITH_UPDATES":
-                return CommitScope.HistoryWithUpdates;
-            case "RANGE":
-                return CommitScope.Range;
-            // No default case needed; all enum values are handled above.
-        }
-    });
+// CommitScope enum removed - replaced by direction + include_updates in CommitRange
 
 // Commit history direction enum - map to OGM enum
 const CommitHistoryDirectionSchema = z
@@ -41,39 +21,36 @@ const CommitHistoryDirectionSchema = z
         }
     });
 
-// Search entity type enum - map to OGM enum
-const SearchEntityTypeSchema = z
-    .enum(["FILESYSTEM", "REGISTRY"])
+// Entity type enum - map to OGM enum
+const EntityTypeSchema = z
+    .enum(["FILESYSTEM", "REGISTRY", "STRUCT", "SYMBOL"])
     .transform((val) => {
         switch (val) {
             case "FILESYSTEM":
-                return SearchEntityType.Filesystem;
+                return EntityType.Filesystem;
             case "REGISTRY":
-                return SearchEntityType.Registry;
+                return EntityType.Registry;
+            case "STRUCT":
+                return EntityType.Struct;
+            case "SYMBOL":
+                return EntityType.Symbol;
             // No default case needed; enum validation ensures only valid values.
         }
     });
 
+// Ref can be commit hash or branch name
+const CommitRefSchema = z.string().min(1).max(255);
+
 // Commit range validation
-export const CommitRangeSchema = z
-    .object({
-        startCommit: GitSHA1Schema,
-        scope: CommitScopeSchema,
-        endCommit: GitSHA1Schema.optional().nullable(),
-    })
-    .refine(
-        (data) => {
-            // If scope is RANGE, endCommit must be provided
-            if (data.scope === CommitScope.Range && !data.endCommit) {
-                return false;
-            }
-            return true;
-        },
-        {
-            message: "endCommit is required when scope is RANGE",
-            path: ["endCommit"],
-        },
-    );
+export const CommitRangeSchema = z.object({
+    startRef: CommitRefSchema,
+    direction: CommitHistoryDirectionSchema.default(
+        CommitHistoryDirection.Backward,
+    ),
+    include_updates: z.boolean().default(false),
+    branch: z.string().min(1).max(255).optional().nullable(),
+    endRef: CommitRefSchema.optional().nullable(),
+});
 
 // Search input validation
 export const SearchInputSchema = z.object({
@@ -82,7 +59,7 @@ export const SearchInputSchema = z.object({
         .string()
         .min(1, "Search term cannot be empty")
         .max(500, "Search term too long (max 500 characters)"),
-    entity_types: z.array(SearchEntityTypeSchema).optional(),
+    entity_types: z.array(EntityTypeSchema).optional(),
     case_sensitive: z.boolean().optional().default(false),
 });
 
