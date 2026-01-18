@@ -196,9 +196,10 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                     );
                 }
                 // Restrict recursive diffing to authenticated users only
-                // max_depth === 0 means non-recursive (single level) - allowed for all
-                // Any other value (including null/undefined) requires authentication
-                if (max_depth !== 0 && !context.jwt) {
+                // max_depth === 0 means node comparison only (no children) - allowed for all
+                // max_depth === 1 means immediate children only - allowed for all
+                // Any other value (including null/undefined/-1) requires authentication
+                if (max_depth !== 0 && max_depth !== 1 && !context.jwt) {
                     console.warn(
                         `Recursive diff denied: Unauthenticated request with max_depth=${max_depth}`,
                     );
@@ -257,7 +258,7 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                         : max_depth;
                 if (resolvedMaxDepth < -1) {
                     throw new Error(
-                        "Max depth should be -1 (unlimited) or a positive integer",
+                        "Max depth should be -1 (unlimited), 0 (node comparison), or a positive integer",
                     );
                 }
                 try {
