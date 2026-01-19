@@ -172,24 +172,6 @@ type SearchResult @query(read: false, aggregate: false) @mutation(operations: []
     node_hash: String!
 }
 
-type SymbolFetchResult @query(read: false, aggregate: false) @mutation(operations: []) {
-    name: String!
-    address: String!
-}
-
-type StructFieldFetchResult @query(read: false, aggregate: false) @mutation(operations: []) {
-    name: String!
-    offset: Int!
-    data_type: JSON!
-}
-
-type StructFetchResult @query(read: false, aggregate: false) @mutation(operations: []) {
-    name: String!
-    size: Int!
-    kind: String!
-    fields: [StructFieldFetchResult!]!
-}
-
 input DiffNodesOptions {
     limit: Int
     offset: Int
@@ -240,10 +222,6 @@ type Query {
     getCommitExtractedDataLabels(commit_hash: String!): [String!]!
     # search
     search(input: SearchInput!): [SearchResult!]!
-    # fetch symbols
-    fetchSymbols(blob_hash: String!, options: SymbolOptions): [SymbolFetchResult!]!
-    # fetch structs
-    fetchStructs(blob_hash: String!, options: StructOptions): [StructFetchResult!]!
 }
 
 # custom Subscriptions
