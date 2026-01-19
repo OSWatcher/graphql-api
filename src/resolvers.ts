@@ -6,11 +6,9 @@ import {
     DiffItem,
     DiffNodesAtResult,
     CommitHistoryDirection,
-    CommitScope,
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { search } from "./search.js";
-import { fetch_symbols, fetch_structs } from "./fetch.js";
 import path from "path";
 import { Driver } from "neo4j-driver";
 import neo4j, { DateTime } from "neo4j-driver";
@@ -20,8 +18,6 @@ import {
     FetchCommitHistoryArgsSchema,
     TraversePathArgsSchema,
     DiffNodesArgsSchema,
-    FetchSymbolsArgsSchema,
-    FetchStructsArgsSchema,
     GetCommitCapabilitiesArgsSchema,
 } from "./validation.js";
 import { GET_NODE_COMMIT_DATES } from "./queries.js";
@@ -130,17 +126,16 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                     const argsObj = args as { input: any };
                     const input = SearchInputSchema.parse(argsObj.input);
 
-                    // Restrict HISTORY_WITH_UPDATES to authenticated users only
+                    // Restrict include_updates to authenticated users only
                     if (
-                        input.commit_range.scope ===
-                            CommitScope.HistoryWithUpdates &&
+                        input.commit_range.include_updates === true &&
                         !context.jwt
                     ) {
                         console.warn(
-                            `HISTORY_WITH_UPDATES denied: Unauthenticated request`,
+                            `include_updates denied: Unauthenticated request`,
                         );
                         throw new Error(
-                            "HISTORY_WITH_UPDATES search mode requires authentication. Please provide a valid JWT token.",
+                            "Commit traversal with include_updates requires authentication. Please provide a valid JWT token.",
                         );
                     }
 
@@ -364,17 +359,16 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                 const argsObj = args as { input: any };
                 const input = SearchInputSchema.parse(argsObj.input);
 
-                // Restrict HISTORY_WITH_UPDATES to authenticated users only
+                // Restrict include_updates to authenticated users only
                 if (
-                    input.commit_range.scope ===
-                        CommitScope.HistoryWithUpdates &&
+                    input.commit_range.include_updates === true &&
                     !context.jwt
                 ) {
                     console.warn(
-                        `HISTORY_WITH_UPDATES denied: Unauthenticated request`,
+                        `include_updates denied: Unauthenticated request`,
                     );
                     throw new Error(
-                        "HISTORY_WITH_UPDATES search mode requires authentication. Please provide a valid JWT token.",
+                        "Commit traversal with include_updates requires authentication. Please provide a valid JWT token.",
                     );
                 }
 
@@ -383,32 +377,6 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                     results.push(result);
                 }
                 return results;
-            },
-            async fetchSymbols(_source: unknown, args: unknown) {
-                // Validate input
-                const validatedArgs = FetchSymbolsArgsSchema.parse(args);
-                const { blob_hash, options } = validatedArgs;
-
-                // Provide defaults for null/undefined options
-                const finalOptions = {
-                    offset: options?.offset ?? 0,
-                    limit: options?.limit ?? 100,
-                };
-
-                return await fetch_symbols(driver, blob_hash, finalOptions);
-            },
-            async fetchStructs(_source: unknown, args: unknown) {
-                // Validate input
-                const validatedArgs = FetchStructsArgsSchema.parse(args);
-                const { blob_hash, options } = validatedArgs;
-
-                // Provide defaults for null/undefined options
-                const finalOptions = {
-                    offset: options?.offset ?? 0,
-                    limit: options?.limit ?? 100,
-                };
-
-                return await fetch_structs(driver, blob_hash, finalOptions);
             },
         },
         DiffItem: {

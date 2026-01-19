@@ -4,6 +4,7 @@ import {
     FETCH_COMMIT_HISTORY_BACKWARD_QUERY,
     FETCH_COMMIT_HISTORY_FORWARD_QUERY,
     GET_COMMIT_CAPABILITIES_QUERY,
+    RESOLVE_BRANCH_REF_QUERY,
 } from "./queries.js";
 
 async function* fetch_commit_history(
@@ -109,4 +110,34 @@ async function get_commit_capabilities(
     }
 }
 
-export { fetch_commit_history, get_commit_capabilities };
+/**
+ * Resolve a ref (commit hash or branch name) to a commit hash
+ * @param driver - Neo4j driver instance
+ * @param ref - Either a 40-character hex commit hash or a branch name
+ * @returns The resolved commit hash
+ * @throws Error if the ref is neither a valid commit hash nor an existing branch
+ */
+async function resolveRef(driver: Driver, ref: string): Promise<string> {
+    // Check if it's a commit hash (40 hex chars)
+    if (/^[a-f0-9]{40}$/i.test(ref)) {
+        return ref;
+    }
+
+    // Otherwise treat as branch name
+    const session = driver.session();
+    try {
+        const result = await session.executeRead(async (tx) => {
+            return tx.run(RESOLVE_BRANCH_REF_QUERY, { branchName: ref });
+        });
+
+        if (result.records.length === 0) {
+            throw new Error(`Branch or commit not found: ${ref}`);
+        }
+
+        return result.records[0].get("hash");
+    } finally {
+        await session.close();
+    }
+}
+
+export { fetch_commit_history, get_commit_capabilities, resolveRef };

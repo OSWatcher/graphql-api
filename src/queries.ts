@@ -1,3 +1,5 @@
+import { CommitHistoryDirection } from "./ogm-types.js";
+
 // diff
 export const NODES_DIFF_QUERY = `
 CALL example.diffTreesRecursive($parentLabel, $base, $diffee, $basePath, $filter, $maxDepth, $withIntermediates, $statusFilter)
@@ -5,7 +7,7 @@ YIELD status, type, path, old_props, new_props
 RETURN status, type, path, old_props, new_props
 `;
 
-// get commits in range
+// get commits in range (DEPRECATED - replaced by buildCommitRangeQuery)
 export const getCommitsInRangeQuery = `
 MATCH (start:Commit {hash: $startCommit})
 OPTIONAL MATCH (end:Commit {hash: $endCommit})
@@ -31,6 +33,85 @@ WITH coalesce(single, history, historyWithUpdates, range) AS commit
 WHERE commit IS NOT NULL
 RETURN commit
 `;
+
+// Resolve branch name to commit hash
+export const RESOLVE_BRANCH_REF_QUERY = `
+MATCH (b:Branch {name: $branchName})-[:TRACKS_COMMIT]->(c:Commit)
+RETURN c.hash as hash
+`;
+
+/**
+ * Build Cypher query for fetching commits based on CommitRange parameters
+ * Replaces the old scope-based getCommitsInRangeQuery
+ *
+ * @param direction - FORWARD or BACKWARD traversal
+ * @param include_updates - Whether to include update/patch branches
+ * @param branch - Optional branch name to filter commits
+ * @param hasEndRef - Whether an endRef was provided (for range queries)
+ */
+export function buildCommitRangeQuery(
+    direction: CommitHistoryDirection,
+    include_updates: boolean,
+    branch: string | null,
+    hasEndRef: boolean,
+): string {
+    // Determine relationship pattern
+    let relationshipPattern: string;
+
+    if (direction === CommitHistoryDirection.Backward) {
+        // BACKWARD: follow HAS_PREVIOUS forward
+        relationshipPattern = include_updates
+            ? "-[:HAS_PREVIOUS*0..]-(c)" // Undirected (includes update branches)
+            : "-[:HAS_PREVIOUS*0..]->(c)"; // Directed (releases only)
+    } else {
+        // FORWARD: follow HAS_PREVIOUS backward
+        relationshipPattern = include_updates
+            ? "-[:HAS_PREVIOUS*0..]-(c)" // Undirected
+            : "<-[:HAS_PREVIOUS*0..]-(c)"; // Reverse directed
+    }
+
+    // Build query
+    let query = `
+MATCH (start:Commit {hash: $startHash})`;
+
+    // Add end ref for range queries
+    if (hasEndRef) {
+        query += `
+MATCH (end:Commit {hash: $endHash})`;
+    }
+
+    // Add traversal pattern
+    query += `
+MATCH (start)${relationshipPattern}`;
+
+    // Add WHERE clauses
+    const whereClauses: string[] = [];
+
+    if (branch) {
+        whereClauses.push(
+            "EXISTS { MATCH (:Branch {name: $branch})-[:TRACKS_COMMIT]->(c) }",
+        );
+    }
+
+    if (hasEndRef) {
+        // Range query: ensure c is between start and end
+        if (direction === CommitHistoryDirection.Backward) {
+            whereClauses.push("(c = end OR (c)-[:HAS_PREVIOUS*0..]->(end))");
+        } else {
+            whereClauses.push("(c = end OR (end)-[:HAS_PREVIOUS*0..]->(c))");
+        }
+    }
+
+    if (whereClauses.length > 0) {
+        query += `
+WHERE ${whereClauses.join(" AND ")}`;
+    }
+
+    query += `
+RETURN c as commit`;
+
+    return query;
+}
 
 // search within specific commits
 export const searchFSInCommitsQuery = `
@@ -78,6 +159,51 @@ RETURN c.name AS commit_name, c.hash AS commit_hash,
        b.hash AS blob_hash,
        '/' + apoc.text.join([rel in fs_rels | rel.name], '/') AS blob_path,
        '/' + hive.name + '/' + full_path AS entity_path, node_hash
+`;
+
+// Symbol search query - searches PDB symbols by name
+// Note: No CALL {} subquery needed here - symbol search has only one variable-length
+// traversal (filesystem), unlike registry which has two. The HAS_SYMBOL relationship
+// is a direct connection from Blob to Symbol, not a variable-length path.
+export const searchSymbolInCommitsQuery = `
+UNWIND $commit_hashes AS commit_hash
+MATCH (c:Commit {hash: commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
+      -[sym_rel:HAS_SYMBOL]->(s:Symbol)
+WITH c, b, fs_rels, sym_rel, s
+WHERE CASE
+  WHEN $case_sensitive THEN sym_rel.name CONTAINS $search_expr
+  ELSE toLower(sym_rel.name) CONTAINS toLower($search_expr)
+END
+RETURN c.name AS commit_name, c.hash AS commit_hash,
+       b.hash AS blob_hash,
+       '/' + apoc.text.join([rel in fs_rels | rel.name], '/') AS blob_path,
+       sym_rel.name AS symbol_name,
+       s.hash AS node_hash
+`;
+
+// Struct search query - searches struct/field paths
+// Traverses to StructField and builds full path: /<struct_name>/<field_name>
+// Searches within that path, so both struct names and field names match.
+// Example: "EPROCESS" matches "/_EPROCESS/ImageFileName"
+// Note: No CALL {} subquery needed - same reasoning as symbol search.
+export const searchStructInCommitsQuery = `
+UNWIND $commit_hashes AS commit_hash
+MATCH (c:Commit {hash: commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
+      -[struct_rel:HAS_STRUCT]->(s:Struct)
+      -[field_rel:HAS_FIELD]->(f:StructField)
+WITH c, b, fs_rels, struct_rel, field_rel, f,
+     struct_rel.name + '/' + field_rel.name AS struct_path
+WHERE CASE
+  WHEN $case_sensitive THEN struct_path CONTAINS $search_expr
+  ELSE toLower(struct_path) CONTAINS toLower($search_expr)
+END
+RETURN c.name AS commit_name, c.hash AS commit_hash,
+       b.hash AS blob_hash,
+       '/' + apoc.text.join([rel in fs_rels | rel.name], '/') AS blob_path,
+       '/' + struct_path AS entity_path,
+       f.hash AS node_hash
 `;
 
 // search (legacy - all commits)
@@ -175,28 +301,6 @@ export const GET_COMMIT_CAPABILITIES_QUERY = `
     WITH n, labels(n) AS labels_list
     UNWIND labels_list AS label
     RETURN COLLECT(DISTINCT label) AS uniqueLabels
-`;
-
-// fetch symbols
-export const FETCH_SYMBOLS_QUERY = `
-    MATCH (b:Blob)-[r:HAS_SYMBOL]->(s:Symbol)
-    WHERE b.hash = $blob_hash
-    WITH r.name as symbol_name, s.address as symbol_address
-    ORDER BY symbol_name ASC
-    SKIP toInteger($skip_count)
-    LIMIT toInteger($limit_count)
-    RETURN symbol_name, symbol_address
-`;
-
-// fetch structs
-export const FETCH_STRUCTS_QUERY = `
-MATCH (b:Blob)-[rs:HAS_STRUCT]->(s:Struct)-[rf:HAS_FIELD]->(f:StructField)
-WHERE b.hash = $blob_hash
-WITH rs.name as struct_name, s, collect({field_name: rf.name, field: properties(f)}) as fields
-ORDER BY struct_name ASC
-SKIP toInteger($skip_count)
-LIMIT toInteger($limit_count)
-RETURN struct_name, properties(s) as struct_props, fields
 `;
 
 // blob authorization

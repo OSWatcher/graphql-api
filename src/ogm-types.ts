@@ -43,8 +43,6 @@ export type Query = {
   traversePath?: Maybe<Scalars["String"]["output"]>;
   getCommitExtractedDataLabels: Array<Scalars["String"]["output"]>;
   search: Array<SearchResult>;
-  fetchSymbols: Array<SymbolFetchResult>;
-  fetchStructs: Array<StructFetchResult>;
   hashables: Array<Hashable>;
   hashablesConnection: HashablesConnection;
   hashablesAggregate: HashableAggregateSelection;
@@ -90,15 +88,6 @@ export type Query = {
   searchResults: Array<SearchResult>;
   searchResultsConnection: SearchResultsConnection;
   searchResultsAggregate: SearchResultAggregateSelection;
-  symbolFetchResults: Array<SymbolFetchResult>;
-  symbolFetchResultsConnection: SymbolFetchResultsConnection;
-  symbolFetchResultsAggregate: SymbolFetchResultAggregateSelection;
-  structFieldFetchResults: Array<StructFieldFetchResult>;
-  structFieldFetchResultsConnection: StructFieldFetchResultsConnection;
-  structFieldFetchResultsAggregate: StructFieldFetchResultAggregateSelection;
-  structFetchResults: Array<StructFetchResult>;
-  structFetchResultsConnection: StructFetchResultsConnection;
-  structFetchResultsAggregate: StructFetchResultAggregateSelection;
 };
 
 export type QueryDiffNodesAtArgs = {
@@ -129,16 +118,6 @@ export type QueryGetCommitExtractedDataLabelsArgs = {
 
 export type QuerySearchArgs = {
   input: SearchInput;
-};
-
-export type QueryFetchSymbolsArgs = {
-  blob_hash: Scalars["String"]["input"];
-  options?: InputMaybe<SymbolOptions>;
-};
-
-export type QueryFetchStructsArgs = {
-  blob_hash: Scalars["String"]["input"];
-  options?: InputMaybe<StructOptions>;
 };
 
 export type QueryHashablesArgs = {
@@ -381,54 +360,6 @@ export type QuerySearchResultsAggregateArgs = {
   where?: InputMaybe<SearchResultWhere>;
 };
 
-export type QuerySymbolFetchResultsArgs = {
-  where?: InputMaybe<SymbolFetchResultWhere>;
-  options?: InputMaybe<SymbolFetchResultOptions>;
-};
-
-export type QuerySymbolFetchResultsConnectionArgs = {
-  first?: InputMaybe<Scalars["Int"]["input"]>;
-  after?: InputMaybe<Scalars["String"]["input"]>;
-  where?: InputMaybe<SymbolFetchResultWhere>;
-  sort?: InputMaybe<Array<InputMaybe<SymbolFetchResultSort>>>;
-};
-
-export type QuerySymbolFetchResultsAggregateArgs = {
-  where?: InputMaybe<SymbolFetchResultWhere>;
-};
-
-export type QueryStructFieldFetchResultsArgs = {
-  where?: InputMaybe<StructFieldFetchResultWhere>;
-  options?: InputMaybe<StructFieldFetchResultOptions>;
-};
-
-export type QueryStructFieldFetchResultsConnectionArgs = {
-  first?: InputMaybe<Scalars["Int"]["input"]>;
-  after?: InputMaybe<Scalars["String"]["input"]>;
-  where?: InputMaybe<StructFieldFetchResultWhere>;
-  sort?: InputMaybe<Array<InputMaybe<StructFieldFetchResultSort>>>;
-};
-
-export type QueryStructFieldFetchResultsAggregateArgs = {
-  where?: InputMaybe<StructFieldFetchResultWhere>;
-};
-
-export type QueryStructFetchResultsArgs = {
-  where?: InputMaybe<StructFetchResultWhere>;
-  options?: InputMaybe<StructFetchResultOptions>;
-};
-
-export type QueryStructFetchResultsConnectionArgs = {
-  first?: InputMaybe<Scalars["Int"]["input"]>;
-  after?: InputMaybe<Scalars["String"]["input"]>;
-  where?: InputMaybe<StructFetchResultWhere>;
-  sort?: InputMaybe<Array<InputMaybe<StructFetchResultSort>>>;
-};
-
-export type QueryStructFetchResultsAggregateArgs = {
-  where?: InputMaybe<StructFetchResultWhere>;
-};
-
 export type Mutation = {
   __typename?: "Mutation";
   createBlobs: CreateBlobsMutationResponse;
@@ -473,15 +404,6 @@ export type Mutation = {
   createSearchResults: CreateSearchResultsMutationResponse;
   deleteSearchResults: DeleteInfo;
   updateSearchResults: UpdateSearchResultsMutationResponse;
-  createSymbolFetchResults: CreateSymbolFetchResultsMutationResponse;
-  deleteSymbolFetchResults: DeleteInfo;
-  updateSymbolFetchResults: UpdateSymbolFetchResultsMutationResponse;
-  createStructFieldFetchResults: CreateStructFieldFetchResultsMutationResponse;
-  deleteStructFieldFetchResults: DeleteInfo;
-  updateStructFieldFetchResults: UpdateStructFieldFetchResultsMutationResponse;
-  createStructFetchResults: CreateStructFetchResultsMutationResponse;
-  deleteStructFetchResults: DeleteInfo;
-  updateStructFetchResults: UpdateStructFetchResultsMutationResponse;
 };
 
 export type MutationCreateBlobsArgs = {
@@ -720,45 +642,6 @@ export type MutationUpdateSearchResultsArgs = {
   update?: InputMaybe<SearchResultUpdateInput>;
 };
 
-export type MutationCreateSymbolFetchResultsArgs = {
-  input: Array<SymbolFetchResultCreateInput>;
-};
-
-export type MutationDeleteSymbolFetchResultsArgs = {
-  where?: InputMaybe<SymbolFetchResultWhere>;
-};
-
-export type MutationUpdateSymbolFetchResultsArgs = {
-  where?: InputMaybe<SymbolFetchResultWhere>;
-  update?: InputMaybe<SymbolFetchResultUpdateInput>;
-};
-
-export type MutationCreateStructFieldFetchResultsArgs = {
-  input: Array<StructFieldFetchResultCreateInput>;
-};
-
-export type MutationDeleteStructFieldFetchResultsArgs = {
-  where?: InputMaybe<StructFieldFetchResultWhere>;
-};
-
-export type MutationUpdateStructFieldFetchResultsArgs = {
-  where?: InputMaybe<StructFieldFetchResultWhere>;
-  update?: InputMaybe<StructFieldFetchResultUpdateInput>;
-};
-
-export type MutationCreateStructFetchResultsArgs = {
-  input: Array<StructFetchResultCreateInput>;
-};
-
-export type MutationDeleteStructFetchResultsArgs = {
-  where?: InputMaybe<StructFetchResultWhere>;
-};
-
-export type MutationUpdateStructFetchResultsArgs = {
-  where?: InputMaybe<StructFetchResultWhere>;
-  update?: InputMaybe<StructFetchResultUpdateInput>;
-};
-
 export type Subscription = {
   __typename?: "Subscription";
   searchStream: SearchResult;
@@ -773,18 +656,18 @@ export enum CommitHistoryDirection {
   Backward = "BACKWARD",
 }
 
-export enum CommitScope {
-  Single = "SINGLE",
-  History = "HISTORY",
-  HistoryWithUpdates = "HISTORY_WITH_UPDATES",
-  Range = "RANGE",
-}
-
 export enum DiffStatus {
   New = "NEW",
   Mod = "MOD",
   Del = "DEL",
   Unchanged = "UNCHANGED",
+}
+
+export enum EntityType {
+  Filesystem = "FILESYSTEM",
+  Registry = "REGISTRY",
+  Struct = "STRUCT",
+  Symbol = "SYMBOL",
 }
 
 export enum HashableImplementation {
@@ -808,11 +691,6 @@ export enum NodeType {
   Struct = "Struct",
   StructField = "StructField",
   DataType = "DataType",
-}
-
-export enum SearchEntityType {
-  Filesystem = "FILESYSTEM",
-  Registry = "REGISTRY",
 }
 
 /** An enum for sorting in either ascending or descending order. */
@@ -1310,18 +1188,6 @@ export type CreateSearchResultsMutationResponse = {
   searchResults: Array<SearchResult>;
 };
 
-export type CreateStructFetchResultsMutationResponse = {
-  __typename?: "CreateStructFetchResultsMutationResponse";
-  info: CreateInfo;
-  structFetchResults: Array<StructFetchResult>;
-};
-
-export type CreateStructFieldFetchResultsMutationResponse = {
-  __typename?: "CreateStructFieldFetchResultsMutationResponse";
-  info: CreateInfo;
-  structFieldFetchResults: Array<StructFieldFetchResult>;
-};
-
 export type CreateStructFieldsMutationResponse = {
   __typename?: "CreateStructFieldsMutationResponse";
   info: CreateInfo;
@@ -1332,12 +1198,6 @@ export type CreateStructsMutationResponse = {
   __typename?: "CreateStructsMutationResponse";
   info: CreateInfo;
   structs: Array<Struct>;
-};
-
-export type CreateSymbolFetchResultsMutationResponse = {
-  __typename?: "CreateSymbolFetchResultsMutationResponse";
-  info: CreateInfo;
-  symbolFetchResults: Array<SymbolFetchResult>;
 };
 
 export type CreateSymbolsMutationResponse = {
@@ -1606,7 +1466,7 @@ export type PageInfo = {
 
 export type SearchResult = {
   __typename?: "SearchResult";
-  type: SearchEntityType;
+  type: EntityType;
   commit_name: Scalars["String"]["output"];
   commit_hash: Scalars["String"]["output"];
   blob_path: Scalars["String"]["output"];
@@ -1741,35 +1601,6 @@ export type StructEdge = {
   node: Struct;
 };
 
-export type StructFetchResult = {
-  __typename?: "StructFetchResult";
-  name: Scalars["String"]["output"];
-  size: Scalars["Int"]["output"];
-  kind: Scalars["String"]["output"];
-  fields: Array<StructFieldFetchResult>;
-};
-
-export type StructFetchResultAggregateSelection = {
-  __typename?: "StructFetchResultAggregateSelection";
-  count: Scalars["Int"]["output"];
-  name: StringAggregateSelection;
-  size: IntAggregateSelection;
-  kind: StringAggregateSelection;
-};
-
-export type StructFetchResultEdge = {
-  __typename?: "StructFetchResultEdge";
-  cursor: Scalars["String"]["output"];
-  node: StructFetchResult;
-};
-
-export type StructFetchResultsConnection = {
-  __typename?: "StructFetchResultsConnection";
-  totalCount: Scalars["Int"]["output"];
-  pageInfo: PageInfo;
-  edges: Array<StructFetchResultEdge>;
-};
-
 export type StructField = Hashable & {
   __typename?: "StructField";
   hash: Scalars["String"]["output"];
@@ -1810,33 +1641,6 @@ export type StructFieldEdge = {
   __typename?: "StructFieldEdge";
   cursor: Scalars["String"]["output"];
   node: StructField;
-};
-
-export type StructFieldFetchResult = {
-  __typename?: "StructFieldFetchResult";
-  name: Scalars["String"]["output"];
-  offset: Scalars["Int"]["output"];
-  data_type: Scalars["JSON"]["output"];
-};
-
-export type StructFieldFetchResultAggregateSelection = {
-  __typename?: "StructFieldFetchResultAggregateSelection";
-  count: Scalars["Int"]["output"];
-  name: StringAggregateSelection;
-  offset: IntAggregateSelection;
-};
-
-export type StructFieldFetchResultEdge = {
-  __typename?: "StructFieldFetchResultEdge";
-  cursor: Scalars["String"]["output"];
-  node: StructFieldFetchResult;
-};
-
-export type StructFieldFetchResultsConnection = {
-  __typename?: "StructFieldFetchResultsConnection";
-  totalCount: Scalars["Int"]["output"];
-  pageInfo: PageInfo;
-  edges: Array<StructFieldFetchResultEdge>;
 };
 
 export type StructFieldsConnection = {
@@ -1981,32 +1785,6 @@ export type SymbolEdge = {
   __typename?: "SymbolEdge";
   cursor: Scalars["String"]["output"];
   node: Symbol;
-};
-
-export type SymbolFetchResult = {
-  __typename?: "SymbolFetchResult";
-  name: Scalars["String"]["output"];
-  address: Scalars["String"]["output"];
-};
-
-export type SymbolFetchResultAggregateSelection = {
-  __typename?: "SymbolFetchResultAggregateSelection";
-  count: Scalars["Int"]["output"];
-  name: StringAggregateSelection;
-  address: StringAggregateSelection;
-};
-
-export type SymbolFetchResultEdge = {
-  __typename?: "SymbolFetchResultEdge";
-  cursor: Scalars["String"]["output"];
-  node: SymbolFetchResult;
-};
-
-export type SymbolFetchResultsConnection = {
-  __typename?: "SymbolFetchResultsConnection";
-  totalCount: Scalars["Int"]["output"];
-  pageInfo: PageInfo;
-  edges: Array<SymbolFetchResultEdge>;
 };
 
 export type SymbolsConnection = {
@@ -2205,18 +1983,6 @@ export type UpdateSearchResultsMutationResponse = {
   searchResults: Array<SearchResult>;
 };
 
-export type UpdateStructFetchResultsMutationResponse = {
-  __typename?: "UpdateStructFetchResultsMutationResponse";
-  info: UpdateInfo;
-  structFetchResults: Array<StructFetchResult>;
-};
-
-export type UpdateStructFieldFetchResultsMutationResponse = {
-  __typename?: "UpdateStructFieldFetchResultsMutationResponse";
-  info: UpdateInfo;
-  structFieldFetchResults: Array<StructFieldFetchResult>;
-};
-
 export type UpdateStructFieldsMutationResponse = {
   __typename?: "UpdateStructFieldsMutationResponse";
   info: UpdateInfo;
@@ -2227,12 +1993,6 @@ export type UpdateStructsMutationResponse = {
   __typename?: "UpdateStructsMutationResponse";
   info: UpdateInfo;
   structs: Array<Struct>;
-};
-
-export type UpdateSymbolFetchResultsMutationResponse = {
-  __typename?: "UpdateSymbolFetchResultsMutationResponse";
-  info: UpdateInfo;
-  symbolFetchResults: Array<SymbolFetchResult>;
 };
 
 export type UpdateSymbolsMutationResponse = {
@@ -4192,9 +3952,11 @@ export type CommitPreviousUpdateFieldInput = {
 };
 
 export type CommitRange = {
-  startCommit: Scalars["String"]["input"];
-  scope: CommitScope;
-  endCommit?: InputMaybe<Scalars["String"]["input"]>;
+  startRef: Scalars["String"]["input"];
+  direction?: InputMaybe<CommitHistoryDirection>;
+  include_updates?: InputMaybe<Scalars["Boolean"]["input"]>;
+  branch?: InputMaybe<Scalars["String"]["input"]>;
+  endRef?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 export type CommitRelationInput = {
@@ -5207,12 +4969,12 @@ export type HasNameRelWhere = {
 export type SearchInput = {
   commit_range: CommitRange;
   search_term: Scalars["String"]["input"];
-  entity_types?: InputMaybe<Array<SearchEntityType>>;
+  entity_types?: InputMaybe<Array<EntityType>>;
   case_sensitive?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export type SearchResultCreateInput = {
-  type: SearchEntityType;
+  type: EntityType;
   commit_name: Scalars["String"]["input"];
   commit_hash: Scalars["String"]["input"];
   blob_path: Scalars["String"]["input"];
@@ -5240,7 +5002,7 @@ export type SearchResultSort = {
 };
 
 export type SearchResultUpdateInput = {
-  type?: InputMaybe<SearchEntityType>;
+  type?: InputMaybe<EntityType>;
   commit_name?: InputMaybe<Scalars["String"]["input"]>;
   commit_hash?: InputMaybe<Scalars["String"]["input"]>;
   blob_path?: InputMaybe<Scalars["String"]["input"]>;
@@ -5250,12 +5012,12 @@ export type SearchResultUpdateInput = {
 };
 
 export type SearchResultWhere = {
-  type?: InputMaybe<SearchEntityType>;
+  type?: InputMaybe<EntityType>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  type_NOT?: InputMaybe<SearchEntityType>;
-  type_IN?: InputMaybe<Array<SearchEntityType>>;
+  type_NOT?: InputMaybe<EntityType>;
+  type_IN?: InputMaybe<Array<EntityType>>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  type_NOT_IN?: InputMaybe<Array<SearchEntityType>>;
+  type_NOT_IN?: InputMaybe<Array<EntityType>>;
   commit_name?: InputMaybe<Scalars["String"]["input"]>;
   /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
   commit_name_NOT?: InputMaybe<Scalars["String"]["input"]>;
@@ -5534,80 +5296,6 @@ export type StructDisconnectInput = {
   blob?: InputMaybe<StructBlobDisconnectFieldInput>;
 };
 
-export type StructFetchResultCreateInput = {
-  name: Scalars["String"]["input"];
-  size: Scalars["Int"]["input"];
-  kind: Scalars["String"]["input"];
-};
-
-export type StructFetchResultOptions = {
-  limit?: InputMaybe<Scalars["Int"]["input"]>;
-  offset?: InputMaybe<Scalars["Int"]["input"]>;
-  /** Specify one or more StructFetchResultSort objects to sort StructFetchResults by. The sorts will be applied in the order in which they are arranged in the array. */
-  sort?: InputMaybe<Array<StructFetchResultSort>>;
-};
-
-/** Fields to sort StructFetchResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one StructFetchResultSort object. */
-export type StructFetchResultSort = {
-  name?: InputMaybe<SortDirection>;
-  size?: InputMaybe<SortDirection>;
-  kind?: InputMaybe<SortDirection>;
-};
-
-export type StructFetchResultUpdateInput = {
-  name?: InputMaybe<Scalars["String"]["input"]>;
-  size?: InputMaybe<Scalars["Int"]["input"]>;
-  size_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
-  size_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
-  kind?: InputMaybe<Scalars["String"]["input"]>;
-};
-
-export type StructFetchResultWhere = {
-  name?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
-  name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  size?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  size_NOT?: InputMaybe<Scalars["Int"]["input"]>;
-  size_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  size_NOT_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
-  size_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  size_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  size_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  size_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  kind?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  kind_NOT?: InputMaybe<Scalars["String"]["input"]>;
-  kind_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  kind_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  kind_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  kind_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  kind_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  kind_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  kind_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  kind_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  OR?: InputMaybe<Array<StructFetchResultWhere>>;
-  AND?: InputMaybe<Array<StructFetchResultWhere>>;
-  NOT?: InputMaybe<StructFetchResultWhere>;
-};
-
 export type StructFieldConnectInput = {
   struct?: InputMaybe<StructFieldStructConnectFieldInput>;
 };
@@ -5637,71 +5325,6 @@ export type StructFieldDeleteInput = {
 
 export type StructFieldDisconnectInput = {
   struct?: InputMaybe<StructFieldStructDisconnectFieldInput>;
-};
-
-export type StructFieldFetchResultCreateInput = {
-  name: Scalars["String"]["input"];
-  offset: Scalars["Int"]["input"];
-  data_type: Scalars["JSON"]["input"];
-};
-
-export type StructFieldFetchResultOptions = {
-  limit?: InputMaybe<Scalars["Int"]["input"]>;
-  offset?: InputMaybe<Scalars["Int"]["input"]>;
-  /** Specify one or more StructFieldFetchResultSort objects to sort StructFieldFetchResults by. The sorts will be applied in the order in which they are arranged in the array. */
-  sort?: InputMaybe<Array<StructFieldFetchResultSort>>;
-};
-
-/** Fields to sort StructFieldFetchResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one StructFieldFetchResultSort object. */
-export type StructFieldFetchResultSort = {
-  name?: InputMaybe<SortDirection>;
-  offset?: InputMaybe<SortDirection>;
-  data_type?: InputMaybe<SortDirection>;
-};
-
-export type StructFieldFetchResultUpdateInput = {
-  name?: InputMaybe<Scalars["String"]["input"]>;
-  offset?: InputMaybe<Scalars["Int"]["input"]>;
-  offset_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
-  offset_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
-  data_type?: InputMaybe<Scalars["JSON"]["input"]>;
-};
-
-export type StructFieldFetchResultWhere = {
-  name?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
-  name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  offset?: InputMaybe<Scalars["Int"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  offset_NOT?: InputMaybe<Scalars["Int"]["input"]>;
-  offset_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  offset_NOT_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
-  offset_LT?: InputMaybe<Scalars["Int"]["input"]>;
-  offset_LTE?: InputMaybe<Scalars["Int"]["input"]>;
-  offset_GT?: InputMaybe<Scalars["Int"]["input"]>;
-  offset_GTE?: InputMaybe<Scalars["Int"]["input"]>;
-  data_type?: InputMaybe<Scalars["JSON"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  data_type_NOT?: InputMaybe<Scalars["JSON"]["input"]>;
-  data_type_IN?: InputMaybe<Array<Scalars["JSON"]["input"]>>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  data_type_NOT_IN?: InputMaybe<Array<Scalars["JSON"]["input"]>>;
-  OR?: InputMaybe<Array<StructFieldFetchResultWhere>>;
-  AND?: InputMaybe<Array<StructFieldFetchResultWhere>>;
-  NOT?: InputMaybe<StructFieldFetchResultWhere>;
 };
 
 export type StructFieldOnCreateInput = {
@@ -6476,65 +6099,6 @@ export type SymbolDeleteInput = {
 
 export type SymbolDisconnectInput = {
   blob?: InputMaybe<SymbolBlobDisconnectFieldInput>;
-};
-
-export type SymbolFetchResultCreateInput = {
-  name: Scalars["String"]["input"];
-  address: Scalars["String"]["input"];
-};
-
-export type SymbolFetchResultOptions = {
-  limit?: InputMaybe<Scalars["Int"]["input"]>;
-  offset?: InputMaybe<Scalars["Int"]["input"]>;
-  /** Specify one or more SymbolFetchResultSort objects to sort SymbolFetchResults by. The sorts will be applied in the order in which they are arranged in the array. */
-  sort?: InputMaybe<Array<SymbolFetchResultSort>>;
-};
-
-/** Fields to sort SymbolFetchResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one SymbolFetchResultSort object. */
-export type SymbolFetchResultSort = {
-  name?: InputMaybe<SortDirection>;
-  address?: InputMaybe<SortDirection>;
-};
-
-export type SymbolFetchResultUpdateInput = {
-  name?: InputMaybe<Scalars["String"]["input"]>;
-  address?: InputMaybe<Scalars["String"]["input"]>;
-};
-
-export type SymbolFetchResultWhere = {
-  name?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT?: InputMaybe<Scalars["String"]["input"]>;
-  name_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  name_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  name_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  name_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  name_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  address?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  address_NOT?: InputMaybe<Scalars["String"]["input"]>;
-  address_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  address_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  address_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  address_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  address_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  address_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  address_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
-  address_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
-  OR?: InputMaybe<Array<SymbolFetchResultWhere>>;
-  AND?: InputMaybe<Array<SymbolFetchResultWhere>>;
-  NOT?: InputMaybe<SymbolFetchResultWhere>;
 };
 
 export type SymbolOnCreateInput = {
@@ -8364,148 +7928,6 @@ export declare class SearchResultModel {
   }): Promise<SearchResultAggregateSelection>;
 }
 
-export interface SymbolFetchResultAggregateSelectionInput {
-  count?: boolean;
-  name?: boolean;
-  address?: boolean;
-}
-
-export declare class SymbolFetchResultModel {
-  public find(args?: {
-    where?: SymbolFetchResultWhere;
-
-    options?: SymbolFetchResultOptions;
-    selectionSet?: string | DocumentNode | SelectionSetNode;
-    args?: any;
-    context?: any;
-    rootValue?: any;
-  }): Promise<SymbolFetchResult[]>;
-  public create(args: {
-    input: SymbolFetchResultCreateInput[];
-    selectionSet?: string | DocumentNode | SelectionSetNode;
-    args?: any;
-    context?: any;
-    rootValue?: any;
-  }): Promise<CreateSymbolFetchResultsMutationResponse>;
-  public update(args: {
-    where?: SymbolFetchResultWhere;
-    update?: SymbolFetchResultUpdateInput;
-
-    selectionSet?: string | DocumentNode | SelectionSetNode;
-    args?: any;
-    context?: any;
-    rootValue?: any;
-  }): Promise<UpdateSymbolFetchResultsMutationResponse>;
-  public delete(args: {
-    where?: SymbolFetchResultWhere;
-
-    context?: any;
-    rootValue?: any;
-  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
-  public aggregate(args: {
-    where?: SymbolFetchResultWhere;
-
-    aggregate: SymbolFetchResultAggregateSelectionInput;
-    context?: any;
-    rootValue?: any;
-  }): Promise<SymbolFetchResultAggregateSelection>;
-}
-
-export interface StructFieldFetchResultAggregateSelectionInput {
-  count?: boolean;
-  name?: boolean;
-  offset?: boolean;
-}
-
-export declare class StructFieldFetchResultModel {
-  public find(args?: {
-    where?: StructFieldFetchResultWhere;
-
-    options?: StructFieldFetchResultOptions;
-    selectionSet?: string | DocumentNode | SelectionSetNode;
-    args?: any;
-    context?: any;
-    rootValue?: any;
-  }): Promise<StructFieldFetchResult[]>;
-  public create(args: {
-    input: StructFieldFetchResultCreateInput[];
-    selectionSet?: string | DocumentNode | SelectionSetNode;
-    args?: any;
-    context?: any;
-    rootValue?: any;
-  }): Promise<CreateStructFieldFetchResultsMutationResponse>;
-  public update(args: {
-    where?: StructFieldFetchResultWhere;
-    update?: StructFieldFetchResultUpdateInput;
-
-    selectionSet?: string | DocumentNode | SelectionSetNode;
-    args?: any;
-    context?: any;
-    rootValue?: any;
-  }): Promise<UpdateStructFieldFetchResultsMutationResponse>;
-  public delete(args: {
-    where?: StructFieldFetchResultWhere;
-
-    context?: any;
-    rootValue?: any;
-  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
-  public aggregate(args: {
-    where?: StructFieldFetchResultWhere;
-
-    aggregate: StructFieldFetchResultAggregateSelectionInput;
-    context?: any;
-    rootValue?: any;
-  }): Promise<StructFieldFetchResultAggregateSelection>;
-}
-
-export interface StructFetchResultAggregateSelectionInput {
-  count?: boolean;
-  name?: boolean;
-  size?: boolean;
-  kind?: boolean;
-}
-
-export declare class StructFetchResultModel {
-  public find(args?: {
-    where?: StructFetchResultWhere;
-
-    options?: StructFetchResultOptions;
-    selectionSet?: string | DocumentNode | SelectionSetNode;
-    args?: any;
-    context?: any;
-    rootValue?: any;
-  }): Promise<StructFetchResult[]>;
-  public create(args: {
-    input: StructFetchResultCreateInput[];
-    selectionSet?: string | DocumentNode | SelectionSetNode;
-    args?: any;
-    context?: any;
-    rootValue?: any;
-  }): Promise<CreateStructFetchResultsMutationResponse>;
-  public update(args: {
-    where?: StructFetchResultWhere;
-    update?: StructFetchResultUpdateInput;
-
-    selectionSet?: string | DocumentNode | SelectionSetNode;
-    args?: any;
-    context?: any;
-    rootValue?: any;
-  }): Promise<UpdateStructFetchResultsMutationResponse>;
-  public delete(args: {
-    where?: StructFetchResultWhere;
-
-    context?: any;
-    rootValue?: any;
-  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
-  public aggregate(args: {
-    where?: StructFetchResultWhere;
-
-    aggregate: StructFetchResultAggregateSelectionInput;
-    context?: any;
-    rootValue?: any;
-  }): Promise<StructFetchResultAggregateSelection>;
-}
-
 export interface ModelMap {
   Blob: BlobModel;
   Tree: TreeModel;
@@ -8521,7 +7943,4 @@ export interface ModelMap {
   DiffNodesAtResult: DiffNodesAtResultModel;
   DiffItem: DiffItemModel;
   SearchResult: SearchResultModel;
-  SymbolFetchResult: SymbolFetchResultModel;
-  StructFieldFetchResult: StructFieldFetchResultModel;
-  StructFetchResult: StructFetchResultModel;
 }
