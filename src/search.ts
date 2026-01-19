@@ -3,6 +3,7 @@ import {
     buildCommitRangeQuery,
     searchFSInCommitsQuery,
     searchRegistryInCommitsQuery,
+    searchSymbolInCommitsQuery,
 } from "./queries.js";
 import {
     CommitRange,
@@ -200,6 +201,71 @@ async function* search_registry(
     }
 }
 
+async function* search_symbol(
+    driver: Driver,
+    search_expr: string,
+    commit_range: CommitRange,
+    case_sensitive: boolean = false,
+): AsyncGenerator<OmniSearchResult> {
+    // Resolve refs to commit hashes
+    const startHash = await resolveRef(driver, commit_range.startRef);
+    const endHash = commit_range.endRef
+        ? await resolveRef(driver, commit_range.endRef)
+        : null;
+
+    // Build commit range query
+    const query = buildCommitRangeQuery(
+        commit_range.direction ?? CommitHistoryDirection.Backward,
+        commit_range.include_updates ?? false,
+        commit_range.branch ?? null,
+        endHash !== null,
+    );
+
+    const session = driver.session();
+    const tx = session.beginTransaction();
+
+    try {
+        // First, get the commits in the specified range
+        const commitsResult = await tx.run(query, {
+            startHash,
+            endHash,
+            branch: commit_range.branch,
+        });
+
+        const commit_hashes = commitsResult.records.map(
+            (record) => record.get("commit").properties.hash,
+        );
+
+        // Then search symbols within those commits - using async iteration for streaming
+        const result = tx.run(searchSymbolInCommitsQuery, {
+            commit_hashes,
+            search_expr,
+            case_sensitive,
+        });
+
+        // Stream results as they arrive from Neo4j
+        for await (const record of result) {
+            yield {
+                type: EntityType.Symbol,
+                commit_name: record.get("commit_name"),
+                commit_hash: record.get("commit_hash"),
+                blob_path: record.get("blob_path"),
+                blob_hash: record.get("blob_hash"),
+                entity_path: record.get("symbol_name"),
+                node_hash: record.get("node_hash"),
+            };
+        }
+
+        await tx.commit();
+    } catch (error) {
+        console.error("Error searching symbols:", error);
+        await tx.rollback();
+        throw error;
+    } finally {
+        await session.close();
+    }
+}
+
 async function* search(
     driver: Driver,
     input: OmniSearchInput,
@@ -207,6 +273,7 @@ async function* search(
     const entityTypes = input.entity_types ?? [
         EntityType.Filesystem,
         EntityType.Registry,
+        EntityType.Symbol,
     ];
     const caseSensitive = input.case_sensitive ?? false;
 
@@ -226,6 +293,15 @@ async function* search(
         } else if (entityType === EntityType.Registry) {
             generators.push(
                 search_registry(
+                    driver,
+                    input.search_term,
+                    input.commit_range,
+                    caseSensitive,
+                ),
+            );
+        } else if (entityType === EntityType.Symbol) {
+            generators.push(
+                search_symbol(
                     driver,
                     input.search_term,
                     input.commit_range,

@@ -161,6 +161,27 @@ RETURN c.name AS commit_name, c.hash AS commit_hash,
        '/' + hive.name + '/' + full_path AS entity_path, node_hash
 `;
 
+// Symbol search query - searches PDB symbols by name
+// Note: No CALL {} subquery needed here - symbol search has only one variable-length
+// traversal (filesystem), unlike registry which has two. The HAS_SYMBOL relationship
+// is a direct connection from Blob to Symbol, not a variable-length path.
+export const searchSymbolInCommitsQuery = `
+UNWIND $commit_hashes AS commit_hash
+MATCH (c:Commit {hash: commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
+      -[sym_rel:HAS_SYMBOL]->(s:Symbol)
+WITH c, b, fs_rels, sym_rel, s
+WHERE CASE
+  WHEN $case_sensitive THEN sym_rel.name CONTAINS $search_expr
+  ELSE toLower(sym_rel.name) CONTAINS toLower($search_expr)
+END
+RETURN c.name AS commit_name, c.hash AS commit_hash,
+       b.hash AS blob_hash,
+       '/' + apoc.text.join([rel in fs_rels | rel.name], '/') AS blob_path,
+       sym_rel.name AS symbol_name,
+       s.hash AS node_hash
+`;
+
 // search (legacy - all commits)
 export const searchFSFullPathQuery = `
 MATCH (c:Commit)-[:OWNS_FILESYSTEM]->(root:Tree)-[r:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
