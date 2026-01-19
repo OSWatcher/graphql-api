@@ -182,6 +182,30 @@ RETURN c.name AS commit_name, c.hash AS commit_hash,
        s.hash AS node_hash
 `;
 
+// Struct search query - searches struct/field paths
+// Traverses to StructField and builds full path: /<struct_name>/<field_name>
+// Searches within that path, so both struct names and field names match.
+// Example: "EPROCESS" matches "/_EPROCESS/ImageFileName"
+// Note: No CALL {} subquery needed - same reasoning as symbol search.
+export const searchStructInCommitsQuery = `
+UNWIND $commit_hashes AS commit_hash
+MATCH (c:Commit {hash: commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
+      -[struct_rel:HAS_STRUCT]->(s:Struct)
+      -[field_rel:HAS_FIELD]->(f:StructField)
+WITH c, b, fs_rels, struct_rel, field_rel, f,
+     struct_rel.name + '/' + field_rel.name AS struct_path
+WHERE CASE
+  WHEN $case_sensitive THEN struct_path CONTAINS $search_expr
+  ELSE toLower(struct_path) CONTAINS toLower($search_expr)
+END
+RETURN c.name AS commit_name, c.hash AS commit_hash,
+       b.hash AS blob_hash,
+       '/' + apoc.text.join([rel in fs_rels | rel.name], '/') AS blob_path,
+       '/' + struct_path AS entity_path,
+       f.hash AS node_hash
+`;
+
 // search (legacy - all commits)
 export const searchFSFullPathQuery = `
 MATCH (c:Commit)-[:OWNS_FILESYSTEM]->(root:Tree)-[r:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
