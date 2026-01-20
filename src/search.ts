@@ -37,18 +37,26 @@ async function* mergeAsyncGenerators<T>(
         }
     });
 
-    // Yield from queue as values arrive
-    while (activeCount > 0 || queue.length > 0) {
-        if (queue.length > 0) {
-            yield queue.shift()!;
-        } else if (activeCount > 0) {
-            await new Promise<void>((r) => {
-                resolve = r;
-            });
+    try {
+        // Yield from queue as values arrive
+        while (activeCount > 0 || queue.length > 0) {
+            if (queue.length > 0) {
+                yield queue.shift()!;
+            } else if (activeCount > 0) {
+                await new Promise<void>((r) => {
+                    resolve = r;
+                });
+            }
+        }
+
+        await Promise.all(consumers);
+    } finally {
+        // On early exit (e.g., WebSocket disconnect), clean up all inner generators.
+        // This triggers their finally blocks, closing Neo4j sessions.
+        for (const gen of generators) {
+            gen.return(undefined);
         }
     }
-
-    await Promise.all(consumers);
 }
 
 // Unified search result type (internal)
