@@ -360,8 +360,7 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                 return result?.hash ?? null;
             },
             async getBlobsWithSymbols(_source: unknown, args: unknown) {
-                const validatedArgs =
-                    GetBlobsWithSymbolsArgsSchema.parse(args);
+                const validatedArgs = GetBlobsWithSymbolsArgsSchema.parse(args);
                 const { commit_hash } = validatedArgs;
                 return get_blobs_with_symbols(driver, commit_hash);
             },
