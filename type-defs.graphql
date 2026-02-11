@@ -162,6 +162,11 @@ type DiffItem @query(read: false, aggregate: false) @mutation(operations: []) {
     new_props: HashableNodeProps
 }
 
+type BlobWithSymbols @query(read: false, aggregate: false) @mutation(operations: []) {
+    blob_hash: String!
+    blob_path: String!
+}
+
 type SearchResult @query(read: false, aggregate: false) @mutation(operations: []) {
     type: EntityType!
     commit_name: String!
@@ -222,6 +227,8 @@ type Query {
     getCommitExtractedDataLabels(commit_hash: String!): [String!]!
     # search
     search(input: SearchInput!): [SearchResult!]!
+    # get blobs that have symbols or structs for a given commit
+    getBlobsWithSymbols(commit_hash: String!): [BlobWithSymbols!]!
 }
 
 # custom Subscriptions

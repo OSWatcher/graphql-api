@@ -4,6 +4,7 @@ import {
     FETCH_COMMIT_HISTORY_BACKWARD_QUERY,
     FETCH_COMMIT_HISTORY_FORWARD_QUERY,
     GET_COMMIT_CAPABILITIES_QUERY,
+    GET_BLOBS_WITH_SYMBOLS_QUERY,
     RESOLVE_BRANCH_REF_QUERY,
 } from "./queries.js";
 
@@ -140,4 +141,37 @@ async function resolveRef(driver: Driver, ref: string): Promise<string> {
     }
 }
 
-export { fetch_commit_history, get_commit_capabilities, resolveRef };
+interface BlobWithSymbols {
+    blob_hash: string;
+    blob_path: string;
+}
+
+async function get_blobs_with_symbols(
+    driver: Driver,
+    commit_hash: string,
+): Promise<BlobWithSymbols[]> {
+    const session = driver.session();
+
+    try {
+        const result = await session.executeRead((tx) =>
+            tx.run(GET_BLOBS_WITH_SYMBOLS_QUERY, { commit_hash }),
+        );
+
+        return result.records.map((record) => ({
+            blob_hash: record.get("blob_hash"),
+            blob_path: record.get("blob_path"),
+        }));
+    } catch (error) {
+        console.error("Error fetching blobs with symbols:", error);
+        throw error;
+    } finally {
+        await session.close();
+    }
+}
+
+export {
+    fetch_commit_history,
+    get_commit_capabilities,
+    get_blobs_with_symbols,
+    resolveRef,
+};
