@@ -1,4 +1,8 @@
-import { fetch_commit_history, get_commit_capabilities } from "./commits.js";
+import {
+    fetch_commit_history,
+    get_commit_capabilities,
+    get_blobs_with_symbols,
+} from "./commits.js";
 import { diffTreesIterative } from "./diff/diff.js";
 import {
     Commit,
@@ -19,6 +23,7 @@ import {
     TraversePathArgsSchema,
     DiffNodesArgsSchema,
     GetCommitCapabilitiesArgsSchema,
+    GetBlobsWithSymbolsArgsSchema,
 } from "./validation.js";
 import { GET_NODE_COMMIT_DATES } from "./queries.js";
 
@@ -353,6 +358,11 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                     path,
                 );
                 return result?.hash ?? null;
+            },
+            async getBlobsWithSymbols(_source: unknown, args: unknown) {
+                const validatedArgs = GetBlobsWithSymbolsArgsSchema.parse(args);
+                const { commit_hash } = validatedArgs;
+                return get_blobs_with_symbols(driver, commit_hash);
             },
             async search(_source: unknown, args: unknown, context: any) {
                 // Validate input

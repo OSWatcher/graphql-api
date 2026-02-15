@@ -303,6 +303,16 @@ export const GET_COMMIT_CAPABILITIES_QUERY = `
     RETURN COLLECT(DISTINCT label) AS uniqueLabels
 `;
 
+// blobs with symbols/structs for a given commit
+export const GET_BLOBS_WITH_SYMBOLS_QUERY = `
+MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(b:Blob)
+WHERE EXISTS { (b)-[:HAS_SYMBOL]->() } OR EXISTS { (b)-[:HAS_STRUCT]->() }
+WITH b, '/' + apoc.text.join([rel in fs_rels | rel.name], '/') AS blob_path
+RETURN DISTINCT b.hash AS blob_hash, blob_path
+ORDER BY blob_path
+`;
+
 // blob authorization
 export const CHECK_BLOB_RESTRICTED_QUERY = `
 MATCH (b:Blob)
