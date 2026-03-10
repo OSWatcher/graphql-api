@@ -211,7 +211,17 @@ export const resolvers = (driver: Driver, _ogm: OGM, env: any) => {
                 if (!context.jwt) {
                     // Date-based restriction for non-filesystem diffs and unauthenticated users
                     // Check both base and diffee nodes - BOTH must have at least one commit <= limitYear
-                    if (parent_label !== "Tree") {
+                    // Symbol/Struct/StructField diffs are exempt (public PDB data)
+                    const symbolLabels = new Set([
+                        "Symbol",
+                        "Struct",
+                        "StructField",
+                    ]);
+                    const isSymbolDiff =
+                        filter &&
+                        filter.length > 0 &&
+                        filter.every((f: string) => symbolLabels.has(f));
+                    if (parent_label !== "Tree" && !isSymbolDiff) {
                         const [baseAllowed, diffeeAllowed] = await Promise.all([
                             isNodeAllowedByDateLimit(
                                 driver,
