@@ -4,7 +4,10 @@ import { EntityRootResult } from "./types.js";
 import {
     GET_FILESYSTEM_ROOT_QUERY,
     GET_REGISTRY_ROOT_QUERY,
+    GET_STRUCT_ROOT_QUERY,
+    GET_SYMBOL_ROOT_QUERY,
 } from "../queries.js";
+import { parseStructPath, parseSymbolPath } from "./path-parser.js";
 
 /**
  * Resolves the entity root for a given commit, entity type, and path.
@@ -33,18 +36,10 @@ export async function get_entity_root(
                 return await get_registry_root(session, commit_hash, path);
 
             case EntityType.Struct:
-                // TODO: Implement struct root resolution
-                // - Parse struct name from path (e.g., "_EPROCESS")
-                // - Query: Find struct in /Windows/System32/ntoskrnl.exe
-                // - Return Struct node + field name as remaining path (if any)
-                throw new Error("Struct entity type not yet implemented");
+                return await get_struct_root(session, commit_hash, path);
 
             case EntityType.Symbol:
-                // TODO: Implement symbol root resolution
-                // - Parse symbol name from path
-                // - Query: Find symbol in /Windows/System32/ntoskrnl.exe
-                // - Return Symbol node + empty remaining path
-                throw new Error("Symbol entity type not yet implemented");
+                return await get_symbol_root(session, commit_hash, path);
 
             default:
                 throw new Error(`Unknown entity type: ${entity_type}`);
@@ -68,7 +63,8 @@ async function get_filesystem_root(
     );
 
     if (result.records.length === 0) {
-        throw new Error(`No filesystem root found for commit ${commit_hash}`);
+        // Filesystem doesn't exist in this commit
+        return null;
     }
 
     const root_hash = result.records[0].get("root_hash");
@@ -86,7 +82,7 @@ async function get_filesystem_root(
 /**
  * Get registry root for a commit.
  * Finds the registry hive blob and returns the WinRegKey root node.
- * Path format: SYSTEM/CurrentControlSet/Services/... where SYSTEM is the hive name.
+ * Path format: /SYSTEM/CurrentControlSet/Services/... where SYSTEM is the hive name.
  */
 async function get_registry_root(
     session: Session,
@@ -118,5 +114,74 @@ async function get_registry_root(
         root_hash,
         root_label: "WinRegKey",
         remaining_path: remainingPath,
+    };
+}
+
+/**
+ * Get struct root for a commit.
+ * Finds the PE blob and returns the Struct node.
+ * Path format: /ntoskrnl.exe/_KPROCESS or /ntoskrnl.exe/_PEB_LDR_DATA/InMemoryOrderModuleList
+ */
+async function get_struct_root(
+    session: Session,
+    commit_hash: string,
+    path: string,
+): Promise<EntityRootResult> {
+    const parsed = parseStructPath(path);
+
+    const result = await session.executeRead((tx: ManagedTransaction) =>
+        tx.run(GET_STRUCT_ROOT_QUERY, {
+            commit_hash,
+            pe_filename: parsed.pe_filename,
+            struct_name: parsed.entity_name,
+        }),
+    );
+
+    if (result.records.length === 0) {
+        // Struct doesn't exist in this commit
+        return null;
+    }
+
+    const root_hash = result.records[0].get("root_hash");
+
+    return {
+        root_hash,
+        root_label: "Struct",
+        remaining_path: parsed.remaining_path,
+    };
+}
+
+/**
+ * Get symbol root for a commit.
+ * Finds the PE blob and returns the Symbol node.
+ * Path format: /ntoskrnl.exe/NtCreateFile
+ * Symbols are leaf nodes — remaining_path is always empty.
+ */
+async function get_symbol_root(
+    session: Session,
+    commit_hash: string,
+    path: string,
+): Promise<EntityRootResult> {
+    const parsed = parseSymbolPath(path);
+
+    const result = await session.executeRead((tx: ManagedTransaction) =>
+        tx.run(GET_SYMBOL_ROOT_QUERY, {
+            commit_hash,
+            pe_filename: parsed.pe_filename,
+            symbol_name: parsed.entity_name,
+        }),
+    );
+
+    if (result.records.length === 0) {
+        // Symbol doesn't exist in this commit
+        return null;
+    }
+
+    const root_hash = result.records[0].get("root_hash");
+
+    return {
+        root_hash,
+        root_label: "Symbol",
+        remaining_path: "",
     };
 }

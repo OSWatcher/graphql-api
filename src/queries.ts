@@ -71,7 +71,7 @@ export function buildCommitRangeQuery(
     }
 
     // Build query
-let query = `
+    let query = `
 MATCH (start:Commit {hash: $startHash})`;
 
     // Add branch filter if specified - must aggregate before traversal
@@ -233,6 +233,8 @@ const LABEL_MAP: Record<string, string> = {
     Blob: "Blob",
     WinRegKey: "WinRegKey",
     Struct: "Struct",
+    StructField: "StructField",
+    Symbol: "Symbol",
 } as const;
 
 export const GET_CHILD_NODE = (label: string) => {
@@ -351,4 +353,26 @@ MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(fsRoot:Tree)
       -[:HAS_WINREG]->(regRoot:WinRegKey)
 WHERE last(fs_rels).name = $hiveName
 RETURN regRoot.hash as root_hash
+`;
+
+// git log - struct root resolution
+// Navigates: Commit -> filesystem -> PE blob -> HAS_STRUCT -> Struct
+export const GET_STRUCT_ROOT_QUERY = `
+MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(fsRoot:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(pe:Blob)
+      -[struct_rel:HAS_STRUCT]->(structRoot:Struct)
+WHERE last(fs_rels).name = $pe_filename
+  AND struct_rel.name = $struct_name
+RETURN structRoot.hash as root_hash
+`;
+
+// git log - symbol root resolution
+// Navigates: Commit -> filesystem -> PE blob -> HAS_SYMBOL -> Symbol
+export const GET_SYMBOL_ROOT_QUERY = `
+MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(fsRoot:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(pe:Blob)
+      -[symbol_rel:HAS_SYMBOL]->(symbol:Symbol)
+WHERE last(fs_rels).name = $pe_filename
+  AND symbol_rel.name = $symbol_name
+RETURN symbol.hash as root_hash
 `;
