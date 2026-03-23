@@ -60,6 +60,11 @@ export async function diffNodesAtInternal(
     const base_entry_at = base_entry_result?.hash ?? null;
     const diffee_entry_at = diffee_entry_result?.hash ?? null;
 
+    // If the path doesn't exist in either tree, there's nothing to diff
+    if (base_entry_at == null && diffee_entry_at == null) {
+        return { total_count: 0, items: [] };
+    }
+
     // Determine the actual label to use for diffing
     // Use the label from whichever node exists (prefer base if both exist)
     const actualLabel =
