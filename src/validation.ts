@@ -76,9 +76,7 @@ export const GitLogArgsSchema = z.object({
             limit: z.number().int().positive().max(1000).default(50),
             offset: z.number().int().nonnegative().default(0),
             status_filter: z.array(z.nativeEnum(DiffStatus)).optional(),
-            direction: CommitHistoryDirectionSchema.optional().default(
-                CommitHistoryDirection.Backward,
-            ),
+            order: z.enum(["ASC", "DESC"]).default("DESC"),
         })
         .optional()
         .nullable(),

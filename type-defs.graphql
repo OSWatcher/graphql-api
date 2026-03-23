@@ -29,6 +29,11 @@ enum CommitHistoryDirection {
     BACKWARD
 }
 
+enum GitLogOrder {
+    ASC     # Oldest first
+    DESC    # Newest first
+}
+
 # CommitScope enum removed - replaced by direction + include_updates parameters in CommitRange
 
 enum EntityType {
@@ -187,8 +192,8 @@ input GitLogOptions {
     offset: Int = 0
     # Filter to specific change types
     status_filter: [DiffStatus!]
-    # Direction of traversal (BACKWARD = newest to oldest, FORWARD = oldest to newest)
-    direction: CommitHistoryDirection = BACKWARD
+    # Processing order (DESC = newest first, ASC = oldest first)
+    order: GitLogOrder = DESC
 }
 
 type SearchResult @query(read: false, aggregate: false) @mutation(operations: []) {
@@ -260,10 +265,6 @@ type Query {
         commit_range: CommitRange!
         options: GitLogOptions = null
     ): GitLogResult!
-    # fetch symbols
-    fetchSymbols(blob_hash: String!, options: SymbolOptions): [SymbolFetchResult!]!
-    # fetch structs
-    fetchStructs(blob_hash: String!, options: StructOptions): [StructFetchResult!]!
 }
 
 # custom Subscriptions

@@ -1,4 +1,4 @@
-import { Commit, DiffItem, CommitHistoryDirection } from "../ogm-types.js";
+import { Commit, DiffItem } from "../ogm-types.js";
 
 /**
  * Result of resolving an entity root for a given commit and entity type.
@@ -37,6 +37,6 @@ export type GitLogOptions = {
     offset?: number;
     /** Filter to specific change types */
     status_filter?: string[];
-    /** Direction of traversal (BACKWARD = newest to oldest, FORWARD = oldest to newest) */
-    direction?: CommitHistoryDirection;
+    /** Processing order (DESC = newest first, ASC = oldest first) */
+    order?: "ASC" | "DESC";
 };

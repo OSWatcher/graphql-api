@@ -140,10 +140,10 @@ export async function* git_log_stream(
         return;
     }
 
-    // Handle direction: commits from query are in newest→oldest order
-    // For FORWARD direction, reverse the array to get oldest→newest order
-    const direction = options?.direction ?? CommitHistoryDirection.Backward;
-    if (direction === CommitHistoryDirection.Forward) {
+    // Commits from query are in newest→oldest order
+    // ASC reverses to oldest→newest (chronological), giving correct diff semantics
+    const order = options?.order ?? "DESC";
+    if (order === "ASC") {
         commits.reverse();
     }
 
