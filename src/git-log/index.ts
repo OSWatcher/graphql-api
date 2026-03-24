@@ -65,7 +65,7 @@ async function fetchCommitsInRange(
  * Process a pair of commits to find differences at the specified path.
  *
  * @param driver Neo4j driver instance
- * @param prev Previous commit with its entity root
+ * @param prev Previous commit with its entity root, or null for first appearance
  * @param current Current commit with its entity root
  * @param path Original entity path (for output)
  * @param status_filter Filter for diff statuses
@@ -73,18 +73,25 @@ async function fetchCommitsInRange(
  */
 async function processCommitPair(
     driver: Driver,
-    prev: CommitWithRoot,
+    prev: CommitWithRoot | null,
     current: CommitWithRoot,
     path: string,
     status_filter: string[],
 ): Promise<DiffItem | null> {
-    const at_path = prev.root.remaining_path
-        ? "/" + prev.root.remaining_path
+    // The first time the entity appears in history there is no previous root.
+    // In that case, use the current root metadata to resolve the path/label for
+    // both sides because only the diffee tree exists yet.
+    const rootForPath = prev?.root ?? current.root;
+    const at_path = rootForPath.remaining_path
+        ? "/" + rootForPath.remaining_path
         : "/";
 
     const diffResult = await diffNodesAtInternal(driver, {
-        parent_label: prev.root.root_label,
-        base_node_hash: prev.root.root_hash,
+        parent_label: rootForPath.root_label,
+        // diffNodesAtInternal skips base-side path resolution when
+        // base_node_hash is null, then diffTreesIterative reports the diffee
+        // side as NEW entries.
+        base_node_hash: prev?.root.root_hash ?? null,
         diffee_node_hash: current.root.root_hash,
         at_path,
         max_depth: 0,
@@ -135,8 +142,8 @@ export async function* git_log_stream(
     // Fetch commits in range
     const commits = await fetchCommitsInRange(driver, startHash, endHash, commit_range);
 
-    if (commits.length < 2) {
-        // Not enough commits to compare
+    if (commits.length < 1) {
+        // No commits in range
         return;
     }
 
@@ -167,32 +174,32 @@ export async function* git_log_stream(
 
         const currentCommitWithRoot: CommitWithRoot = { commit, root };
 
-        // If we have a previous valid commit, we can diff and yield
-        if (prevCommitWithRoot) {
-            const diff = await processCommitPair(
-                driver,
-                prevCommitWithRoot,
-                currentCommitWithRoot,
-                path,
-                status_filter,
-            );
+        // Always diff against the previous resolved commit. When there is no
+        // previous commit yet, processCommitPair treats this as the entity's
+        // first appearance and yields NEW entries with a null base commit.
+        const diff = await processCommitPair(
+            driver,
+            prevCommitWithRoot,
+            currentCommitWithRoot,
+            path,
+            status_filter,
+        );
 
-            if (diff) {
-                const action = pagination.process();
+        if (diff) {
+            const action = pagination.process();
 
-                if (action === "yield" || action === "stop") {
-                    yield {
-                        base_commit: prevCommitWithRoot.commit,
-                        diffee_commit: currentCommitWithRoot.commit,
-                        diff,
-                    };
+            if (action === "yield" || action === "stop") {
+                yield {
+                    base_commit: prevCommitWithRoot?.commit ?? null,
+                    diffee_commit: currentCommitWithRoot.commit,
+                    diff,
+                };
 
-                    if (action === "stop") {
-                        return;
-                    }
+                if (action === "stop") {
+                    return;
                 }
-                // "skip" - continue to next iteration without yielding
             }
+            // "skip" - continue to next iteration without yielding
         }
 
         // Slide the window forward
