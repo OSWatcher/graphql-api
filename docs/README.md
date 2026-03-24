@@ -9,6 +9,7 @@ This documentation follows the [Divio documentation framework](https://documenta
 
 Reference documentation provides technical specifications and API details.
 
+- [Data Model](./reference/data-model.md) - Core graph structure and merkle tree architecture
 - [Blob Download API](./reference/blob-api.md) - Complete REST API specification for blob downloads
 - [Access Restrictions](./reference/access-restrictions.md) - Comprehensive catalog of all access control and data filtering mechanisms
 

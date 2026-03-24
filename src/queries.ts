@@ -74,10 +74,23 @@ export function buildCommitRangeQuery(
     let query = `
 MATCH (start:Commit {hash: $startHash})`;
 
+    // Add branch filter if specified - must aggregate before traversal
+    // Get all commits reachable from the branch, not just the HEAD commit
+    if (branch) {
+        query += `
+MATCH (branch:Branch {name: $branch})-[:TRACKS_COMMIT]->(branchHead:Commit)
+MATCH (branchHead)-[:HAS_PREVIOUS*0..]->(tracked:Commit)
+WITH start, COLLECT(tracked) as trackedCommits`;
+    }
     // Add end ref for range queries
     if (hasEndRef) {
         query += `
 MATCH (end:Commit {hash: $endHash})`;
+        // Preserve trackedCommits in WITH clause if branch filter exists
+        if (branch) {
+            query += `
+WITH start, end, trackedCommits`;
+        }
     }
 
     // Add traversal pattern
@@ -88,9 +101,7 @@ MATCH (start)${relationshipPattern}`;
     const whereClauses: string[] = [];
 
     if (branch) {
-        whereClauses.push(
-            "EXISTS { MATCH (:Branch {name: $branch})-[:TRACKS_COMMIT]->(c) }",
-        );
+        whereClauses.push("c IN trackedCommits");
     }
 
     if (hasEndRef) {
@@ -222,6 +233,8 @@ const LABEL_MAP: Record<string, string> = {
     Blob: "Blob",
     WinRegKey: "WinRegKey",
     Struct: "Struct",
+    StructField: "StructField",
+    Symbol: "Symbol",
 } as const;
 
 export const GET_CHILD_NODE = (label: string) => {
@@ -324,4 +337,42 @@ MATCH (br:Branch)-[:TRACKS_COMMIT|HAS_PREVIOUS*]-(c:Commit)
 WHERE br.name = $branch_name
 WITH commit_list_where_hash, collect(c) as branch_reachable_commit_list
 RETURN all(c IN commit_list_where_hash WHERE c IN branch_reachable_commit_list) as is_restricted
+`;
+
+// git log - filesystem root resolution
+export const GET_FILESYSTEM_ROOT_QUERY = `
+MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)
+RETURN root.hash as root_hash
+`;
+
+// git log - registry root resolution
+// Note: Uses last(fs_rels).name to get hive filename from relationship property
+export const GET_REGISTRY_ROOT_QUERY = `
+MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(fsRoot:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(hive:Blob)
+      -[:HAS_WINREG]->(regRoot:WinRegKey)
+WHERE last(fs_rels).name = $hiveName
+RETURN regRoot.hash as root_hash
+`;
+
+// git log - struct root resolution
+// Navigates: Commit -> filesystem -> PE blob -> HAS_STRUCT -> Struct
+export const GET_STRUCT_ROOT_QUERY = `
+MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(fsRoot:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(pe:Blob)
+      -[struct_rel:HAS_STRUCT]->(structRoot:Struct)
+WHERE '/' + apoc.text.join([rel in fs_rels | rel.name], '/') = $blob_path
+  AND struct_rel.name = $struct_name
+RETURN structRoot.hash as root_hash
+`;
+
+// git log - symbol root resolution
+// Navigates: Commit -> filesystem -> PE blob -> HAS_SYMBOL -> Symbol
+export const GET_SYMBOL_ROOT_QUERY = `
+MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(fsRoot:Tree)
+      -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(pe:Blob)
+      -[symbol_rel:HAS_SYMBOL]->(symbol:Symbol)
+WHERE '/' + apoc.text.join([rel in fs_rels | rel.name], '/') = $blob_path
+  AND symbol_rel.name = $symbol_name
+RETURN symbol.hash as root_hash
 `;

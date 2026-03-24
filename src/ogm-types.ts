@@ -43,6 +43,8 @@ export type Query = {
   traversePath?: Maybe<Scalars["String"]["output"]>;
   getCommitExtractedDataLabels: Array<Scalars["String"]["output"]>;
   search: Array<SearchResult>;
+  getBlobsWithSymbols: Array<BlobWithSymbols>;
+  gitLog: GitLogResult;
   hashables: Array<Hashable>;
   hashablesConnection: HashablesConnection;
   hashablesAggregate: HashableAggregateSelection;
@@ -85,6 +87,15 @@ export type Query = {
   diffItems: Array<DiffItem>;
   diffItemsConnection: DiffItemsConnection;
   diffItemsAggregate: DiffItemAggregateSelection;
+  blobWithSymbols: Array<BlobWithSymbols>;
+  blobWithSymbolsConnection: BlobWithSymbolsConnection;
+  blobWithSymbolsAggregate: BlobWithSymbolsAggregateSelection;
+  gitLogEntries: Array<GitLogEntry>;
+  gitLogEntriesConnection: GitLogEntriesConnection;
+  gitLogEntriesAggregate: GitLogEntryAggregateSelection;
+  gitLogResults: Array<GitLogResult>;
+  gitLogResultsConnection: GitLogResultsConnection;
+  gitLogResultsAggregate: GitLogResultAggregateSelection;
   searchResults: Array<SearchResult>;
   searchResultsConnection: SearchResultsConnection;
   searchResultsAggregate: SearchResultAggregateSelection;
@@ -118,6 +129,17 @@ export type QueryGetCommitExtractedDataLabelsArgs = {
 
 export type QuerySearchArgs = {
   input: SearchInput;
+};
+
+export type QueryGetBlobsWithSymbolsArgs = {
+  commit_hash: Scalars["String"]["input"];
+};
+
+export type QueryGitLogArgs = {
+  path: Scalars["String"]["input"];
+  context: EntityType;
+  commit_range: CommitRange;
+  options?: InputMaybe<GitLogOptions>;
 };
 
 export type QueryHashablesArgs = {
@@ -344,6 +366,53 @@ export type QueryDiffItemsAggregateArgs = {
   where?: InputMaybe<DiffItemWhere>;
 };
 
+export type QueryBlobWithSymbolsArgs = {
+  where?: InputMaybe<BlobWithSymbolsWhere>;
+  options?: InputMaybe<BlobWithSymbolsOptions>;
+};
+
+export type QueryBlobWithSymbolsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<BlobWithSymbolsWhere>;
+  sort?: InputMaybe<Array<InputMaybe<BlobWithSymbolsSort>>>;
+};
+
+export type QueryBlobWithSymbolsAggregateArgs = {
+  where?: InputMaybe<BlobWithSymbolsWhere>;
+};
+
+export type QueryGitLogEntriesArgs = {
+  where?: InputMaybe<GitLogEntryWhere>;
+  options?: InputMaybe<GitLogEntryOptions>;
+};
+
+export type QueryGitLogEntriesConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<GitLogEntryWhere>;
+};
+
+export type QueryGitLogEntriesAggregateArgs = {
+  where?: InputMaybe<GitLogEntryWhere>;
+};
+
+export type QueryGitLogResultsArgs = {
+  where?: InputMaybe<GitLogResultWhere>;
+  options?: InputMaybe<GitLogResultOptions>;
+};
+
+export type QueryGitLogResultsConnectionArgs = {
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  where?: InputMaybe<GitLogResultWhere>;
+  sort?: InputMaybe<Array<InputMaybe<GitLogResultSort>>>;
+};
+
+export type QueryGitLogResultsAggregateArgs = {
+  where?: InputMaybe<GitLogResultWhere>;
+};
+
 export type QuerySearchResultsArgs = {
   where?: InputMaybe<SearchResultWhere>;
   options?: InputMaybe<SearchResultOptions>;
@@ -401,6 +470,15 @@ export type Mutation = {
   createDiffItems: CreateDiffItemsMutationResponse;
   deleteDiffItems: DeleteInfo;
   updateDiffItems: UpdateDiffItemsMutationResponse;
+  createBlobWithSymbols: CreateBlobWithSymbolsMutationResponse;
+  deleteBlobWithSymbols: DeleteInfo;
+  updateBlobWithSymbols: UpdateBlobWithSymbolsMutationResponse;
+  createGitLogEntries: CreateGitLogEntriesMutationResponse;
+  deleteGitLogEntries: DeleteInfo;
+  updateGitLogEntries: UpdateGitLogEntriesMutationResponse;
+  createGitLogResults: CreateGitLogResultsMutationResponse;
+  deleteGitLogResults: DeleteInfo;
+  updateGitLogResults: UpdateGitLogResultsMutationResponse;
   createSearchResults: CreateSearchResultsMutationResponse;
   deleteSearchResults: DeleteInfo;
   updateSearchResults: UpdateSearchResultsMutationResponse;
@@ -629,6 +707,45 @@ export type MutationUpdateDiffItemsArgs = {
   update?: InputMaybe<DiffItemUpdateInput>;
 };
 
+export type MutationCreateBlobWithSymbolsArgs = {
+  input: Array<BlobWithSymbolsCreateInput>;
+};
+
+export type MutationDeleteBlobWithSymbolsArgs = {
+  where?: InputMaybe<BlobWithSymbolsWhere>;
+};
+
+export type MutationUpdateBlobWithSymbolsArgs = {
+  where?: InputMaybe<BlobWithSymbolsWhere>;
+  update?: InputMaybe<BlobWithSymbolsUpdateInput>;
+};
+
+export type MutationCreateGitLogEntriesArgs = {
+  input: Array<GitLogEntryCreateInput>;
+};
+
+export type MutationDeleteGitLogEntriesArgs = {
+  where?: InputMaybe<GitLogEntryWhere>;
+};
+
+export type MutationUpdateGitLogEntriesArgs = {
+  where?: InputMaybe<GitLogEntryWhere>;
+  update?: InputMaybe<GitLogEntryUpdateInput>;
+};
+
+export type MutationCreateGitLogResultsArgs = {
+  input: Array<GitLogResultCreateInput>;
+};
+
+export type MutationDeleteGitLogResultsArgs = {
+  where?: InputMaybe<GitLogResultWhere>;
+};
+
+export type MutationUpdateGitLogResultsArgs = {
+  where?: InputMaybe<GitLogResultWhere>;
+  update?: InputMaybe<GitLogResultUpdateInput>;
+};
+
 export type MutationCreateSearchResultsArgs = {
   input: Array<SearchResultCreateInput>;
 };
@@ -645,10 +762,18 @@ export type MutationUpdateSearchResultsArgs = {
 export type Subscription = {
   __typename?: "Subscription";
   searchStream: SearchResult;
+  gitLogStream: GitLogEntry;
 };
 
 export type SubscriptionSearchStreamArgs = {
   input: SearchInput;
+};
+
+export type SubscriptionGitLogStreamArgs = {
+  path: Scalars["String"]["input"];
+  context: EntityType;
+  commit_range: CommitRange;
+  options?: InputMaybe<GitLogOptions>;
 };
 
 export enum CommitHistoryDirection {
@@ -668,6 +793,11 @@ export enum EntityType {
   Registry = "REGISTRY",
   Struct = "STRUCT",
   Symbol = "SYMBOL",
+}
+
+export enum GitLogOrder {
+  Asc = "ASC",
+  Desc = "DESC",
 }
 
 export enum HashableImplementation {
@@ -882,6 +1012,32 @@ export type BlobWinRegKeyHas_WinregAggregationSelection = {
 export type BlobWinRegKeyHas_WinregNodeAggregateSelection = {
   __typename?: "BlobWinRegKeyHas_winregNodeAggregateSelection";
   hash: StringAggregateSelection;
+};
+
+export type BlobWithSymbols = {
+  __typename?: "BlobWithSymbols";
+  blob_hash: Scalars["String"]["output"];
+  blob_path: Scalars["String"]["output"];
+};
+
+export type BlobWithSymbolsAggregateSelection = {
+  __typename?: "BlobWithSymbolsAggregateSelection";
+  count: Scalars["Int"]["output"];
+  blob_hash: StringAggregateSelection;
+  blob_path: StringAggregateSelection;
+};
+
+export type BlobWithSymbolsConnection = {
+  __typename?: "BlobWithSymbolsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<BlobWithSymbolsEdge>;
+};
+
+export type BlobWithSymbolsEdge = {
+  __typename?: "BlobWithSymbolsEdge";
+  cursor: Scalars["String"]["output"];
+  node: BlobWithSymbols;
 };
 
 export type Branch = {
@@ -1137,6 +1293,12 @@ export type CreateBlobsMutationResponse = {
   blobs: Array<Blob>;
 };
 
+export type CreateBlobWithSymbolsMutationResponse = {
+  __typename?: "CreateBlobWithSymbolsMutationResponse";
+  info: CreateInfo;
+  blobWithSymbols: Array<BlobWithSymbols>;
+};
+
 export type CreateBranchesMutationResponse = {
   __typename?: "CreateBranchesMutationResponse";
   info: CreateInfo;
@@ -1165,6 +1327,18 @@ export type CreateDiffNodesAtResultsMutationResponse = {
   __typename?: "CreateDiffNodesAtResultsMutationResponse";
   info: CreateInfo;
   diffNodesAtResults: Array<DiffNodesAtResult>;
+};
+
+export type CreateGitLogEntriesMutationResponse = {
+  __typename?: "CreateGitLogEntriesMutationResponse";
+  info: CreateInfo;
+  gitLogEntries: Array<GitLogEntry>;
+};
+
+export type CreateGitLogResultsMutationResponse = {
+  __typename?: "CreateGitLogResultsMutationResponse";
+  info: CreateInfo;
+  gitLogResults: Array<GitLogResult>;
 };
 
 export type CreateHashableNodePropsMutationResponse = {
@@ -1375,6 +1549,57 @@ export type DiffNodesAtResultsConnection = {
   totalCount: Scalars["Int"]["output"];
   pageInfo: PageInfo;
   edges: Array<DiffNodesAtResultEdge>;
+};
+
+export type GitLogEntriesConnection = {
+  __typename?: "GitLogEntriesConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<GitLogEntryEdge>;
+};
+
+export type GitLogEntry = {
+  __typename?: "GitLogEntry";
+  base_commit?: Maybe<Commit>;
+  diffee_commit: Commit;
+  diff: DiffItem;
+};
+
+export type GitLogEntryAggregateSelection = {
+  __typename?: "GitLogEntryAggregateSelection";
+  count: Scalars["Int"]["output"];
+};
+
+export type GitLogEntryEdge = {
+  __typename?: "GitLogEntryEdge";
+  cursor: Scalars["String"]["output"];
+  node: GitLogEntry;
+};
+
+export type GitLogResult = {
+  __typename?: "GitLogResult";
+  total_count: Scalars["Int"]["output"];
+  entries: Array<GitLogEntry>;
+  has_more: Scalars["Boolean"]["output"];
+};
+
+export type GitLogResultAggregateSelection = {
+  __typename?: "GitLogResultAggregateSelection";
+  count: Scalars["Int"]["output"];
+  total_count: IntAggregateSelection;
+};
+
+export type GitLogResultEdge = {
+  __typename?: "GitLogResultEdge";
+  cursor: Scalars["String"]["output"];
+  node: GitLogResult;
+};
+
+export type GitLogResultsConnection = {
+  __typename?: "GitLogResultsConnection";
+  totalCount: Scalars["Int"]["output"];
+  pageInfo: PageInfo;
+  edges: Array<GitLogResultEdge>;
 };
 
 /**
@@ -1930,6 +2155,12 @@ export type UpdateBlobsMutationResponse = {
   blobs: Array<Blob>;
 };
 
+export type UpdateBlobWithSymbolsMutationResponse = {
+  __typename?: "UpdateBlobWithSymbolsMutationResponse";
+  info: UpdateInfo;
+  blobWithSymbols: Array<BlobWithSymbols>;
+};
+
 export type UpdateBranchesMutationResponse = {
   __typename?: "UpdateBranchesMutationResponse";
   info: UpdateInfo;
@@ -1958,6 +2189,18 @@ export type UpdateDiffNodesAtResultsMutationResponse = {
   __typename?: "UpdateDiffNodesAtResultsMutationResponse";
   info: UpdateInfo;
   diffNodesAtResults: Array<DiffNodesAtResult>;
+};
+
+export type UpdateGitLogEntriesMutationResponse = {
+  __typename?: "UpdateGitLogEntriesMutationResponse";
+  info: UpdateInfo;
+  gitLogEntries: Array<GitLogEntry>;
+};
+
+export type UpdateGitLogResultsMutationResponse = {
+  __typename?: "UpdateGitLogResultsMutationResponse";
+  info: UpdateInfo;
+  gitLogResults: Array<GitLogResult>;
 };
 
 export type UpdateHashableNodePropsMutationResponse = {
@@ -2891,6 +3134,65 @@ export type BlobWhere = {
   /** Return Blobs where some of the related BlobHas_structConnections match this filter */
   has_structConnection_SOME?: InputMaybe<BlobHas_StructConnectionWhere>;
   has_structAggregate?: InputMaybe<BlobHas_StructAggregateInput>;
+};
+
+export type BlobWithSymbolsCreateInput = {
+  blob_hash: Scalars["String"]["input"];
+  blob_path: Scalars["String"]["input"];
+};
+
+export type BlobWithSymbolsOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more BlobWithSymbolsSort objects to sort BlobWithSymbols by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<BlobWithSymbolsSort>>;
+};
+
+/** Fields to sort BlobWithSymbols by. The order in which sorts are applied is not guaranteed when specifying many fields in one BlobWithSymbolsSort object. */
+export type BlobWithSymbolsSort = {
+  blob_hash?: InputMaybe<SortDirection>;
+  blob_path?: InputMaybe<SortDirection>;
+};
+
+export type BlobWithSymbolsUpdateInput = {
+  blob_hash?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type BlobWithSymbolsWhere = {
+  blob_hash?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  blob_hash_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  blob_hash_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  blob_hash_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  blob_hash_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  blob_hash_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  blob_hash_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  blob_hash_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  blob_path_NOT?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  blob_path_NOT_IN?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  blob_path_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  blob_path_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  blob_path_NOT_CONTAINS?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  blob_path_NOT_STARTS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  blob_path_NOT_ENDS_WITH?: InputMaybe<Scalars["String"]["input"]>;
+  OR?: InputMaybe<Array<BlobWithSymbolsWhere>>;
+  AND?: InputMaybe<Array<BlobWithSymbolsWhere>>;
+  NOT?: InputMaybe<BlobWithSymbolsWhere>;
 };
 
 export type BranchConnectInput = {
@@ -4692,6 +4994,78 @@ export type DiffNodesOptions = {
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   offset?: InputMaybe<Scalars["Int"]["input"]>;
   status_filter?: InputMaybe<Array<DiffStatus>>;
+};
+
+export type GitLogEntryCreateInput = {
+  /** Appears because this input type would be empty otherwise because this type is composed of just generated and/or relationship properties. See https://neo4j.com/docs/graphql-manual/current/troubleshooting/faqs/ */
+  _emptyInput?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type GitLogEntryOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type GitLogEntryUpdateInput = {
+  /** Appears because this input type would be empty otherwise because this type is composed of just generated and/or relationship properties. See https://neo4j.com/docs/graphql-manual/current/troubleshooting/faqs/ */
+  _emptyInput?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type GitLogEntryWhere = {
+  OR?: InputMaybe<Array<GitLogEntryWhere>>;
+  AND?: InputMaybe<Array<GitLogEntryWhere>>;
+  NOT?: InputMaybe<GitLogEntryWhere>;
+};
+
+export type GitLogOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  status_filter?: InputMaybe<Array<DiffStatus>>;
+  order?: InputMaybe<GitLogOrder>;
+};
+
+export type GitLogResultCreateInput = {
+  total_count: Scalars["Int"]["input"];
+  has_more: Scalars["Boolean"]["input"];
+};
+
+export type GitLogResultOptions = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Specify one or more GitLogResultSort objects to sort GitLogResults by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<GitLogResultSort>>;
+};
+
+/** Fields to sort GitLogResults by. The order in which sorts are applied is not guaranteed when specifying many fields in one GitLogResultSort object. */
+export type GitLogResultSort = {
+  total_count?: InputMaybe<SortDirection>;
+  has_more?: InputMaybe<SortDirection>;
+};
+
+export type GitLogResultUpdateInput = {
+  total_count?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_INCREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_DECREMENT?: InputMaybe<Scalars["Int"]["input"]>;
+  has_more?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type GitLogResultWhere = {
+  total_count?: InputMaybe<Scalars["Int"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  total_count_NOT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  total_count_NOT_IN?: InputMaybe<Array<Scalars["Int"]["input"]>>;
+  total_count_LT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_LTE?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_GT?: InputMaybe<Scalars["Int"]["input"]>;
+  total_count_GTE?: InputMaybe<Scalars["Int"]["input"]>;
+  has_more?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** @deprecated Negation filters will be deprecated, use the NOT operator to achieve the same behavior */
+  has_more_NOT?: InputMaybe<Scalars["Boolean"]["input"]>;
+  OR?: InputMaybe<Array<GitLogResultWhere>>;
+  AND?: InputMaybe<Array<GitLogResultWhere>>;
+  NOT?: InputMaybe<GitLogResultWhere>;
 };
 
 export type HasFilenameRelAggregationWhereInput = {
@@ -7877,6 +8251,144 @@ export declare class DiffItemModel {
   }): Promise<DiffItemAggregateSelection>;
 }
 
+export interface BlobWithSymbolsAggregateSelectionInput {
+  count?: boolean;
+  blob_hash?: boolean;
+  blob_path?: boolean;
+}
+
+export declare class BlobWithSymbolsModel {
+  public find(args?: {
+    where?: BlobWithSymbolsWhere;
+
+    options?: BlobWithSymbolsOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<BlobWithSymbols[]>;
+  public create(args: {
+    input: BlobWithSymbolsCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateBlobWithSymbolsMutationResponse>;
+  public update(args: {
+    where?: BlobWithSymbolsWhere;
+    update?: BlobWithSymbolsUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateBlobWithSymbolsMutationResponse>;
+  public delete(args: {
+    where?: BlobWithSymbolsWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: BlobWithSymbolsWhere;
+
+    aggregate: BlobWithSymbolsAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<BlobWithSymbolsAggregateSelection>;
+}
+
+export interface GitLogEntryAggregateSelectionInput {
+  count?: boolean;
+}
+
+export declare class GitLogEntryModel {
+  public find(args?: {
+    where?: GitLogEntryWhere;
+
+    options?: GitLogEntryOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<GitLogEntry[]>;
+  public create(args: {
+    input: GitLogEntryCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateGitLogEntriesMutationResponse>;
+  public update(args: {
+    where?: GitLogEntryWhere;
+    update?: GitLogEntryUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateGitLogEntriesMutationResponse>;
+  public delete(args: {
+    where?: GitLogEntryWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: GitLogEntryWhere;
+
+    aggregate: GitLogEntryAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<GitLogEntryAggregateSelection>;
+}
+
+export interface GitLogResultAggregateSelectionInput {
+  count?: boolean;
+  total_count?: boolean;
+}
+
+export declare class GitLogResultModel {
+  public find(args?: {
+    where?: GitLogResultWhere;
+
+    options?: GitLogResultOptions;
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<GitLogResult[]>;
+  public create(args: {
+    input: GitLogResultCreateInput[];
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<CreateGitLogResultsMutationResponse>;
+  public update(args: {
+    where?: GitLogResultWhere;
+    update?: GitLogResultUpdateInput;
+
+    selectionSet?: string | DocumentNode | SelectionSetNode;
+    args?: any;
+    context?: any;
+    rootValue?: any;
+  }): Promise<UpdateGitLogResultsMutationResponse>;
+  public delete(args: {
+    where?: GitLogResultWhere;
+
+    context?: any;
+    rootValue?: any;
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>;
+  public aggregate(args: {
+    where?: GitLogResultWhere;
+
+    aggregate: GitLogResultAggregateSelectionInput;
+    context?: any;
+    rootValue?: any;
+  }): Promise<GitLogResultAggregateSelection>;
+}
+
 export interface SearchResultAggregateSelectionInput {
   count?: boolean;
   commit_name?: boolean;
@@ -7942,5 +8454,8 @@ export interface ModelMap {
   HashableNodeProps: HashableNodePropsModel;
   DiffNodesAtResult: DiffNodesAtResultModel;
   DiffItem: DiffItemModel;
+  BlobWithSymbols: BlobWithSymbolsModel;
+  GitLogEntry: GitLogEntryModel;
+  GitLogResult: GitLogResultModel;
   SearchResult: SearchResultModel;
 }

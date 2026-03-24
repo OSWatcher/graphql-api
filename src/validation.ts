@@ -63,6 +63,25 @@ export const SearchInputSchema = z.object({
     case_sensitive: z.boolean().optional().default(false),
 });
 
+// Git log arguments
+export const GitLogArgsSchema = z.object({
+    path: z
+        .string()
+        .min(1, "Path cannot be empty")
+        .startsWith("/", "Path must be absolute"),
+    context: EntityTypeSchema,
+    commit_range: CommitRangeSchema,
+    options: z
+        .object({
+            limit: z.number().int().positive().max(1000).default(50),
+            offset: z.number().int().nonnegative().default(0),
+            status_filter: z.array(z.nativeEnum(DiffStatus)).optional(),
+            order: z.enum(["ASC", "DESC"]).default("DESC"),
+        })
+        .optional()
+        .nullable(),
+});
+
 // Fetch commit history arguments
 export const FetchCommitHistoryArgsSchema = z.object({
     commit_hash: GitSHA1Schema,

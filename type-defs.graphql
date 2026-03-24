@@ -29,6 +29,11 @@ enum CommitHistoryDirection {
     BACKWARD
 }
 
+enum GitLogOrder {
+    ASC     # Oldest first
+    DESC    # Newest first
+}
+
 # CommitScope enum removed - replaced by direction + include_updates parameters in CommitRange
 
 enum EntityType {
@@ -167,6 +172,30 @@ type BlobWithSymbols @query(read: false, aggregate: false) @mutation(operations:
     blob_path: String!
 }
 
+type GitLogEntry @query(read: false, aggregate: false) @mutation(operations: []) {
+    # Older commit (null for first appearance in history)
+    base_commit: Commit
+    # Newer commit where change is visible
+    diffee_commit: Commit!
+    # The change details
+    diff: DiffItem!
+}
+
+type GitLogResult @query(read: false, aggregate: false) @mutation(operations: []) {
+    total_count: Int!
+    entries: [GitLogEntry!]!
+    has_more: Boolean!
+}
+
+input GitLogOptions {
+    limit: Int = 50
+    offset: Int = 0
+    # Filter to specific change types
+    status_filter: [DiffStatus!]
+    # Processing order (DESC = newest first, ASC = oldest first)
+    order: GitLogOrder = DESC
+}
+
 type SearchResult @query(read: false, aggregate: false) @mutation(operations: []) {
     type: EntityType!
     commit_name: String!
@@ -229,10 +258,25 @@ type Query {
     search(input: SearchInput!): [SearchResult!]!
     # get blobs that have symbols or structs for a given commit
     getBlobsWithSymbols(commit_hash: String!): [BlobWithSymbols!]!
+    # git log - track entity changes across commit history
+    gitLog(
+        path: String!
+        context: EntityType!
+        commit_range: CommitRange!
+        options: GitLogOptions = null
+    ): GitLogResult!
 }
 
 # custom Subscriptions
 type Subscription {
     # search (streaming) - results are streamed as they are found
     searchStream(input: SearchInput!): SearchResult!
+
+    # git log (streaming) - entries are streamed as they are computed
+    gitLogStream(
+        path: String!
+        context: EntityType!
+        commit_range: CommitRange!
+        options: GitLogOptions = null
+    ): GitLogEntry!
 }
