@@ -5,11 +5,11 @@
 
 /**
  * Parsed path for struct/symbol entity types.
- * Separates the PE filename (used for root resolution) from the entity path within.
+ * Separates the exact blob path (used for root resolution) from the entity path within.
  */
 export type ParsedEntityPath = {
-    /** PE filename, e.g., "ntoskrnl.exe" */
-    pe_filename: string;
+    /** Full filesystem blob path, e.g., "/Windows/System32/ntoskrnl.exe" */
+    blob_path: string;
     /** Entity name (struct or symbol name), e.g., "_KPROCESS" or "NtCreateFile" */
     entity_name: string;
     /** Remaining sub-path after entity root (e.g., field name for structs, empty for symbols) */
@@ -17,43 +17,65 @@ export type ParsedEntityPath = {
 };
 
 /**
- * Parse a struct path: {pe_filename}/{struct_name} or {pe_filename}/{struct_name}/{field_name}
+ * Parse a struct path: {blob_path}::{struct_name} or {blob_path}::{struct_name}/{field_name}
  *
  * Examples:
- *   "/ntoskrnl.exe/_KPROCESS" -> { pe_filename: "ntoskrnl.exe", entity_name: "_KPROCESS", remaining_path: "" }
- *   "/ntoskrnl.exe/_PEB_LDR_DATA/InMemoryOrderModuleList" -> { pe_filename: "ntoskrnl.exe", entity_name: "_PEB_LDR_DATA", remaining_path: "InMemoryOrderModuleList" }
+ *   "/Windows/System32/ntoskrnl.exe::_KPROCESS" -> { blob_path: "/Windows/System32/ntoskrnl.exe", entity_name: "_KPROCESS", remaining_path: "" }
+ *   "/Windows/System32/ntoskrnl.exe::_PEB_LDR_DATA/InMemoryOrderModuleList" -> { blob_path: "/Windows/System32/ntoskrnl.exe", entity_name: "_PEB_LDR_DATA", remaining_path: "InMemoryOrderModuleList" }
  */
 export function parseStructPath(path: string): ParsedEntityPath {
-    const parts = path.split("/").filter(Boolean);
-    if (parts.length < 2) {
+    const separatorIndex = path.indexOf("::");
+    if (separatorIndex <= 0) {
         throw new Error(
-            `Invalid struct path "${path}": expected at least {pe_filename}/{struct_name}`,
+            `Invalid struct path "${path}": expected /{blob_path}::{struct_name}[/{field_path}]`,
         );
     }
+
+    const blob_path = path.slice(0, separatorIndex);
+    const entityPath = path.slice(separatorIndex + 2);
+    const parts = entityPath.split("/").filter(Boolean);
+
+    if (!blob_path.startsWith("/") || parts.length < 1) {
+        throw new Error(
+            `Invalid struct path "${path}": expected /{blob_path}::{struct_name}[/{field_path}]`,
+        );
+    }
+
     return {
-        pe_filename: parts[0],
-        entity_name: parts[1],
-        remaining_path: parts.slice(2).join("/"),
+        blob_path,
+        entity_name: parts[0],
+        remaining_path: parts.slice(1).join("/"),
     };
 }
 
 /**
- * Parse a symbol path: {pe_filename}/{symbol_name}
+ * Parse a symbol path: {blob_path}::{symbol_name}
  * Symbols are leaf nodes, so no remaining path is expected.
  *
  * Examples:
- *   "/ntoskrnl.exe/NtCreateFile" -> { pe_filename: "ntoskrnl.exe", entity_name: "NtCreateFile", remaining_path: "" }
+ *   "/Windows/System32/ntoskrnl.exe::NtCreateFile" -> { blob_path: "/Windows/System32/ntoskrnl.exe", entity_name: "NtCreateFile", remaining_path: "" }
  */
 export function parseSymbolPath(path: string): ParsedEntityPath {
-    const parts = path.split("/").filter(Boolean);
-    if (parts.length !== 2) {
+    const separatorIndex = path.indexOf("::");
+    if (separatorIndex <= 0) {
         throw new Error(
-            `Invalid symbol path "${path}": expected exactly {pe_filename}/{symbol_name}`,
+            `Invalid symbol path "${path}": expected /{blob_path}::{symbol_name}`,
         );
     }
+
+    const blob_path = path.slice(0, separatorIndex);
+    const entityPath = path.slice(separatorIndex + 2);
+    const parts = entityPath.split("/").filter(Boolean);
+
+    if (!blob_path.startsWith("/") || parts.length !== 1) {
+        throw new Error(
+            `Invalid symbol path "${path}": expected /{blob_path}::{symbol_name}`,
+        );
+    }
+
     return {
-        pe_filename: parts[0],
-        entity_name: parts[1],
+        blob_path,
+        entity_name: parts[0],
         remaining_path: "",
     };
 }

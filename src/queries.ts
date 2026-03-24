@@ -361,7 +361,7 @@ export const GET_STRUCT_ROOT_QUERY = `
 MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(fsRoot:Tree)
       -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(pe:Blob)
       -[struct_rel:HAS_STRUCT]->(structRoot:Struct)
-WHERE last(fs_rels).name = $pe_filename
+WHERE '/' + apoc.text.join([rel in fs_rels | rel.name], '/') = $blob_path
   AND struct_rel.name = $struct_name
 RETURN structRoot.hash as root_hash
 `;
@@ -372,7 +372,7 @@ export const GET_SYMBOL_ROOT_QUERY = `
 MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(fsRoot:Tree)
       -[fs_rels:HAS_CHILD_TREE|HAS_CHILD_BLOB*]->(pe:Blob)
       -[symbol_rel:HAS_SYMBOL]->(symbol:Symbol)
-WHERE last(fs_rels).name = $pe_filename
+WHERE '/' + apoc.text.join([rel in fs_rels | rel.name], '/') = $blob_path
   AND symbol_rel.name = $symbol_name
 RETURN symbol.hash as root_hash
 `;

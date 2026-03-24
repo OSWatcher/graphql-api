@@ -120,7 +120,8 @@ async function get_registry_root(
 /**
  * Get struct root for a commit.
  * Finds the PE blob and returns the Struct node.
- * Path format: /ntoskrnl.exe/_KPROCESS or /ntoskrnl.exe/_PEB_LDR_DATA/InMemoryOrderModuleList
+ * Path format: /Windows/System32/ntoskrnl.exe::_KPROCESS
+ *   or /Windows/System32/ntoskrnl.exe::_PEB_LDR_DATA/InMemoryOrderModuleList
  */
 async function get_struct_root(
     session: Session,
@@ -132,7 +133,7 @@ async function get_struct_root(
     const result = await session.executeRead((tx: ManagedTransaction) =>
         tx.run(GET_STRUCT_ROOT_QUERY, {
             commit_hash,
-            pe_filename: parsed.pe_filename,
+            blob_path: parsed.blob_path,
             struct_name: parsed.entity_name,
         }),
     );
@@ -154,7 +155,7 @@ async function get_struct_root(
 /**
  * Get symbol root for a commit.
  * Finds the PE blob and returns the Symbol node.
- * Path format: /ntoskrnl.exe/NtCreateFile
+ * Path format: /Windows/System32/ntoskrnl.exe::NtCreateFile
  * Symbols are leaf nodes — remaining_path is always empty.
  */
 async function get_symbol_root(
@@ -167,7 +168,7 @@ async function get_symbol_root(
     const result = await session.executeRead((tx: ManagedTransaction) =>
         tx.run(GET_SYMBOL_ROOT_QUERY, {
             commit_hash,
-            pe_filename: parsed.pe_filename,
+            blob_path: parsed.blob_path,
             symbol_name: parsed.entity_name,
         }),
     );
