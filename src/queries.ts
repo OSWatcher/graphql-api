@@ -252,25 +252,6 @@ RETURN c, labels(c) as child_labels
 `;
 };
 
-export const GET_NODE_COMMIT_DATES = (label: string) => {
-    // Validate label against whitelist to prevent Cypher injection
-    const safeLabel = LABEL_MAP[label];
-    if (!safeLabel) {
-        throw new Error(`Invalid label type for commit lookup: ${label}`);
-    }
-
-    // Single query pattern that works for all node types:
-    // - Traverses up from node through any relationships (including zero-length for root Trees)
-    // - Finds root Tree nodes (those with OWNS_FILESYSTEM relationship)
-    // - Follows OWNS_FILESYSTEM to get parent Commits
-    // - Returns ALL commit dates since node can appear in multiple commits
-    return `
-MATCH (n:${safeLabel} {hash: $node_hash})<-[*]-(root:Tree)<-[:OWNS_FILESYSTEM]-(c:Commit)
-RETURN c.date as date
-ORDER BY c.date DESC
-`;
-};
-
 // constraints
 const CONSTRAINT_LABELS = {
     Blob: "Blob",

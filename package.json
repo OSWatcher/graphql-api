@@ -23,7 +23,7 @@
   },
   "keywords": [],
   "author": "Mathieu Tarral",
-  "license": "PROPRIETARY",
+  "license": "Apache-2.0",
   "private": true,
   "dependencies": {
     "@apollo/server": "5.0.0",

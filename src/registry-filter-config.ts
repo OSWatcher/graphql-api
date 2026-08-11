@@ -3,7 +3,6 @@
  */
 
 export const REDACTED_VALUE = "[REDACTED]";
-export const HIDDEN_VALUE = "[HIDDEN]";
 
 const DEFAULT_SENSITIVE_VALUE_NAMES = [
     "DigitalProductId",

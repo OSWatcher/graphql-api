@@ -38,10 +38,4 @@ ALLOWED_ORIGINS=https://oswatcher.github.io,http://127.0.0.1:8080
 # Comma-separated list of sensitive registry value names to redact
 # Default: DigitalProductId,ProductId
 SENSITIVE_REGISTRY_VALUES=
-
-# Optional - Diff Date Limitation
-# Year limit for non-filesystem diffs (Blob/WinRegKey)
-# Diffs for nodes only in commits after this year are restricted
-# Default: 2020
-DIFF_DATE_LIMIT_YEAR=2020
 ~~~

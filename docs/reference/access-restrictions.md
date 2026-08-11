@@ -124,9 +124,7 @@ Result: isBlobRestricted(Y, "windows-10") = false → 200 OK
 
 ### Purpose
 
-Protects Windows registry data through two mechanisms:
-1. **Sensitive value redaction** - Always redacts product keys and license identifiers (e.g., ProductId)
-2. **Authentication-based hiding** - Hides all registry values from unauthenticated users
+Protects Windows registry data by redacting sensitive product keys and license identifiers (e.g., `ProductId`) from all responses, regardless of authentication status.
 
 ### Scope
 
@@ -136,10 +134,10 @@ Protects Windows registry data through two mechanisms:
 
 ### Behavior Summary
 
-| User Type       | Sensitive Value | Non-Sensitive Value |
-|-----------------|-----------------|---------------------|
-| Authenticated   | `[REDACTED]`    | Actual value        |
-| Unauthenticated | `[REDACTED]`    | `[HIDDEN]`          |
+| Value Type       | Result        |
+|-------------------|---------------|
+| Sensitive value    | `[REDACTED]`  |
+| Non-sensitive value | Actual value  |
 
 ### Implementation
 
@@ -147,19 +145,18 @@ Protects Windows registry data through two mechanisms:
 - `src/registry-response-filter.ts` - Filtering logic
 - `src/registry-filter-config.ts` - Configuration and sensitive value list
 
-**Function:** `filterSensitiveRegistryValues(responseData, isAuthenticated)`
+**Function:** `filterSensitiveRegistryValues(responseData)`
 
 **Hook Location:** `src/index.ts` Apollo Server plugin
 
 ```typescript
 {
-  async requestDidStart({ contextValue }: any) {
-    const isAuthenticated = !!contextValue?.jwt;
+  async requestDidStart() {
     return {
       async willSendResponse({ response }: any) {
         if (response?.body?.kind === 'single' && response.body.singleResult?.data) {
           try {
-            filterSensitiveRegistryValues(response.body.singleResult.data, isAuthenticated);
+            filterSensitiveRegistryValues(response.body.singleResult.data);
           } catch (error) {
             console.error('Registry filter error:', error);
             // Fail-open: don't break API if filtering fails
@@ -514,125 +511,12 @@ When adding new restrictions:
 
 ---
 
-## 3. Recursive Diff Authentication Requirement
-
-### Purpose
-
-Restricts recursive diffing operations to authenticated users only. Single-level diffs (`max_depth: 0`) remain available for anonymous users.
-
-### Implementation
-
-**File:** `src/resolvers.ts` - `diffNodesAt` resolver
-
-**Logic:** Check `max_depth` parameter:
-- `max_depth === 0` → Non-recursive - allowed for all users
-- `max_depth !== 0` (including `null`, `undefined`, or any other value) → Recursive - requires JWT authentication
-
-**Error Message:** "Recursive diffing requires authentication. Please provide a valid JWT token."
-
-### Rationale
-
-Recursive diffs are computationally expensive and can traverse entire filesystem trees. Restricting to authenticated users prevents DoS attacks while allowing basic exploration for anonymous users.
-
----
-
-## 4. HISTORY_WITH_UPDATES Search Mode Authentication Requirement
-
-### Purpose
-
-Restricts the `HISTORY_WITH_UPDATES` commit search scope to authenticated users only. Other search modes (`SINGLE`, `HISTORY`, `RANGE`) remain available for all users.
-
-### Implementation
-
-**Files:**
-- `src/resolvers.ts` - `search` query and `searchStream` subscription resolvers
-- `src/auth/websocket-jwt.ts` - JWT extraction and verification utilities
-- `src/index.ts` - WebSocket context configuration
-
-**Scope:** Applies to both:
-- `search` query - Returns array of results (HTTP/GraphQL)
-- `searchStream` subscription - Streams results in real-time (WebSocket)
-
-**Logic:**
-- Check `commit_range.scope` parameter
-- If `CommitScope.HistoryWithUpdates` and `!context.jwt` → Block request
-- Other scopes (`SINGLE`, `HISTORY`, `RANGE`) → Allowed for all users
-
-**Authentication Methods:**
-- **HTTP Queries**: JWT validated via `express-oauth2-jwt-bearer` middleware from `Authorization: Bearer <token>` header
-- **WebSocket Subscriptions**: JWT validated from `connectionParams` using Auth0 JWKS verification
-  - Client sends: `connectionParams: { authorization: "Bearer <token>" }` or `{ token: "<token>" }`
-  - Server extracts and verifies JWT using `jose` library
-  - Populates `context.jwt` for resolvers
-
-**Error Message:** "HISTORY_WITH_UPDATES search mode requires authentication. Please provide a valid JWT token."
-
-### Rationale
-
-`HISTORY_WITH_UPDATES` performs bidirectional traversal of the commit graph (both backwards through history and forwards through updates), which is significantly more expensive than unidirectional traversal. This scope allows searching across the entire commit timeline in both directions, making it a powerful but resource-intensive operation. Restricting to authenticated users prevents abuse while maintaining basic search functionality for anonymous users.
-
----
-
-## 5. Date-Based Diff Limitation
-
-### Purpose
-
-Restricts non-filesystem diffs (Blob, WinRegKey) for **unauthenticated users** to nodes that appear in at least one commit from the configured year or older. Filesystem (Tree) diffs remain available for all commit dates. **Authenticated users bypass this restriction.**
-
-### Implementation
-
-**Files:**
-- `src/resolvers.ts` - `diffNodesAt` resolver and `isNodeAllowedByDateLimit` helper
-- `src/queries.ts` - `GET_NODE_COMMIT_DATES` query function
-
-**Configuration:** `DIFF_DATE_LIMIT_YEAR` environment variable (default: 2020)
-
-**Logic:**
-- Check `context.jwt` → If authenticated, **skip all date checks** (bypass restriction)
-- `parent_label === "Tree"` → No date restriction (always allowed)
-- `parent_label === "Blob"` or `"WinRegKey"` → Query Neo4j to find all commits containing the node
-- Allow if **at least one** commit has date ≤ configured year
-- Block if **all** commits have date > configured year
-
-**Query Pattern:**
-```cypher
-MATCH (n:${label} {hash: $node_hash})<-[*]-(root:Tree)<-[:OWNS_FILESYSTEM]-(c:Commit)
-RETURN c.date ORDER BY c.date DESC
-```
-
-**Error Message:** "Diff operations for {parent_label} nodes from commits after {year} are not available."
-
-### Behavior Example
-
-With `DIFF_DATE_LIMIT_YEAR=2020`:
-
-**Unauthenticated Users:**
-
-| Node Commits | Result |
-|--------------|--------|
-| 2018, 2019 | ✅ Allowed (2018 ≤ 2020) |
-| 2021, 2022 | ❌ Blocked (all > 2020) |
-| 2019, 2021 | ✅ Allowed (2019 ≤ 2020) |
-
-**Authenticated Users:**
-- ✅ All diffs allowed regardless of commit dates
-
-### Rationale
-
-Historical non-filesystem data (registry, symbols) may be incomplete or less relevant for newer commits. Limiting unauthenticated access to nodes with at least one old commit ensures public users can access historical data while restricting purely new data. Authenticated users have full access to support research and analysis needs.
-
----
-
 ## Summary Table
 
 | Restriction | Type | Scope | Fail-Safe | Configurable |
 |------------|------|-------|-----------|--------------|
 | Blob Download Authorization | REST Endpoint | `GET /blob/:hash` | Block (403) | `RESTRICTED_BRANCH_NAME` |
 | Registry Value Filtering (Sensitive) | Response Filter | All GraphQL responses | Allow (fail-open) | `SENSITIVE_REGISTRY_VALUES` |
-| Registry Value Hiding (Auth) | Response Filter | All GraphQL responses (unauthenticated only) | Allow (fail-open) | N/A (hardcoded) |
-| Recursive Diff Authentication | Resolver Check | `diffNodesAt` query (unauthenticated only) | Block (error) | N/A (hardcoded) |
-| HISTORY_WITH_UPDATES Authentication | Resolver Check | `search` query & `searchStream` subscription (unauthenticated only) | Block (error) | N/A (hardcoded) |
-| Date-Based Diff Limitation | Resolver Check | `diffNodesAt` for Blob/WinRegKey (unauthenticated only) | Allow (fail-open) | `DIFF_DATE_LIMIT_YEAR` |
 | Query Complexity | GraphQL Validation | All GraphQL queries | Block (error) | Hardcoded (100 fields) |
 | Rate Limiting | Middleware | All endpoints | Block (429) | Hardcoded (100/min) |
 | Result Set Limits | GraphQL Schema | All paginated queries | Limit to 5000 | `@limit` directive |
@@ -655,3 +539,4 @@ Historical non-filesystem data (registry, symbols) may be incomplete or less rel
 | Date | Change | Author |
 |------|--------|--------|
 | 2025-12-08 | Initial documentation of blob authorization and registry filtering | Claude Code |
+| 2026-08-11 | Removed auth-gated feature restrictions (registry value hiding, recursive diff block, HISTORY_WITH_UPDATES block, date-based diff limit) ahead of open-source release — these gated features purely on JWT presence with no technical or legal basis, unlike blob download authorization and sensitive-value redaction, which remain | Claude Code |

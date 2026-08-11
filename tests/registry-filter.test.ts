@@ -2,7 +2,6 @@ import { describe, it, expect } from "@jest/globals";
 import {
     isSensitiveValueName,
     REDACTED_VALUE,
-    HIDDEN_VALUE,
 } from "../src/registry-filter-config.js";
 import { filterSensitiveRegistryValues } from "../src/registry-response-filter.js";
 
@@ -48,17 +47,11 @@ describe("Registry Filter Configuration", () => {
             expect(REDACTED_VALUE).toBe("[REDACTED]");
         });
     });
-
-    describe("HIDDEN_VALUE constant", () => {
-        it("should be defined as [HIDDEN]", () => {
-            expect(HIDDEN_VALUE).toBe("[HIDDEN]");
-        });
-    });
 });
 
-describe("Registry Filter with Authentication", () => {
+describe("Registry Filter", () => {
     describe("Connection-style responses", () => {
-        it("should hide all values for unauthenticated users (default)", () => {
+        it("should show non-sensitive values as-is", () => {
             const data = {
                 child_valuesConnection: {
                     edges: [
@@ -73,49 +66,11 @@ describe("Registry Filter with Authentication", () => {
             filterSensitiveRegistryValues(data);
 
             expect(data.child_valuesConnection.edges[0].node.value).toBe(
-                HIDDEN_VALUE,
-            );
-        });
-
-        it("should hide all values when isAuthenticated is false", () => {
-            const data = {
-                child_valuesConnection: {
-                    edges: [
-                        {
-                            node: { value: "some-value" },
-                            properties: { name: "NormalValue" },
-                        },
-                    ],
-                },
-            };
-
-            filterSensitiveRegistryValues(data, false);
-
-            expect(data.child_valuesConnection.edges[0].node.value).toBe(
-                HIDDEN_VALUE,
-            );
-        });
-
-        it("should show actual values for authenticated users (non-sensitive)", () => {
-            const data = {
-                child_valuesConnection: {
-                    edges: [
-                        {
-                            node: { value: "some-value" },
-                            properties: { name: "NormalValue" },
-                        },
-                    ],
-                },
-            };
-
-            filterSensitiveRegistryValues(data, true);
-
-            expect(data.child_valuesConnection.edges[0].node.value).toBe(
                 "some-value",
             );
         });
 
-        it("should always redact sensitive values even for authenticated users", () => {
+        it("should always redact sensitive values", () => {
             const data = {
                 child_valuesConnection: {
                     edges: [
@@ -127,14 +82,14 @@ describe("Registry Filter with Authentication", () => {
                 },
             };
 
-            filterSensitiveRegistryValues(data, true);
+            filterSensitiveRegistryValues(data);
 
             expect(data.child_valuesConnection.edges[0].node.value).toBe(
                 REDACTED_VALUE,
             );
         });
 
-        it("should redact sensitive values for unauthenticated users", () => {
+        it("should redact sensitive values case-insensitively", () => {
             const data = {
                 child_valuesConnection: {
                     edges: [
@@ -146,7 +101,7 @@ describe("Registry Filter with Authentication", () => {
                 },
             };
 
-            filterSensitiveRegistryValues(data, false);
+            filterSensitiveRegistryValues(data);
 
             expect(data.child_valuesConnection.edges[0].node.value).toBe(
                 REDACTED_VALUE,
@@ -155,7 +110,7 @@ describe("Registry Filter with Authentication", () => {
     });
 
     describe("Diff-style responses", () => {
-        it("should hide diff values for unauthenticated users", () => {
+        it("should show non-sensitive diff values as-is", () => {
             const data = {
                 diffNodesAt: {
                     items: [
@@ -169,31 +124,7 @@ describe("Registry Filter with Authentication", () => {
                 },
             };
 
-            filterSensitiveRegistryValues(data, false);
-
-            expect(
-                data.diffNodesAt.items[0].old_props.properties.value,
-            ).toBe(HIDDEN_VALUE);
-            expect(
-                data.diffNodesAt.items[0].new_props.properties.value,
-            ).toBe(HIDDEN_VALUE);
-        });
-
-        it("should show diff values for authenticated users (non-sensitive)", () => {
-            const data = {
-                diffNodesAt: {
-                    items: [
-                        {
-                            type: "WinRegValue",
-                            path: "/HKLM/Software/SomeKey/NormalValue",
-                            old_props: { properties: { value: "old-val" } },
-                            new_props: { properties: { value: "new-val" } },
-                        },
-                    ],
-                },
-            };
-
-            filterSensitiveRegistryValues(data, true);
+            filterSensitiveRegistryValues(data);
 
             expect(
                 data.diffNodesAt.items[0].old_props.properties.value,
@@ -203,7 +134,7 @@ describe("Registry Filter with Authentication", () => {
             ).toBe("new-val");
         });
 
-        it("should always redact sensitive diff values even for authenticated users", () => {
+        it("should always redact sensitive diff values", () => {
             const data = {
                 diffNodesAt: {
                     items: [
@@ -217,7 +148,7 @@ describe("Registry Filter with Authentication", () => {
                 },
             };
 
-            filterSensitiveRegistryValues(data, true);
+            filterSensitiveRegistryValues(data);
 
             expect(
                 data.diffNodesAt.items[0].old_props.properties.value,
@@ -245,7 +176,7 @@ describe("Registry Filter with Authentication", () => {
                 },
             };
 
-            filterSensitiveRegistryValues(data, true);
+            filterSensitiveRegistryValues(data);
 
             // Sensitive value should be redacted
             expect(data.child_valuesConnection.edges[0].node.value).toBe(
@@ -273,12 +204,12 @@ describe("Registry Filter with Authentication", () => {
                 },
             };
 
-            filterSensitiveRegistryValues(data, false);
+            filterSensitiveRegistryValues(data);
 
             expect(
                 data.someQuery.nested.child_valuesConnection.edges[0].node
                     .value,
-            ).toBe(HIDDEN_VALUE);
+            ).toBe("nested-value");
         });
     });
 });
