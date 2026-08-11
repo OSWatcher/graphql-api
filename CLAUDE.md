@@ -6,11 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a GraphQL API server for OSWatcher that uses Neo4j as the database and provides filesystem analysis, diff computation, and search capabilities. The server includes:
 - GraphQL API with WebSocket subscriptions
-- REST API for blob downloads with authorization
+- REST API for blob downloads (authorization check disabled by default -- see below)
 - Auth0 JWT authentication
 - S3/MinIO integration for blob storage
 - PostHog analytics proxy (production only)
-- Windows registry value filtering for sensitive data
+- Windows registry value filtering for sensitive data (disabled by default -- see below)
+
+**Open-source release note (2026-08-11):** blob download authorization and
+sensitive registry value redaction are commented out by default (not
+deleted) in `src/rest-routes.ts` and `src/index.ts`, so a self-hosted
+instance has full functionality with no configuration required. See
+`docs/reference/access-restrictions.md` for what each restriction does and
+how to re-enable it.
 
 ## Development Commands
 

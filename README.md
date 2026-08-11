@@ -23,7 +23,9 @@ MINIO_ACCESS_KEY=
 MINIO_SECRET_KEY=
 MINIO_OBJECTS_BUCKET_NAME=objects
 
-# Blob Access Control
+# Optional - Blob Access Control
+# Unused unless the restriction commented out in src/rest-routes.ts is
+# re-enabled (see docs/reference/access-restrictions.md)
 RESTRICTED_BRANCH_NAME=
 
 # Optional - PostHog Analytics (production only)
@@ -35,6 +37,8 @@ NODE_ENV=development
 ALLOWED_ORIGINS=https://oswatcher.github.io,http://127.0.0.1:8080
 
 # Optional - Registry Filtering
+# Unused unless the plugin commented out in src/index.ts is re-enabled
+# (see docs/reference/access-restrictions.md)
 # Comma-separated list of sensitive registry value names to redact
 # Default: DigitalProductId,ProductId
 SENSITIVE_REGISTRY_VALUES=

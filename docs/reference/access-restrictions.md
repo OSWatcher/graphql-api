@@ -11,6 +11,14 @@ The API implements multiple layers of access control to protect sensitive data a
 
 ## 1. Blob Download Authorization
 
+> **Status: disabled by default (2026-08-11).** The enforcement code in
+> `src/rest-routes.ts` is commented out for the open-source release, so all
+> blobs are downloadable regardless of branch. Uncomment it (and set
+> `RESTRICTED_BRANCH_NAME`) to restore this restriction for a deployment
+> that needs to comply with Windows redistribution licensing. The rest of
+> this section describes the mechanism as designed, not current runtime
+> behavior.
+
 ### Purpose
 
 Prevents unauthorized downloading of blobs that belong exclusively to restricted branches, primarily to comply with Microsoft Windows licensing restrictions.
@@ -121,6 +129,13 @@ Result: isBlobRestricted(Y, "windows-10") = false → 200 OK
 ---
 
 ## 2. Windows Registry Value Filtering
+
+> **Status: disabled by default (2026-08-11).** The Apollo Server plugin
+> that invokes `filterSensitiveRegistryValues` is commented out in
+> `src/index.ts` for the open-source release, so registry values are
+> returned unredacted. Uncomment the plugin block (and the import above
+> it) to restore this filtering. The rest of this section describes the
+> mechanism as designed, not current runtime behavior.
 
 ### Purpose
 
@@ -513,15 +528,15 @@ When adding new restrictions:
 
 ## Summary Table
 
-| Restriction | Type | Scope | Fail-Safe | Configurable |
-|------------|------|-------|-----------|--------------|
-| Blob Download Authorization | REST Endpoint | `GET /blob/:hash` | Block (403) | `RESTRICTED_BRANCH_NAME` |
-| Registry Value Filtering (Sensitive) | Response Filter | All GraphQL responses | Allow (fail-open) | `SENSITIVE_REGISTRY_VALUES` |
-| Query Complexity | GraphQL Validation | All GraphQL queries | Block (error) | Hardcoded (100 fields) |
-| Rate Limiting | Middleware | All endpoints | Block (429) | Hardcoded (100/min) |
-| Result Set Limits | GraphQL Schema | All paginated queries | Limit to 5000 | `@limit` directive |
-| Mutations | GraphQL Schema | Write operations | Block (disabled) | `@mutation(operations: [])` |
-| CORS | Middleware | All endpoints | Block | `ALLOWED_ORIGINS` |
+| Restriction | Type | Scope | Fail-Safe | Configurable | Status |
+|------------|------|-------|-----------|--------------|--------|
+| Blob Download Authorization | REST Endpoint | `GET /blob/:hash` | Block (403) | `RESTRICTED_BRANCH_NAME` | Disabled by default (commented out) |
+| Registry Value Filtering (Sensitive) | Response Filter | All GraphQL responses | Allow (fail-open) | `SENSITIVE_REGISTRY_VALUES` | Disabled by default (commented out) |
+| Query Complexity | GraphQL Validation | All GraphQL queries | Block (error) | Hardcoded (100 fields) | Active |
+| Rate Limiting | Middleware | All endpoints | Block (429) | Hardcoded (100/min) | Active |
+| Result Set Limits | GraphQL Schema | All paginated queries | Limit to 5000 | `@limit` directive | Active |
+| Mutations | GraphQL Schema | Write operations | Block (disabled) | `@mutation(operations: [])` | Active |
+| CORS | Middleware | All endpoints | Block | `ALLOWED_ORIGINS` | Active |
 
 ---
 
@@ -540,3 +555,4 @@ When adding new restrictions:
 |------|--------|--------|
 | 2025-12-08 | Initial documentation of blob authorization and registry filtering | Claude Code |
 | 2026-08-11 | Removed auth-gated feature restrictions (registry value hiding, recursive diff block, HISTORY_WITH_UPDATES block, date-based diff limit) ahead of open-source release — these gated features purely on JWT presence with no technical or legal basis, unlike blob download authorization and sensitive-value redaction, which remain | Claude Code |
+| 2026-08-11 | Disabled (commented out, not deleted) blob download authorization and sensitive registry value redaction by default — self-hosted OSS deployments get full functionality out of the box; both can be re-enabled by uncommenting the marked blocks in `src/rest-routes.ts` and `src/index.ts` | Claude Code |

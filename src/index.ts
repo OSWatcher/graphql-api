@@ -10,7 +10,11 @@ import { cleanEnv, str, url } from "envalid";
 import { createConstraintsIfNotExists } from "./constraints.js";
 import { resolvers } from "./resolvers.js";
 import { createRestRouter } from "./rest-routes.js";
-import { filterSensitiveRegistryValues } from "./registry-response-filter.js";
+// Sensitive registry value redaction (ProductId, DigitalProductId, etc.) is
+// disabled by default for the open-source release -- see the commented-out
+// plugin block below and docs/reference/access-restrictions.md. Uncomment
+// to re-enable.
+// import { filterSensitiveRegistryValues } from "./registry-response-filter.js";
 import express, { Request, Response } from "express";
 import { expressMiddleware } from "@as-integrations/express5";
 import cors from "cors";
@@ -34,7 +38,13 @@ const env = cleanEnv(process.env, {
     AUTH0_DOMAIN_URI: url({ desc: "Auth0 domain URI" }),
     AUTH0_AUDIENCE: str({ desc: "Auth0 API audience" }),
     OBJECT_STORAGE_URI: url({ desc: "S3/MinIO object storage endpoint" }),
-    RESTRICTED_BRANCH_NAME: str({ desc: "Branch name for restricted blobs" }),
+    // Blob download restriction is disabled by default for the open-source
+    // release (see rest-routes.ts). Left optional so the server starts
+    // without configuring it.
+    RESTRICTED_BRANCH_NAME: str({
+        default: "",
+        desc: "Branch name for restricted blobs (unused unless the restriction in rest-routes.ts is re-enabled)",
+    }),
     MINIO_ACCESS_KEY: str({
         desc: "MinIO access key for authenticated requests",
     }),
@@ -251,30 +261,35 @@ async function main() {
         const server = new ApolloServer({
             schema,
             plugins: [
-                {
-                    async requestDidStart() {
-                        return {
-                            async willSendResponse({ response }: any) {
-                                if (
-                                    response?.body?.kind === "single" &&
-                                    response.body.singleResult?.data
-                                ) {
-                                    try {
-                                        filterSensitiveRegistryValues(
-                                            response.body.singleResult.data,
-                                        );
-                                    } catch (error) {
-                                        console.error(
-                                            "Registry filter error:",
-                                            error,
-                                        );
-                                        // Fail-open: don't break API if filtering fails
-                                    }
-                                }
-                            },
-                        };
-                    },
-                },
+                // Sensitive registry value redaction (ProductId, etc.) is
+                // disabled by default for the open-source release. Uncomment
+                // this plugin (and the import above) to re-enable it -- see
+                // docs/reference/access-restrictions.md.
+                //
+                // {
+                //     async requestDidStart() {
+                //         return {
+                //             async willSendResponse({ response }: any) {
+                //                 if (
+                //                     response?.body?.kind === "single" &&
+                //                     response.body.singleResult?.data
+                //                 ) {
+                //                     try {
+                //                         filterSensitiveRegistryValues(
+                //                             response.body.singleResult.data,
+                //                         );
+                //                     } catch (error) {
+                //                         console.error(
+                //                             "Registry filter error:",
+                //                             error,
+                //                         );
+                //                         // Fail-open: don't break API if filtering fails
+                //                     }
+                //                 }
+                //             },
+                //         };
+                //     },
+                // },
                 ApolloServerPluginDrainHttpServer({ httpServer }),
                 {
                     async serverWillStart() {
