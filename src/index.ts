@@ -22,11 +22,6 @@ import axios from "axios";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
-import { auth } from "express-oauth2-jwt-bearer";
-import {
-    createAuth0JwtVerifier,
-    extractTokenFromConnectionParams,
-} from "./auth/websocket-jwt.js";
 
 dotenv.config();
 
@@ -35,8 +30,6 @@ const env = cleanEnv(process.env, {
     NEO4J_URI: url({ desc: "Neo4j connection URI" }),
     NEO4J_USER: str({ desc: "Neo4j username" }),
     NEO4J_PASSWORD: str({ desc: "Neo4j password" }),
-    AUTH0_DOMAIN_URI: url({ desc: "Auth0 domain URI" }),
-    AUTH0_AUDIENCE: str({ desc: "Auth0 API audience" }),
     OBJECT_STORAGE_URI: url({ desc: "S3/MinIO object storage endpoint" }),
     // Blob download restriction is disabled by default for the open-source
     // release (see rest-routes.ts). Left optional so the server starts
@@ -76,12 +69,6 @@ const env = cleanEnv(process.env, {
         default: "",
         desc: "Comma-separated list of sensitive registry value names to redact",
     }),
-});
-
-const checkJwt = auth({
-    audience: env.AUTH0_AUDIENCE,
-    issuerBaseURL: `${env.AUTH0_DOMAIN_URI}/`,
-    authRequired: false, // Allow requests without JWT tokens
 });
 
 // Neo4j driver instance
@@ -142,13 +129,6 @@ async function main() {
         const instanciatedResolvers = resolvers(driver, ogm);
         const neoSchema = new Neo4jGraphQL({
             typeDefs,
-            features: {
-                authorization: {
-                    key: {
-                        url: `${env.AUTH0_DOMAIN_URI}/.well-known/jwks.json`,
-                    },
-                },
-            },
             driver,
             resolvers: instanciatedResolvers,
         });
@@ -172,54 +152,15 @@ async function main() {
             perMessageDeflate: false, // Prevent compression bombs
         });
 
-        // Create JWT verifier for WebSocket authentication
-        const verifyWebSocketJwt = createAuth0JwtVerifier(
-            `${env.AUTH0_DOMAIN_URI}/.well-known/jwks.json`,
-            env.AUTH0_AUDIENCE,
-        );
-
         // Set up WebSocket subscription handler with security
         const serverCleanup = useServer(
             {
                 schema,
-                context: async (ctx) => {
-                    // Extract JWT from connectionParams (idiomatic graphql-ws approach)
-                    const token = extractTokenFromConnectionParams(
-                        ctx.connectionParams,
-                    );
-
-                    if (!token) {
-                        // No token provided - return empty context (allow unauthenticated)
-                        return { jwt: null };
-                    }
-
-                    // Verify token using Auth0
-                    const payload = await verifyWebSocketJwt(token);
-
-                    if (!payload) {
-                        // Invalid token - return empty context
-                        console.warn(
-                            "WebSocket connection with invalid JWT token",
-                        );
-                        return { jwt: null };
-                    }
-
-                    // Valid token - populate context (same structure as HTTP context)
-                    return {
-                        jwt: payload,
-                        permissions: payload.permissions,
-                    };
-                },
+                context: async () => ({}),
                 onConnect: async (ctx) => {
-                    // Log authentication status for monitoring
-                    const hasToken = extractTokenFromConnectionParams(
-                        ctx.connectionParams,
-                    );
                     const ip =
                         ctx.extra.request.socket.remoteAddress || "unknown";
-                    console.log(
-                        `WebSocket connecting from ${ip} (${hasToken ? "authenticated" : "unauthenticated"})`,
-                    );
+                    console.log(`WebSocket connecting from ${ip}`);
 
                     // Rate limit connections per IP
                     const currentConnections = wsConnections.get(ip) || 0;
@@ -443,8 +384,6 @@ async function main() {
             }),
             createRateLimit(100, 60000), // 100 requests per minute
             express.json({ limit: "1mb" }),
-            // Auth0 middleware: validates token, adds req.auth
-            checkJwt,
             createRestRouter(
                 driver,
                 env.OBJECT_STORAGE_URI,
@@ -464,14 +403,8 @@ async function main() {
             }),
             createRateLimit(100, 60000), // 100 requests per minute
             express.json({ limit: "1mb" }),
-            // Auth0 middleware: validates token, adds req.auth
-            checkJwt,
             expressMiddleware(server, {
-                context: async ({ req }: { req: Request }) => ({
-                    req,
-                    jwt: req.auth,
-                    permissions: req.auth?.payload.permissions,
-                }),
+                context: async ({ req }: { req: Request }) => ({ req }),
             }),
         );
 
