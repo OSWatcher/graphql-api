@@ -30,7 +30,6 @@ POSTHOG_PROJECT_API_KEY=
 
 # Optional - Environment
 NODE_ENV=development
-ALLOWED_ORIGINS=https://oswatcher.github.io,http://127.0.0.1:8080
 
 # Optional - Registry Filtering
 # Unused unless the plugin commented out in src/index.ts is re-enabled

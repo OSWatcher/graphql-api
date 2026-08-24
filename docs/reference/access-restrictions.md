@@ -536,7 +536,7 @@ When adding new restrictions:
 | Rate Limiting | Middleware | All endpoints | Block (429) | Hardcoded (100/min) | Active |
 | Result Set Limits | GraphQL Schema | All paginated queries | Limit to 5000 | `@limit` directive | Active |
 | Mutations | GraphQL Schema | Write operations | Block (disabled) | `@mutation(operations: [])` | Active |
-| CORS | Middleware | All endpoints | Block | `ALLOWED_ORIGINS` | Active |
+| CORS | Middleware | All endpoints | Allow any origin | None | Open by design (no credentials are ever sent) |
 
 ---
 

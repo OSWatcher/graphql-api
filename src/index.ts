@@ -17,6 +17,12 @@ import { createRestRouter } from "./rest-routes.js";
 // import { filterSensitiveRegistryValues } from "./registry-response-filter.js";
 import express, { Request, Response } from "express";
 import { expressMiddleware } from "@as-integrations/express5";
+// The API is public, read-only and unauthenticated: no cookies, no
+// Authorization header, nothing a browser could be tricked into attaching. An
+// origin allow-list therefore protects nothing (curl ignores CORS entirely)
+// while breaking every local frontend and third-party tool. Access control
+// that does matter is enforced server-side: rate limiting and restricted-branch
+// filtering.
 import cors from "cors";
 import axios from "axios";
 import { createServer } from "http";
@@ -60,10 +66,6 @@ const env = cleanEnv(process.env, {
         choices: ["development", "production", "test"],
         default: "development",
         desc: "Node environment",
-    }),
-    ALLOWED_ORIGINS: str({
-        default: "https://oswatcher.github.io,http://127.0.0.1:8080",
-        desc: "Comma-separated list of allowed CORS origins",
     }),
     SENSITIVE_REGISTRY_VALUES: str({
         default: "",
@@ -329,10 +331,7 @@ async function main() {
         if (isProduction && env.POSTHOG_PROJECT_API_KEY) {
             app.use(
                 "/events",
-                cors({
-                    origin: env.ALLOWED_ORIGINS.split(","),
-                    credentials: true,
-                }),
+                cors(),
                 express.raw({ type: "*/*", limit: "10mb" }),
                 async (req: Request, res: Response) => {
                     try {
@@ -378,10 +377,7 @@ async function main() {
         // Blob REST API - mounted before GraphQL
         app.use(
             "/blob",
-            cors({
-                origin: env.ALLOWED_ORIGINS.split(","),
-                credentials: true,
-            }),
+            cors(),
             createRateLimit(100, 60000), // 100 requests per minute
             express.json({ limit: "1mb" }),
             createRestRouter(
@@ -397,10 +393,7 @@ async function main() {
         // Apply middleware
         app.use(
             "/graphql",
-            cors({
-                origin: env.ALLOWED_ORIGINS.split(","),
-                credentials: true,
-            }),
+            cors(),
             createRateLimit(100, 60000), // 100 requests per minute
             express.json({ limit: "1mb" }),
             expressMiddleware(server, {
