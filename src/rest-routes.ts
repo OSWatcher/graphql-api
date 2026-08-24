@@ -44,7 +44,10 @@ export const createRestRouter = (
             // release. Uncomment to re-enable -- see
             // docs/reference/access-restrictions.md.
             //
-            // req.auth is populated by express-oauth2-jwt-bearer middleware
+            // NOTE: re-enabling this also requires reinstating an auth
+            // middleware that populates req.auth. Auth0 was removed when the
+            // project went fully open source; see git history for the
+            // express-oauth2-jwt-bearer wiring.
             // const permissions = (req as any).auth?.payload?.permissions as
             //     | string[]
             //     | undefined;
