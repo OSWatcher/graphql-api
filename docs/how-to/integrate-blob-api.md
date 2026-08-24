@@ -8,7 +8,6 @@ This guide shows how to integrate the blob download REST API into your frontend 
 
 - Access to the GraphQL API (for getting blob hashes)
 - API base URL (e.g., `https://api.oswatcher.io`)
-- Optional: Auth0 JWT token for authenticated requests
 
 ## Step 1: Update Configuration
 
@@ -41,22 +40,15 @@ export class BlobService {
    * Download a blob by hash
    * @param hash SHA-1 hash of the blob
    * @param filename Optional filename for download
-   * @param authToken Optional JWT token
    */
   async downloadBlob(
     hash: string,
-    filename?: string,
-    authToken?: string
+    filename?: string
   ): Promise<void> {
     const url = `${this.blobBaseUrl}/${hash}`;
 
-    const headers: Record<string, string> = {};
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-    }
-
     try {
-      const response = await fetch(url, { headers });
+      const response = await fetch(url);
 
       if (!response.ok) {
         await this.handleError(response);
@@ -123,17 +115,11 @@ export class BlobService {
   async downloadBlobWithProgress(
     hash: string,
     onProgress: (percent: number) => void,
-    filename?: string,
-    authToken?: string
+    filename?: string
   ): Promise<void> {
     const url = `${this.blobBaseUrl}/${hash}`;
 
-    const headers: Record<string, string> = {};
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-    }
-
-    const response = await fetch(url, { headers });
+    const response = await fetch(url);
 
     if (!response.ok) {
       await this.handleError(response);
@@ -204,19 +190,14 @@ export const LIST_ENTRIES_FOR_TREE = gql`
 
 import { BlobService } from '../services/blobService';
 import { API_CONFIG } from '../config';
-import { useAuth0 } from '@auth0/auth0-react';
 
 export function FileExplorer() {
   const blobService = new BlobService(API_CONFIG.blobUrl);
-  const { getAccessTokenSilently } = useAuth0();
 
   const handleDownload = async (blobHash: string, filename: string) => {
     try {
-      // Get auth token if available
-      const token = await getAccessTokenSilently().catch(() => undefined);
-
       // Download blob
-      await blobService.downloadBlob(blobHash, filename, token);
+      await blobService.downloadBlob(blobHash, filename);
 
       // Success notification
       toast.success(`Downloaded ${filename}`);
@@ -255,10 +236,9 @@ import { BlobService } from '../services/blobService';
 interface DownloadButtonProps {
   hash: string;
   filename: string;
-  authToken?: string;
 }
 
-export function DownloadButton({ hash, filename, authToken }: DownloadButtonProps) {
+export function DownloadButton({ hash, filename }: DownloadButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const blobService = new BlobService(API_CONFIG.blobUrl);
@@ -268,7 +248,7 @@ export function DownloadButton({ hash, filename, authToken }: DownloadButtonProp
     setError(null);
 
     try {
-      await blobService.downloadBlob(hash, filename, authToken);
+      await blobService.downloadBlob(hash, filename);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -312,18 +292,11 @@ export class BlobService {
   /**
    * Check if a blob is accessible
    */
-  async isAccessible(hash: string, authToken?: string): Promise<boolean> {
+  async isAccessible(hash: string): Promise<boolean> {
     const url = `${this.blobBaseUrl}/${hash}`;
-    const headers: Record<string, string> = {};
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-    }
 
     try {
-      const response = await fetch(url, {
-        method: 'HEAD',
-        headers
-      });
+      const response = await fetch(url, { method: 'HEAD' });
       return response.ok;
     } catch {
       return false;
@@ -332,7 +305,7 @@ export class BlobService {
 }
 
 // Usage:
-const accessible = await blobService.isAccessible(hash, token);
+const accessible = await blobService.isAccessible(hash);
 if (!accessible) {
   showWarning('This file is restricted');
 }
@@ -355,7 +328,7 @@ window.open(s3Url, '_blank');
 ```typescript
 // ✅ New approach
 const apiUrl = `https://api.oswatcher.io/blob/${blobHash}`;
-await blobService.downloadBlob(blobHash, filename, authToken);
+await blobService.downloadBlob(blobHash, filename);
 ```
 
 ## Testing
@@ -411,7 +384,7 @@ The API doesn't cache authorization results, so each download checks the databas
 const accessCache = new Map<string, { accessible: boolean; timestamp: number }>();
 const CACHE_TTL = 60000; // 1 minute
 
-async function isCachedAccessible(hash: string, token?: string): Promise<boolean> {
+async function isCachedAccessible(hash: string): Promise<boolean> {
   const cached = accessCache.get(hash);
   const now = Date.now();
 
@@ -419,7 +392,7 @@ async function isCachedAccessible(hash: string, token?: string): Promise<boolean
     return cached.accessible;
   }
 
-  const accessible = await blobService.isAccessible(hash, token);
+  const accessible = await blobService.isAccessible(hash);
   accessCache.set(hash, { accessible, timestamp: now });
   return accessible;
 }

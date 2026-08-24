@@ -18,9 +18,7 @@ Downloads a blob by its SHA-1 hash with authorization checks.
 
 ## Request Headers
 
-| Header | Required | Description |
-|--------|----------|-------------|
-| `Authorization` | No | Bearer token for Auth0 JWT authentication |
+The endpoint is unauthenticated: no headers are required.
 
 ## Response
 
@@ -102,10 +100,9 @@ Error communicating with object storage.
 
 ## Authorization
 
-The API performs two levels of authorization:
-
-1. **Authentication**: Optional Auth0 JWT token validation
-2. **Blob Restriction**: Neo4j query to check if blob belongs exclusively to restricted branches
+Access control is limited to blob restriction: a Neo4j query checks whether the
+blob belongs exclusively to restricted branches. There is no per-user
+authentication.
 
 ### Restriction Logic
 
