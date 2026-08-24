@@ -473,8 +473,8 @@ describe('Access Restriction', () => {
    - Different restrictions for filesystem vs. symbol blobs
 
 2. **Role-Based Access Control (RBAC)**
-   - Use Auth0 permissions for fine-grained access
-   - Example: `download:windows` permission for licensed users
+   - Would require reintroducing an identity provider, removed when the project
+     went fully open source
 
 3. **Rate Limiting Per User**
    - Higher limits for authenticated users
