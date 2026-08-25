@@ -126,7 +126,7 @@ See README.md for complete `.env` setup. Key variables:
 - **Neo4j**: `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`
 - **Storage**: `OBJECT_STORAGE_URI`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_OBJECTS_BUCKET_NAME`
 - **Authorization**: `RESTRICTED_BRANCH_NAME` - branch containing restricted blobs
-- **Optional**: `POSTHOG_HOST`, `POSTHOG_PROJECT_API_KEY`, `NODE_ENV`, `ALLOWED_ORIGINS`, `SENSITIVE_REGISTRY_VALUES`
+- **Optional**: `POSTHOG_HOST`, `POSTHOG_PROJECT_API_KEY`, `NODE_ENV`, `SENSITIVE_REGISTRY_VALUES`
 
 ## Testing Strategy
 - Jest 30 with ts-jest for TypeScript support
