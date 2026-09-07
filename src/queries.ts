@@ -307,19 +307,6 @@ RETURN DISTINCT b.hash AS blob_hash, blob_path
 ORDER BY blob_path
 `;
 
-// blob authorization
-export const CHECK_BLOB_RESTRICTED_QUERY = `
-MATCH (b:Blob)
-WHERE b.hash = $blob_hash
-WITH b
-MATCH (b)<-[:HAS_CHILD_BLOB]-(t:Tree)<-[:HAS_CHILD_TREE|OWNS_FILESYSTEM*]-(c:Commit)
-WITH collect(c) as commit_list_where_hash
-MATCH (br:Branch)-[:TRACKS_COMMIT|HAS_PREVIOUS*]-(c:Commit)
-WHERE br.name = $branch_name
-WITH commit_list_where_hash, collect(c) as branch_reachable_commit_list
-RETURN all(c IN commit_list_where_hash WHERE c IN branch_reachable_commit_list) as is_restricted
-`;
-
 // git log - filesystem root resolution
 export const GET_FILESYSTEM_ROOT_QUERY = `
 MATCH (c:Commit {hash: $commit_hash})-[:OWNS_FILESYSTEM]->(root:Tree)

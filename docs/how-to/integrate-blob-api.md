@@ -70,8 +70,6 @@ export class BlobService {
     const data: BlobDownloadError = await response.json();
 
     switch (response.status) {
-      case 403:
-        throw new Error('This file is restricted and cannot be downloaded.');
       case 404:
         throw new Error('File not found in storage.');
       case 429:
@@ -223,95 +221,7 @@ export function FileExplorer() {
 }
 ```
 
-## Step 4: Handle Restricted Blobs
-
-### Show User-Friendly Error Messages
-
-```typescript
-// components/DownloadButton.tsx
-
-import { useState } from 'react';
-import { BlobService } from '../services/blobService';
-
-interface DownloadButtonProps {
-  hash: string;
-  filename: string;
-}
-
-export function DownloadButton({ hash, filename }: DownloadButtonProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const blobService = new BlobService(API_CONFIG.blobUrl);
-
-  const handleDownload = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      await blobService.downloadBlob(hash, filename);
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div>
-      <button
-        onClick={handleDownload}
-        disabled={loading}
-      >
-        {loading ? 'Downloading...' : 'Download'}
-      </button>
-
-      {error && (
-        <div className="error-message">
-          {error}
-          {error.includes('restricted') && (
-            <p className="help-text">
-              This file is from a restricted branch (e.g., Windows)
-              and cannot be downloaded due to licensing restrictions.
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-```
-
-### Precheck Before Download (Optional)
-
-You can add a HEAD request to check if a blob is accessible before attempting download:
-
-```typescript
-export class BlobService {
-  /**
-   * Check if a blob is accessible
-   */
-  async isAccessible(hash: string): Promise<boolean> {
-    const url = `${this.blobBaseUrl}/${hash}`;
-
-    try {
-      const response = await fetch(url, { method: 'HEAD' });
-      return response.ok;
-    } catch {
-      return false;
-    }
-  }
-}
-
-// Usage:
-const accessible = await blobService.isAccessible(hash);
-if (!accessible) {
-  showWarning('This file is restricted');
-}
-```
-
-## Step 5: Update Existing S3 References
+## Step 4: Update Existing S3 References
 
 If you previously downloaded directly from S3, update those references:
 
@@ -335,20 +245,14 @@ await blobService.downloadBlob(blobHash, filename);
 
 ### Test Cases
 
-1. **Unrestricted blob download**
+1. **Blob download**
    - Expected: Successful download
 
-2. **Restricted blob download**
-   - Expected: 403 error with user-friendly message
-
-3. **Invalid hash format**
+2. **Invalid hash format**
    - Expected: 400 error
 
-4. **Non-existent blob**
+3. **Non-existent blob**
    - Expected: 404 error
-
-5. **Authenticated vs unauthenticated**
-   - Both should work the same (auth doesn't affect restrictions currently)
 
 ### Example Test
 
@@ -356,47 +260,16 @@ await blobService.downloadBlob(blobHash, filename);
 // blobService.test.ts
 
 describe('BlobService', () => {
-  it('should download unrestricted blob', async () => {
+  it('should download a blob', async () => {
     const service = new BlobService('http://localhost:4000/blob');
     await expect(
       service.downloadBlob('a94a8fe5ccb19ba61c4c0873d391e987982fbbd3')
     ).resolves.not.toThrow();
   });
-
-  it('should reject restricted blob', async () => {
-    const service = new BlobService('http://localhost:4000/blob');
-    await expect(
-      service.downloadBlob('restricted_hash_here')
-    ).rejects.toThrow('restricted');
-  });
 });
 ```
 
 ## Performance Considerations
-
-### Caching
-
-The API doesn't cache authorization results, so each download checks the database.
-
-**Recommendation**: Cache the accessibility check result client-side for a short time:
-
-```typescript
-const accessCache = new Map<string, { accessible: boolean; timestamp: number }>();
-const CACHE_TTL = 60000; // 1 minute
-
-async function isCachedAccessible(hash: string): Promise<boolean> {
-  const cached = accessCache.get(hash);
-  const now = Date.now();
-
-  if (cached && now - cached.timestamp < CACHE_TTL) {
-    return cached.accessible;
-  }
-
-  const accessible = await blobService.isAccessible(hash);
-  accessCache.set(hash, { accessible, timestamp: now });
-  return accessible;
-}
-```
 
 ### Concurrent Downloads
 
@@ -435,5 +308,3 @@ class DownloadQueue {
 ## Related Documentation
 
 - [Blob API Reference](../reference/blob-api.md) - Complete API specification
-- [Configure Blob Restrictions](./configure-blob-restrictions.md) - Backend configuration
-- [Authorization Explanation](../explanation/blob-authorization.md) - How restrictions work
