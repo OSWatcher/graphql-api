@@ -24,7 +24,6 @@ import { expressMiddleware } from "@as-integrations/express5";
 // that does matter is enforced server-side: rate limiting and restricted-branch
 // filtering.
 import cors from "cors";
-import axios from "axios";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
@@ -55,13 +54,6 @@ const env = cleanEnv(process.env, {
         desc: "MinIO bucket name for blob storage",
     }),
     // Optional environment variables
-    POSTHOG_HOST: url({
-        default: "https://us.i.posthog.com",
-        desc: "PostHog analytics host",
-    }),
-    POSTHOG_PROJECT_API_KEY: str({
-        desc: "PostHog project API key",
-    }),
     NODE_ENV: str({
         choices: ["development", "production", "test"],
         default: "development",
@@ -327,53 +319,6 @@ async function main() {
         // Start Apollo Server
         await server.start();
 
-        // PostHog events endpoint - only in production
-        if (isProduction && env.POSTHOG_PROJECT_API_KEY) {
-            app.use(
-                "/events",
-                cors(),
-                express.raw({ type: "*/*", limit: "10mb" }),
-                async (req: Request, res: Response) => {
-                    try {
-                        const posthogPath = req.originalUrl.replace(
-                            "/events",
-                            "",
-                        );
-                        const fullUrl = `${env.POSTHOG_HOST}${posthogPath}`;
-
-                        // Forward the request exactly as received
-                        const response = await axios({
-                            method: req.method,
-                            url: fullUrl,
-                            data: req.body,
-                            headers: {
-                                ...req.headers,
-                                host: new URL(env.POSTHOG_HOST).host,
-                                Authorization: `Bearer ${env.POSTHOG_PROJECT_API_KEY}`,
-                            },
-                            decompress: false,
-                        });
-
-                        // Forward the response exactly as received
-                        res.status(response.status);
-                        Object.entries(response.headers).forEach(
-                            ([key, value]) => {
-                                res.setHeader(key, value);
-                            },
-                        );
-                        res.send(response.data);
-                    } catch (error: unknown) {
-                        // Log full error for debugging but don't expose details
-                        console.error("Error proxying PostHog event:", error);
-                        res.status(502).json({
-                            error: "Service temporarily unavailable",
-                        });
-                    }
-                },
-            );
-            console.log(`📊 PostHog events endpoint enabled in production`);
-        }
-
         // Blob REST API - mounted before GraphQL
         app.use(
             "/blob",
@@ -406,11 +351,6 @@ async function main() {
             console.log(`🚀 Server ready at http://localhost:4000/graphql`);
             console.log(`🔌 WebSocket ready at ws://localhost:4000/graphql`);
             console.log(`📦 Blob API ready at http://localhost:4000/blob`);
-            if (isProduction) {
-                console.log(
-                    `📊 PostHog events endpoint ready at http://localhost:4000/events`,
-                );
-            }
         });
     } catch (error) {
         console.error("❌ Server startup failed:", error);

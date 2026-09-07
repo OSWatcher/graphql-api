@@ -8,7 +8,6 @@ This is a GraphQL API server for OSWatcher that uses Neo4j as the database and p
 - GraphQL API with WebSocket subscriptions
 - REST API for blob downloads (authorization check disabled by default -- see below)
 - S3/MinIO integration for blob storage
-- PostHog analytics proxy (production only)
 - Windows registry value filtering for sensitive data (disabled by default -- see below)
 
 **Open-source release note (2026-08-11):** blob download authorization and
@@ -60,7 +59,6 @@ The main server file that orchestrates all components:
 - Sets up three endpoints:
   - `/graphql` - GraphQL API with WebSocket subscriptions
   - `/blob/:hash` - REST API for blob downloads
-  - `/events` - PostHog analytics proxy (production only)
 - Implements security features:
   - Rate limiting (100 requests/minute, 5 WebSocket connections per IP)
   - Query complexity validation (max 100 fields)
@@ -126,7 +124,7 @@ See README.md for complete `.env` setup. Key variables:
 - **Neo4j**: `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`
 - **Storage**: `OBJECT_STORAGE_URI`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_OBJECTS_BUCKET_NAME`
 - **Authorization**: `RESTRICTED_BRANCH_NAME` - branch containing restricted blobs
-- **Optional**: `POSTHOG_HOST`, `POSTHOG_PROJECT_API_KEY`, `NODE_ENV`, `SENSITIVE_REGISTRY_VALUES`
+- **Optional**: `NODE_ENV`, `SENSITIVE_REGISTRY_VALUES`
 
 ## Testing Strategy
 - Jest 30 with ts-jest for TypeScript support
