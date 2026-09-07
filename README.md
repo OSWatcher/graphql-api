@@ -24,10 +24,6 @@ MINIO_OBJECTS_BUCKET_NAME=objects
 # re-enabled (see docs/reference/access-restrictions.md)
 RESTRICTED_BRANCH_NAME=
 
-# Optional - PostHog Analytics (production only)
-POSTHOG_HOST=https://us.i.posthog.com
-POSTHOG_PROJECT_API_KEY=
-
 # Optional - Environment
 NODE_ENV=development
 
