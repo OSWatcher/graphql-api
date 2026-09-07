@@ -6,129 +6,9 @@ This document catalogs all access control and data filtering mechanisms implemen
 
 The API implements multiple layers of access control to protect sensitive data and prevent abuse:
 
-1. **Blob Download Authorization** - Prevents redistribution of restricted content (e.g., Windows binaries)
-2. **Windows Registry Value Filtering** - Redacts sensitive product keys and identifiers from responses
+1. **Windows Registry Value Filtering** - Redacts sensitive product keys and identifiers from responses
 
-## 1. Blob Download Authorization
-
-> **Status: disabled by default (2026-08-11).** The enforcement code in
-> `src/rest-routes.ts` is commented out for the open-source release, so all
-> blobs are downloadable regardless of branch. Uncomment it (and set
-> `RESTRICTED_BRANCH_NAME`) to restore this restriction for a deployment
-> that needs to comply with Windows redistribution licensing. The rest of
-> this section describes the mechanism as designed, not current runtime
-> behavior.
-
-### Purpose
-
-Prevents unauthorized downloading of blobs that belong exclusively to restricted branches, primarily to comply with Microsoft Windows licensing restrictions.
-
-### Scope
-
-- **Applies to:** REST API endpoint `GET /blob/:hash`
-- **Does NOT apply to:** GraphQL queries (blob hashes remain visible for exploration)
-
-### Implementation
-
-**File:** `src/blob-authorization.ts`
-
-**Function:** `isBlobRestricted(driver, blobHash, restrictedBranchName)`
-
-**Logic:**
-1. Query Neo4j to find all commits containing the blob
-2. Query Neo4j to find all commits reachable from the restricted branch
-3. Check if **ALL** commits containing the blob are in the restricted branch
-4. If yes → blob is restricted (403 Forbidden)
-5. If no → blob is allowed (download proceeds)
-
-**Cypher Query:** `CHECK_BLOB_RESTRICTED_QUERY` in `src/queries.ts`
-
-```cypher
-MATCH (b:Blob)
-WHERE b.hash = $blob_hash
-WITH b
-
--- Find all commits containing this blob
-MATCH (b)<-[:HAS_CHILD_BLOB]-(t:Tree)<-[:HAS_CHILD_TREE|OWNS_FILESYSTEM*]-(c:Commit)
-WITH collect(c) as commit_list_where_hash
-
--- Find all commits reachable from restricted branch
-MATCH (br:Branch)-[:TRACKS_COMMIT|HAS_PREVIOUS*]-(c:Commit)
-WHERE br.name = $branch_name
-WITH commit_list_where_hash, collect(c) as branch_reachable_commit_list
-
--- Check if ALL blob commits are in restricted branch
-RETURN all(c IN commit_list_where_hash WHERE c IN branch_reachable_commit_list) as is_restricted
-```
-
-### Configuration
-
-**Environment Variable:** `RESTRICTED_BRANCH_NAME`
-
-**Example:**
-```bash
-RESTRICTED_BRANCH_NAME=windows-10
-```
-
-### Behavior
-
-| Scenario | Result | HTTP Status |
-|----------|--------|-------------|
-| Blob exists only in restricted branch | Blocked | 403 Forbidden |
-| Blob exists in restricted + non-restricted branches | Allowed | 200 OK |
-| Blob not found in database | Allowed | (proceeds to S3 check) |
-| Neo4j query error | Blocked (fail-safe) | 403 Forbidden |
-| Blob not found in S3 storage | Error | 404 Not Found |
-
-### Fail-Safe Principle
-
-**Rule:** When in doubt, block access
-
-```typescript
-try {
-  const result = await session.executeRead(/* query */);
-  return result.records[0].get('is_restricted');
-} catch (error) {
-  console.error('Authorization error:', error);
-  return true; // Treat as restricted on error
-}
-```
-
-### Example Scenarios
-
-#### Scenario 1: Exclusive to Restricted Branch
-```
-Branch: windows-10
-  → Commit A (contains blob X)
-  → Commit B (contains blob X)
-
-Branch: ubuntu-server
-  → Commit C
-  → Commit D
-
-Result: isBlobRestricted(X, "windows-10") = true → 403 Forbidden
-```
-
-#### Scenario 2: Shared Between Branches
-```
-Branch: windows-10
-  → Commit A (contains blob Y)
-
-Branch: ubuntu-server
-  → Commit B (contains blob Y)  ← Same blob!
-
-Result: isBlobRestricted(Y, "windows-10") = false → 200 OK
-```
-
-### Related Documentation
-
-- **Detailed Explanation:** [Blob Authorization Deep Dive](../explanation/blob-authorization.md)
-- **Configuration Guide:** [Configure Blob Restrictions](../how-to/configure-blob-restrictions.md)
-- **API Specification:** [Blob Download API](./blob-api.md)
-
----
-
-## 2. Windows Registry Value Filtering
+## 1. Windows Registry Value Filtering
 
 > **Status: disabled by default (2026-08-11).** The Apollo Server plugin
 > that invokes `filterSensitiveRegistryValues` is commented out in
@@ -375,7 +255,7 @@ When implementing new access restrictions, follow these established patterns:
 | **GraphQL Schema** | Prevent queries entirely | `@mutation(operations: [])` to disable mutations |
 | **Resolver Level** | Context-based access control | Check `jwt.permissions` in custom resolvers |
 | **Response Filter** | Data redaction/masking | Registry value filtering |
-| **REST Endpoint** | Resource-level authorization | Blob download restrictions |
+| **REST Endpoint** | Resource-level authorization | Per-resource checks before serving a download |
 
 ### 2. Fail-Safe Principle
 
@@ -530,7 +410,6 @@ When adding new restrictions:
 
 | Restriction | Type | Scope | Fail-Safe | Configurable | Status |
 |------------|------|-------|-----------|--------------|--------|
-| Blob Download Authorization | REST Endpoint | `GET /blob/:hash` | Block (403) | `RESTRICTED_BRANCH_NAME` | Disabled by default (commented out) |
 | Registry Value Filtering (Sensitive) | Response Filter | All GraphQL responses | Allow (fail-open) | `SENSITIVE_REGISTRY_VALUES` | Disabled by default (commented out) |
 | Query Complexity | GraphQL Validation | All GraphQL queries | Block (error) | Hardcoded (100 fields) | Active |
 | Rate Limiting | Middleware | All endpoints | Block (429) | Hardcoded (100/min) | Active |
@@ -542,9 +421,7 @@ When adding new restrictions:
 
 ## Related Documentation
 
-- [Blob Authorization Deep Dive](../explanation/blob-authorization.md) - Comprehensive explanation of blob restriction design
 - [Blob Download API](./blob-api.md) - Complete REST API specification
-- [Configure Blob Restrictions](../how-to/configure-blob-restrictions.md) - Setup instructions
 - [Security and Performance](./security-and-performance.md) - Overall security architecture (if exists)
 
 ---
@@ -556,3 +433,4 @@ When adding new restrictions:
 | 2025-12-08 | Initial documentation of blob authorization and registry filtering | Claude Code |
 | 2026-08-11 | Removed auth-gated feature restrictions (registry value hiding, recursive diff block, HISTORY_WITH_UPDATES block, date-based diff limit) ahead of open-source release — these gated features purely on JWT presence with no technical or legal basis, unlike blob download authorization and sensitive-value redaction, which remain | Claude Code |
 | 2026-08-11 | Disabled (commented out, not deleted) blob download authorization and sensitive registry value redaction by default — self-hosted OSS deployments get full functionality out of the box; both can be re-enabled by uncommenting the marked blocks in `src/rest-routes.ts` and `src/index.ts` | Claude Code |
+| 2026-09-08 | Removed blob download authorization entirely (`src/blob-authorization.ts`, `CHECK_BLOB_RESTRICTED_QUERY`, `RESTRICTED_BRANCH_NAME`, and the commented-out enforcement block). It gated only Windows binaries, which are not in the public corpus; git history keeps the implementation. Sensitive registry value redaction is unaffected. | Claude Code |

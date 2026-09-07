@@ -18,7 +18,6 @@ Reference documentation provides technical specifications and API details.
 
 How-to guides show you how to solve specific problems and complete tasks.
 
-- [Configure Blob Restrictions](./how-to/configure-blob-restrictions.md) - Set up branch-based blob access control
 - [Integrate Blob API (Frontend)](./how-to/integrate-blob-api.md) - Use the blob API from your frontend application
 
 ### 💡 [Explanation](./explanation/)
@@ -26,7 +25,7 @@ How-to guides show you how to solve specific problems and complete tasks.
 
 Explanation documentation helps you understand the concepts and design decisions.
 
-- [Blob Authorization Deep Dive](./explanation/blob-authorization.md) - How blob restrictions work internally
+- [Query Optimization](./explanation/query-optimization.md) - CALL {} subquery pattern for variable-length path queries
 
 ### 🎓 Tutorials
 *Learning-oriented - Step-by-step learning paths*
@@ -37,48 +36,13 @@ Explanation documentation helps you understand the concepts and design decisions
 
 ### For Developers
 
-**Just getting started?**
-- Read [Blob Authorization Explanation](./explanation/blob-authorization.md) to understand why restrictions exist
-- Follow [Configure Blob Restrictions](./how-to/configure-blob-restrictions.md) to set up your environment
-
 **Integrating the API?**
 - Check [Blob API Reference](./reference/blob-api.md) for complete endpoint specifications
 - Review [Access Restrictions](./reference/access-restrictions.md) to understand security controls
 - Follow [Frontend Integration Guide](./how-to/integrate-blob-api.md) for client implementation
 
 **Troubleshooting?**
-- See troubleshooting section in [Configuration Guide](./how-to/configure-blob-restrictions.md#troubleshooting)
 - Check error codes in [API Reference](./reference/blob-api.md#error-responses)
-
-### For System Administrators
-
-**Configuring restrictions:**
-1. Set `OBJECT_STORAGE_URI` and `RESTRICTED_BRANCH_NAME` in `.env`
-2. Verify with test requests (see [Configuration Guide](./how-to/configure-blob-restrictions.md#step-3-test-blob-restrictions))
-3. Monitor logs for authorization decisions
-
-**Security considerations:**
-- Review [Security Considerations](./explanation/blob-authorization.md#security-considerations)
-- Configure S3 bucket policies to prevent direct access
-- Monitor 403 responses for unauthorized access attempts
-
-## Feature Overview: Blob Download Restrictions
-
-### Problem
-Windows binaries cannot be redistributed due to Microsoft licensing restrictions, but the system needs to allow exploration and downloading of Linux files.
-
-### Solution
-A two-tier approach:
-1. **GraphQL API** - Returns blob hashes freely for exploration (browsing, searching, diffing)
-2. **REST API** - Controls actual downloads with branch-based authorization
-
-### Key Concepts
-
-**Branch-Based Restrictions**: Blobs are restricted if they belong exclusively to a configured restricted branch (e.g., `windows-10`).
-
-**Fail-Safe Default**: If authorization check fails, access is denied (better to block accidentally than allow).
-
-**Streaming Architecture**: Large files are streamed directly from object storage without buffering in memory.
 
 ## Contributing to Documentation
 

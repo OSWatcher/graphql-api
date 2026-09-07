@@ -21,8 +21,7 @@ import { expressMiddleware } from "@as-integrations/express5";
 // Authorization header, nothing a browser could be tricked into attaching. An
 // origin allow-list therefore protects nothing (curl ignores CORS entirely)
 // while breaking every local frontend and third-party tool. Access control
-// that does matter is enforced server-side: rate limiting and restricted-branch
-// filtering.
+// that does matter is enforced server-side: rate limiting.
 import cors from "cors";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
@@ -36,13 +35,6 @@ const env = cleanEnv(process.env, {
     NEO4J_USER: str({ desc: "Neo4j username" }),
     NEO4J_PASSWORD: str({ desc: "Neo4j password" }),
     OBJECT_STORAGE_URI: url({ desc: "S3/MinIO object storage endpoint" }),
-    // Blob download restriction is disabled by default for the open-source
-    // release (see rest-routes.ts). Left optional so the server starts
-    // without configuring it.
-    RESTRICTED_BRANCH_NAME: str({
-        default: "",
-        desc: "Branch name for restricted blobs (unused unless the restriction in rest-routes.ts is re-enabled)",
-    }),
     MINIO_ACCESS_KEY: str({
         desc: "MinIO access key for authenticated requests",
     }),
@@ -326,9 +318,7 @@ async function main() {
             createRateLimit(100, 60000), // 100 requests per minute
             express.json({ limit: "1mb" }),
             createRestRouter(
-                driver,
                 env.OBJECT_STORAGE_URI,
-                env.RESTRICTED_BRANCH_NAME,
                 env.MINIO_ACCESS_KEY,
                 env.MINIO_SECRET_KEY,
                 env.MINIO_OBJECTS_BUCKET_NAME,

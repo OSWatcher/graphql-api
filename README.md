@@ -19,11 +19,6 @@ MINIO_ACCESS_KEY=
 MINIO_SECRET_KEY=
 MINIO_OBJECTS_BUCKET_NAME=objects
 
-# Optional - Blob Access Control
-# Unused unless the restriction commented out in src/rest-routes.ts is
-# re-enabled (see docs/reference/access-restrictions.md)
-RESTRICTED_BRANCH_NAME=
-
 # Optional - Environment
 NODE_ENV=development
 

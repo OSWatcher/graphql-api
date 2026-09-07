@@ -1,18 +1,10 @@
 import { Router, Request, Response } from "express";
-import { Driver } from "neo4j-driver";
 import { BlobHashParamSchema } from "./validation.js";
 import { ZodError } from "zod";
-// Blob download restriction is disabled by default for the open-source
-// release -- see the commented-out block below and
-// docs/reference/access-restrictions.md. Uncomment to re-enable
-// branch-based blocking of Windows-exclusive binaries.
-// import { isBlobRestricted } from "./blob-authorization.js";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
 export const createRestRouter = (
-    driver: Driver,
     objectStorageUri: string,
-    _restrictedBranchName: string,
     minioAccessKey: string,
     minioSecretKey: string,
     minioObjectsBucketName: string,
@@ -37,36 +29,6 @@ export const createRestRouter = (
             const { hash } = BlobHashParamSchema.parse(req.params);
 
             console.log(`Blob download requested: ${hash}`);
-
-            // Blob download restriction (branch-based blocking of
-            // Windows-exclusive binaries, per Microsoft redistribution
-            // licensing) is disabled by default for the open-source
-            // release. Uncomment to re-enable -- see
-            // docs/reference/access-restrictions.md.
-            //
-            // NOTE: re-enabling this also requires reinstating an auth
-            // middleware that populates req.auth. Auth0 was removed when the
-            // project went fully open source; see git history for the
-            // express-oauth2-jwt-bearer wiring.
-            // const permissions = (req as any).auth?.payload?.permissions as
-            //     | string[]
-            //     | undefined;
-            // const hasRestrictedAccess =
-            //     permissions?.includes("download:restricted") ?? false;
-            //
-            // if (!hasRestrictedAccess) {
-            //     const restricted = await isBlobRestricted(
-            //         driver,
-            //         hash,
-            //         restrictedBranchName,
-            //     );
-            //     if (restricted) {
-            //         return res.status(403).json({
-            //             error: "Forbidden",
-            //             message: "This blob is restricted",
-            //         });
-            //     }
-            // }
 
             // Fetch blob from MinIO using S3 SDK
             const command = new GetObjectCommand({
