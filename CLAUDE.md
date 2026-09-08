@@ -146,8 +146,44 @@ The project includes comprehensive documentation in the `docs/` directory follow
   - [Integrate Blob API](docs/how-to/integrate-blob-api.md) - Frontend integration guide
 - **Explanation** (`docs/explanation/`) - Conceptual deep dives
   - [Query Optimization](docs/explanation/query-optimization.md) - CALL {} subquery pattern for variable-length path queries
+  - [Diff System](docs/explanation/diff-system.md) - max_depth semantics, the filter gotcha (Blob nodes), and the max_depth=1 rule for leaf-node types
 
 **When working on Cypher queries or the graph data model, ALWAYS consult [docs/reference/data-model.md](docs/reference/data-model.md) first.**
+
+## MCP Server (`mcp/`)
+
+The MCP (Model Context Protocol) server exposes OSWatcher tools to AI assistants. It is a **separate Docker service** — not part of the `api` container.
+
+- **Location**: `graphql-api/mcp/`, with its own `Dockerfile`, `package.json`, `tsconfig.json` and codegen. The root `tsconfig.json` excludes it.
+- **Compose service**: defined in `oswatcher-hub/compose.dev.yml` as `mcp`, port 3001, built from `context: ../graphql-api`. The two repos must be siblings on disk.
+- **Rebuilding**: must be rebuilt explicitly — `docker compose -f compose.yml -f compose.dev.yml up --build mcp -d`. Rebuilding `api` does NOT rebuild `mcp`.
+- **GraphQL client**: calls the API at `GRAPHQL_API_URL` (`http://api:4000/graphql` in Docker). The API is unauthenticated, so no credential is forwarded and the SDK is built once at module scope.
+- **Codegen**: `npm run generate` (not `codegen`) regenerates `src/graphql/generated/sdk.ts` from `src/graphql/queries.graphql`. It reads the schema from a **running** API on port 4000.
+
+### Tools (10 total)
+
+| Tool | Description |
+|------|-------------|
+| `list_branches` | List OS branches with optional name filter |
+| `list_commits` | List commits on a branch |
+| `diff_versions` | Filesystem diff between two refs at a path |
+| `search` | Substring search across filesystem/registry/symbols/structs |
+| `search_next` | Next page of a search session |
+| `search_close` | End a search session early |
+| `traverse_path` | Walk the filesystem from a ref to a path; returns `{ hash }` |
+| `get_winreg_root` | Follow `HAS_WINREG` from a Blob hash to the registry root hash |
+| `get_blobs_with_symbols` | List PE blobs that have PDB symbols or struct data |
+| `diff_nodes` | Low-level diff on raw node hashes (registry, symbols, structs) |
+
+### Key design constraints
+
+**Filesystem diff filter**: `DiffNodesAt` **must** pass `filter: ["Tree", "Blob"]` when diffing filesystems. Without it, the Java procedure (`example.diffTreesRecursive`) defaults to filtering only `Tree` nodes and silently drops every `Blob` leaf. See `docs/explanation/diff-system.md`.
+
+**`max_depth=1` required for Symbol, Struct and StructField diffs**: the Java procedure adds `parentLabel` to the filter and recurses into Struct/Symbol nodes, but their children are `StructField`, not `Struct`/`Symbol`. Without `max_depth=1` the diff silently returns 0 results.
+
+**UNCHANGED status filter for a full C type layout**: to reconstruct a whole struct (e.g. `_EPROCESS`, 261 fields) pass `status_filter: ["NEW", "MOD", "DEL", "UNCHANGED"]`. Without it only the delta comes back (~5 items).
+
+**Search sessions are process-local**: `src/search-session.ts` holds them in a `Map`, so the API cannot be horizontally scaled while sessions are in use.
 
 ## Important Patterns
 
