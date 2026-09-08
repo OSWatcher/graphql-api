@@ -14,6 +14,11 @@ import {
 } from "./ogm-types.js";
 import { get_path_entry } from "./filesystem.js";
 import { search } from "./search.js";
+import {
+    createSession,
+    fetchNextPage,
+    closeSession,
+} from "./search-session.js";
 import { git_log, git_log_stream } from "./git-log/index.js";
 import { Driver } from "neo4j-driver";
 import { OGM } from "@neo4j/graphql-ogm";
@@ -25,6 +30,9 @@ import {
     GetCommitCapabilitiesArgsSchema,
     GetBlobsWithSymbolsArgsSchema,
     GitLogArgsSchema,
+    SearchWithSessionArgsSchema,
+    SearchNextArgsSchema,
+    SearchCloseArgsSchema,
 } from "./validation.js";
 
 export const resolvers = (driver: Driver, _ogm: OGM) => {
@@ -194,6 +202,15 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                 }
                 return results;
             },
+            async searchWithSession(_source: unknown, args: unknown) {
+                const { input, page_size } =
+                    SearchWithSessionArgsSchema.parse(args);
+                return createSession(driver, input, page_size, false);
+            },
+            async searchNext(_source: unknown, args: unknown) {
+                const { session_id } = SearchNextArgsSchema.parse(args);
+                return fetchNextPage(session_id);
+            },
             async gitLog(
                 _source: unknown,
                 args: unknown,
@@ -215,6 +232,12 @@ export const resolvers = (driver: Driver, _ogm: OGM) => {
                     commit_range,
                     options,
                 );
+            },
+        },
+        Mutation: {
+            async searchClose(_source: unknown, args: unknown) {
+                const { session_id } = SearchCloseArgsSchema.parse(args);
+                return closeSession(session_id);
             },
         },
         DiffItem: {
