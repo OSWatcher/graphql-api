@@ -1,0 +1,153 @@
+query FetchBranches {
+    branches {
+        name
+        tracks {
+            hash
+            name
+            date
+        }
+    }
+}
+
+query ResolveCommitRef($ref: String!) {
+    branches(where: { name: $ref }) {
+        name
+        tracks {
+            hash
+            filesystem {
+                hash
+            }
+        }
+    }
+    commits(where: { hash: $ref }) {
+        hash
+        filesystem {
+            hash
+        }
+    }
+}
+
+query Search($input: SearchInput!) {
+    search(input: $input) {
+        type
+        commit_name
+        commit_hash
+        blob_path
+        blob_hash
+        entity_path
+        node_hash
+    }
+}
+
+query FetchCommitHistory(
+    $commitHash: String!
+    $direction: CommitHistoryDirection
+) {
+    fetchCommitHistory(commit_hash: $commitHash, direction: $direction) {
+        hash
+        name
+        description
+        date
+        previous {
+            hash
+        }
+        next {
+            hash
+        }
+    }
+}
+
+query DiffNodesAt(
+    $parentLabel: String!
+    $baseNodeHash: String!
+    $diffeeNodeHash: String!
+    $atPath: String!
+    $maxDepth: Int
+    $withIntermediates: Boolean
+    $filter: [String!]
+    $options: DiffNodesOptions
+) {
+    diffNodesAt(
+        parent_label: $parentLabel
+        base_node_hash: $baseNodeHash
+        diffee_node_hash: $diffeeNodeHash
+        at_path: $atPath
+        max_depth: $maxDepth
+        with_intermediates: $withIntermediates
+        filter: $filter
+        options: $options
+    ) {
+        total_count
+        items {
+            status
+            path
+            type
+            old_props {
+                hash
+                properties
+            }
+            new_props {
+                hash
+                properties
+            }
+        }
+    }
+}
+
+query TraversePath($parentLabel: String!, $treeHash: String!, $path: String!) {
+    traversePath(parent_label: $parentLabel, tree_hash: $treeHash, path: $path)
+}
+
+query GetBlobWinRegRoot($hash: String!) {
+    blobs(where: { hash: $hash }) {
+        hash
+        has_winreg {
+            hash
+        }
+    }
+}
+
+query GetBlobsWithSymbols($commitHash: String!) {
+    getBlobsWithSymbols(commit_hash: $commitHash) {
+        blob_hash
+        blob_path
+    }
+}
+
+query SearchWithSession($input: SearchInput!, $pageSize: Int) {
+    searchWithSession(input: $input, page_size: $pageSize) {
+        session_id
+        results {
+            type
+            commit_name
+            commit_hash
+            blob_path
+            blob_hash
+            entity_path
+            node_hash
+        }
+        has_more
+        total_fetched
+    }
+}
+
+query SearchNext($sessionId: String!) {
+    searchNext(session_id: $sessionId) {
+        session_id
+        results {
+            type
+            commit_name
+            commit_hash
+            blob_path
+            blob_hash
+            entity_path
+            node_hash
+        }
+        has_more
+        total_fetched
+    }
+}
+
+mutation SearchClose($sessionId: String!) {
+    searchClose(session_id: $sessionId)
+}
