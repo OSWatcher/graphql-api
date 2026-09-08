@@ -3,7 +3,7 @@ import { jest } from "@jest/globals";
 const mockResolveCommitRef = jest.fn<any>();
 const mockTraversePath = jest.fn<any>();
 
-jest.unstable_mockModule("../src/tools/resolve-ref.js", () => ({
+jest.unstable_mockModule("../src/resolve.js", () => ({
     resolveCommitRef: mockResolveCommitRef,
 }));
 

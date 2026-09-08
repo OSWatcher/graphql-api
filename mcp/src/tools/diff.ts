@@ -1,6 +1,6 @@
-import { GraphqlSdk } from "../graphql/client.js";
 import { DiffStatus } from "../graphql/generated/sdk.js";
-import { resolveCommitRef } from "./resolve-ref.js";
+import { resolveCommitRef } from "../resolve.js";
+import type { GraphqlSdk } from "../graphql/client.js";
 
 export interface DiffVersionsResultItem {
     status: DiffStatus;

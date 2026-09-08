@@ -1,5 +1,5 @@
-import { GraphqlSdk } from "../graphql/client.js";
-import { resolveCommitRef } from "./resolve-ref.js";
+import { resolveCommitRef } from "../resolve.js";
+import type { GraphqlSdk } from "../graphql/client.js";
 
 export interface BlobWithSymbols {
     blob_hash: string;
