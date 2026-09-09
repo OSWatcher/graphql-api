@@ -54,6 +54,14 @@ const streamOf = (data: Uint8Array): ReadableStream<Uint8Array> =>
         },
     });
 
+/** A 200-body stream that closes without ever yielding a chunk. */
+const emptyStream = (): ReadableStream<Uint8Array> =>
+    new ReadableStream({
+        start(controller) {
+            controller.close();
+        },
+    });
+
 /** A stream that yields `data` then errors, i.e. fails *after* the first byte. */
 const streamThenError = (data: Uint8Array): ReadableStream<Uint8Array> => {
     let sent = false;
@@ -524,6 +532,28 @@ describe("tryServeFromWinbindex", () => {
         expect(res.destroyed).toBe(true);
         expect(res.ended).toBe(false);
         expect(console.warn).toHaveBeenCalled();
+    });
+
+    it("falls back to MinIO on a SHA-1 mismatch when no byte was sent (empty 200 body)", async () => {
+        const requestedHash = sha1Hex(bytes("a real, non-empty PE file"));
+        fetchMock.mockImplementation(async (input: unknown) =>
+            String(input).includes(".json.gz")
+                ? jsonIndexResponse(entryIndex(requestedHash))
+                : symbolResponse(emptyStream()),
+        );
+
+        const res = makeMockRes();
+        const outcome = await tryServeFromWinbindex(
+            CONFIG,
+            requestedHash,
+            "kernel32.dll",
+            res,
+        );
+
+        expect(outcome).toBe("not_available");
+        expect(res.destroyed).toBe(false);
+        expect(res.body).toHaveLength(0);
+        expect(res.headers).toEqual({});
     });
 
     it.each(["a?b.dll", "x#y.dll", "mal ware.dll", "%2e%2e.dll", "café.dll"])(
