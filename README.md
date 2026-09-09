@@ -22,6 +22,13 @@ MINIO_OBJECTS_BUCKET_NAME=objects
 # Optional - Environment
 NODE_ENV=development
 
+# Optional - Winbindex fast path for Windows PE blob downloads
+# (all defaulted; see docs/reference/winbindex-source.md)
+WINBINDEX_ENABLED=true
+WINBINDEX_DATA_URL=https://winbindex.m417z.com/data/by_filename_compressed
+WINBINDEX_SYMBOL_SERVER_URL=https://msdl.microsoft.com/download/symbols
+WINBINDEX_FETCH_TIMEOUT_MS=15000
+
 # Optional - Registry Filtering
 # Unused unless the plugin commented out in src/index.ts is re-enabled
 # (see docs/reference/access-restrictions.md)
