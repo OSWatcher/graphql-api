@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
-import { gunzipSync } from "node:zlib";
+import { promisify } from "node:util";
+import { gunzip } from "node:zlib";
+
+/** Off-loads decompression to the threadpool so the event loop is not blocked. */
+const gunzipAsync = promisify(gunzip);
 
 /**
  * Winbindex fast path for Windows PE blob downloads.
@@ -131,14 +135,20 @@ function cacheGet(name: string): { hit: boolean; value: WinbindexJson | null } {
         jsonCache.delete(name);
         return { hit: false, value: null };
     }
+    // Move to the most-recently-used end so eviction in `cacheSet` is LRU: a
+    // `Map` keeps insertion order, so re-inserting is the cheapest bump.
+    jsonCache.delete(name);
+    jsonCache.set(name, record);
     return { hit: true, value: record.value };
 }
 
 function cacheSet(name: string, value: WinbindexJson | null): void {
-    if (!jsonCache.has(name) && jsonCache.size >= WINBINDEX_JSON_CACHE_MAX) {
-        const oldest = jsonCache.keys().next().value;
-        if (oldest !== undefined) {
-            jsonCache.delete(oldest);
+    // Refresh recency even when the key already exists (re-insert at the end).
+    jsonCache.delete(name);
+    if (jsonCache.size >= WINBINDEX_JSON_CACHE_MAX) {
+        const lru = jsonCache.keys().next().value;
+        if (lru !== undefined) {
+            jsonCache.delete(lru);
         }
     }
     jsonCache.set(name, {
@@ -177,9 +187,8 @@ async function fetchIndex(
 
     try {
         const compressed = new Uint8Array(await response.arrayBuffer());
-        const parsed = JSON.parse(
-            gunzipSync(compressed).toString("utf-8"),
-        ) as WinbindexJson;
+        const json = (await gunzipAsync(compressed)).toString("utf-8");
+        const parsed = JSON.parse(json) as WinbindexJson;
         cacheSet(name, parsed);
         return parsed;
     } catch {
@@ -230,11 +239,17 @@ export async function resolveEntry(
 /**
  * Resolve once the response has drained and can take more data, or reject if the
  * client went away first (so the caller stops pulling from the upstream instead
- * of buffering forever). Listeners are always removed before settling.
+ * of buffering forever). Rejects after `timeoutMs` as well, so a socket that
+ * never emits `drain`, `close` or `error` cannot hang the request handler.
+ * Listeners and the timer are always cleared before settling.
  */
-function waitForDrain(res: BlobResponse): Promise<void> {
+function waitForDrain(res: BlobResponse, timeoutMs: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+        let timer: ReturnType<typeof setTimeout> | undefined;
         const cleanup = (): void => {
+            if (timer !== undefined) {
+                clearTimeout(timer);
+            }
             res.off("drain", onDrain);
             res.off("close", onClose);
             res.off("error", onError);
@@ -251,6 +266,10 @@ function waitForDrain(res: BlobResponse): Promise<void> {
             cleanup();
             reject(err instanceof Error ? err : new Error(String(err)));
         };
+        timer = setTimeout(() => {
+            cleanup();
+            reject(new Error("timed out waiting for the response to drain"));
+        }, timeoutMs);
         res.once("drain", onDrain);
         res.once("close", onClose);
         res.once("error", onError);
@@ -335,7 +354,7 @@ export async function streamFromSymbolServer(
             const flushed = res.write(chunk.value);
             wrote = true;
             if (!flushed) {
-                await waitForDrain(res);
+                await waitForDrain(res, cfg.timeoutMs);
             }
             chunk = await reader.read();
         }

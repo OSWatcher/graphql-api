@@ -339,7 +339,7 @@ describe("resolveEntry", () => {
         }
     });
 
-    it("bounds the cache to 200 entries, evicting the oldest first", async () => {
+    it("bounds the cache to 200 entries, evicting the least-recently-used first", async () => {
         const index = {
             a: {
                 fileInfo: {
@@ -362,6 +362,36 @@ describe("resolveEntry", () => {
 
         // f200 is still cached -> no fetch.
         await resolveEntry(CONFIG, "f200.dll", KERNEL32_SHA1);
+        expect(fetchMock).toHaveBeenCalledTimes(202);
+    });
+
+    it("a cache read refreshes recency, sparing a hot entry under churn", async () => {
+        const index = {
+            a: {
+                fileInfo: {
+                    timestamp: 1584069829,
+                    virtualSize: 118784,
+                    sha1: KERNEL32_SHA1,
+                },
+            },
+        };
+        fetchMock.mockResolvedValue(jsonIndexResponse(index));
+
+        // Fill the cache exactly: f0 .. f199.
+        for (let i = 0; i < 200; i++) {
+            await resolveEntry(CONFIG, `f${i}.dll`, KERNEL32_SHA1);
+        }
+        expect(fetchMock).toHaveBeenCalledTimes(200);
+
+        // Re-read f0: it becomes most-recently-used, f1 is now the coldest.
+        await resolveEntry(CONFIG, "f0.dll", KERNEL32_SHA1);
+        expect(fetchMock).toHaveBeenCalledTimes(200);
+
+        // A new entry evicts the LRU (f1), not the just-read f0.
+        await resolveEntry(CONFIG, "f200.dll", KERNEL32_SHA1);
+        await resolveEntry(CONFIG, "f0.dll", KERNEL32_SHA1);
+        expect(fetchMock).toHaveBeenCalledTimes(201);
+        await resolveEntry(CONFIG, "f1.dll", KERNEL32_SHA1);
         expect(fetchMock).toHaveBeenCalledTimes(202);
     });
 });
@@ -605,5 +635,29 @@ describe("tryServeFromWinbindex", () => {
             "MZ...a portable executable that needs draining...",
         );
         expect(res.ended).toBe(true);
+    });
+
+    it("tears the response down if the client never drains", async () => {
+        const body = bytes("MZ...a client that stops reading...");
+        const hash = sha1Hex(body);
+        fetchMock.mockImplementation(async (input: unknown) =>
+            String(input).includes(".json.gz")
+                ? jsonIndexResponse(entryIndex(hash))
+                : symbolResponse(body),
+        );
+
+        // write() reports backpressure but "drain" is never emitted.
+        const res = makeMockRes();
+        res.write = () => false;
+
+        const outcome = await tryServeFromWinbindex(
+            { ...CONFIG, timeoutMs: 10 },
+            hash,
+            "kernel32.dll",
+            res,
+        );
+
+        expect(outcome).toBe("failed_after_send");
+        expect(res.destroyed).toBe(true);
     });
 });

@@ -32,8 +32,10 @@ ignores `filename`.
 1. `GET /blob/<sha1>?filename=kernel32.dll`
 2. `GET <WINBINDEX_DATA_URL>/kernel32.dll.json.gz` — gzipped JSON, top-level keys
    are SHA-256, each value carries `fileInfo.timestamp`, `fileInfo.virtualSize`
-   and (about 70% of the time) `fileInfo.sha1`. The parsed index is cached in
-   memory for 24h, keyed by lowercased filename, bounded to 200 entries. A 404 is
+   and (about 70% of the time) `fileInfo.sha1`. The index is decompressed off the
+   event loop (async gunzip). The parsed result is cached in memory for 24h,
+   keyed by lowercased filename, bounded to 200 entries evicted least-recently-used.
+   A 404 is
    cached as a negative result so a missing filename is not re-fetched on every
    request. This in-memory negative cache is best-effort only: it is per-process,
    unbounded in eviction pressure, and can be flushed by requests for 200 other
