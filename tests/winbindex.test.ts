@@ -69,6 +69,22 @@ const streamThenError = (data: Uint8Array): ReadableStream<Uint8Array> => {
     });
 };
 
+/** A stream that yields `data` then stalls, recording whether it was cancelled. */
+const stallingStream = (
+    data: Uint8Array,
+): { stream: ReadableStream<Uint8Array>; cancelled: () => boolean } => {
+    let cancelled = false;
+    const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+            controller.enqueue(data);
+        },
+        cancel() {
+            cancelled = true;
+        },
+    });
+    return { stream, cancelled: () => cancelled };
+};
+
 /** A stream that errors before yielding anything. */
 const erroringStream = (): ReadableStream<Uint8Array> =>
     new ReadableStream({
@@ -639,13 +655,14 @@ describe("tryServeFromWinbindex", () => {
         expect(res.ended).toBe(true);
     });
 
-    it("tears the response down if the client never drains", async () => {
+    it("tears the response and the upstream down if the client never drains", async () => {
         const body = bytes("MZ...a client that stops reading...");
         const hash = sha1Hex(body);
+        const upstream = stallingStream(body);
         fetchMock.mockImplementation(async (input: unknown) =>
             String(input).includes(".json.gz")
                 ? jsonIndexResponse(entryIndex(hash))
-                : symbolResponse(body),
+                : symbolResponse(upstream.stream),
         );
 
         // write() reports backpressure but "drain" is never emitted.
@@ -661,5 +678,6 @@ describe("tryServeFromWinbindex", () => {
 
         expect(outcome).toBe("failed_after_send");
         expect(res.destroyed).toBe(true);
+        expect(upstream.cancelled()).toBe(true);
     });
 });

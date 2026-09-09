@@ -380,6 +380,11 @@ export async function streamFromSymbolServer(
         );
         res.destroy();
         return "failed_after_send";
+    } finally {
+        // Abort the symbol-server download on any exit: a no-op once the body is
+        // fully read, but on a mid-stream error or drain timeout it stops the
+        // upstream transfer instead of leaving it running in the background.
+        void reader.cancel().catch(() => {});
     }
 
     const digest = hash.digest("hex");
