@@ -76,7 +76,9 @@ describe("cursor codec", () => {
 
     it("rejects a cursor that decodes to something other than an object", () => {
         const arrayCursor = Buffer.from("[]", "utf-8").toString("base64url");
-        expect(() => decodeCursor(arrayCursor, ["trees"])).toThrow("Invalid cursor");
+        expect(() => decodeCursor(arrayCursor, ["trees"])).toThrow(
+            "Invalid cursor",
+        );
     });
 });
 
@@ -104,7 +106,10 @@ describe("advanceCursor", () => {
 
     it("exhausts a requested connection that returned no pageInfo", () => {
         expect(
-            advanceCursor({ trees: "", blobs: "" }, { trees: undefined, blobs: undefined }),
+            advanceCursor(
+                { trees: "", blobs: "" },
+                { trees: undefined, blobs: undefined },
+            ),
         ).toEqual({ trees: null, blobs: null });
     });
 });

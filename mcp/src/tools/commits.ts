@@ -1,5 +1,7 @@
+import { z } from "zod";
 import { GraphqlSdk } from "../graphql/client.js";
 import { CommitHistoryDirection } from "../graphql/generated/sdk.js";
+import { defineTool } from "../types.js";
 
 export interface CommitResult {
     hash: string;
@@ -51,3 +53,18 @@ export async function listCommits(
 
     return commits;
 }
+
+export default defineTool({
+    name: "list_commits",
+    description: "List commits (OS snapshots/updates) on a branch",
+    schema: {
+        branch: z.string().describe("Branch name (e.g. 'windows_11_23h2')"),
+        limit: z
+            .number()
+            .int()
+            .positive()
+            .optional()
+            .describe("Maximum number of commits to return"),
+    },
+    handler: (sdk, { branch, limit }) => listCommits(sdk, branch, limit),
+});

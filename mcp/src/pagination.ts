@@ -57,16 +57,18 @@ export function decodeCursor(
 
     let parsed: unknown;
     try {
-        parsed = JSON.parse(
-            Buffer.from(cursor, "base64url").toString("utf-8"),
-        );
+        parsed = JSON.parse(Buffer.from(cursor, "base64url").toString("utf-8"));
     } catch {
         throw new Error(
             "Invalid cursor. Pass back the next_cursor value from the previous page unchanged, or omit it to start over.",
         );
     }
 
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        Array.isArray(parsed)
+    ) {
         throw new Error(
             "Invalid cursor. Pass back the next_cursor value from the previous page unchanged, or omit it to start over.",
         );

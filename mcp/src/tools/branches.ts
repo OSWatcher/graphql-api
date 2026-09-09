@@ -1,4 +1,6 @@
+import { z } from "zod";
 import { GraphqlSdk } from "../graphql/client.js";
+import { defineTool } from "../types.js";
 
 export interface BranchResult {
     name: string;
@@ -29,3 +31,16 @@ export async function listBranches(
 
     return branches;
 }
+
+export default defineTool({
+    name: "list_branches",
+    description:
+        "List available OS branches (operating system versions tracked by OSWatcher).",
+    schema: {
+        search: z
+            .string()
+            .optional()
+            .describe("Case-insensitive substring filter on branch name"),
+    },
+    handler: (sdk, { search }) => listBranches(sdk, search),
+});

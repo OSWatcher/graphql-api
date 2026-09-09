@@ -1,5 +1,7 @@
+import { z } from "zod";
 import { GraphqlSdk } from "../graphql/client.js";
 import { SearchResponse } from "./search.js";
+import { defineTool } from "../types.js";
 
 export async function searchNext(
     sdk: GraphqlSdk,
@@ -23,3 +25,15 @@ export async function searchNext(
         total_fetched: page.total_fetched,
     };
 }
+
+export default defineTool({
+    name: "search_next",
+    description:
+        "Fetch the next page of results from a paginated search session. Returns the same format as search. When has_more is false, the session is automatically closed.",
+    schema: {
+        session_id: z
+            .string()
+            .describe("Session ID returned by a previous search call"),
+    },
+    handler: (sdk, { session_id }) => searchNext(sdk, session_id),
+});

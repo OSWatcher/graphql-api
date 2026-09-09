@@ -1,5 +1,7 @@
+import { z } from "zod";
 import { DiffStatus } from "../graphql/generated/sdk.js";
 import { resolveCommitRef } from "../resolve.js";
+import { defineTool } from "../types.js";
 import type { GraphqlSdk } from "../graphql/client.js";
 
 export interface DiffVersionsResultItem {
@@ -113,3 +115,62 @@ export async function diffVersions(
         })),
     };
 }
+
+export default defineTool({
+    name: "diff_versions",
+    description:
+        "Compute a filesystem diff between two commits or branches at a specific path",
+    schema: {
+        base_ref: z
+            .string()
+            .min(1)
+            .describe(
+                "Older side of the comparison: commit hash or branch name",
+            ),
+        diffee_ref: z
+            .string()
+            .min(1)
+            .describe(
+                "Newer side of the comparison: commit hash or branch name",
+            ),
+        path: z
+            .string()
+            .startsWith("/")
+            .describe(
+                "Absolute filesystem path to diff, e.g. '/' or '/Windows/System32'",
+            ),
+        max_depth: z
+            .number()
+            .int()
+            .min(0)
+            .max(100)
+            .optional()
+            .describe(
+                "Depth of child traversal. If omitted, GraphQL applies its own default and auth rules.",
+            ),
+        limit: z
+            .number()
+            .int()
+            .positive()
+            .max(10000)
+            .optional()
+            .describe("Maximum number of diff items to return"),
+        offset: z
+            .number()
+            .int()
+            .nonnegative()
+            .optional()
+            .describe("Number of diff items to skip before returning results"),
+        status_filter: z
+            .array(z.enum(["NEW", "MOD", "DEL", "UNCHANGED"]))
+            .optional()
+            .describe("Optional diff statuses to include"),
+        with_intermediates: z
+            .boolean()
+            .optional()
+            .describe(
+                "Include intermediary directory nodes in recursive diffs",
+            ),
+    },
+    handler: (sdk, params) => diffVersions({ ...params, sdk }),
+});

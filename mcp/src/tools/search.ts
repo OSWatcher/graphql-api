@@ -1,8 +1,10 @@
+import { z } from "zod";
 import { GraphqlSdk } from "../graphql/client.js";
 import {
     CommitHistoryDirection,
     EntityType,
 } from "../graphql/generated/sdk.js";
+import { defineTool } from "../types.js";
 
 export interface SearchResult {
     type: string;
@@ -90,3 +92,66 @@ export async function search(params: {
         total_fetched: page.total_fetched,
     };
 }
+
+export default defineTool({
+    name: "search",
+    description:
+        "Search for files, registry keys, symbols, or structs across OS versions by substring match. `start_ref` accepts either a branch name or a 40-character commit hash. If the value is not a 40-character hash, it is treated as a branch name. To search a single snapshot, resolve and pass the exact commit hash (optionally set `end_ref` to the same hash). `entity_types` must use uppercase enum values: `FILESYSTEM`, `REGISTRY`, `STRUCT`, `SYMBOL`. Returns paginated results with a session_id. Use search_next to fetch more results, search_close to end the session.",
+    schema: {
+        search_term: z
+            .string()
+            .min(1)
+            .max(500)
+            .describe(
+                "Substring to search for (e.g. 'ntdll.dll', 'Defender', '_EPROCESS')",
+            ),
+        start_ref: z
+            .string()
+            .describe(
+                "Starting point for commit traversal: either a branch name or an exact 40-character commit hash. Non-hash values are treated as branch names.",
+            ),
+        direction: z
+            .enum(["BACKWARD", "FORWARD"])
+            .optional()
+            .describe(
+                "Commit traversal direction from start_ref (default: BACKWARD). This controls history traversal, not single-snapshot selection.",
+            ),
+        include_updates: z
+            .boolean()
+            .optional()
+            .describe(
+                "Whether to traverse update or patch branches in commit history. `false` does not mean single-commit search; it only keeps traversal directed.",
+            ),
+        branch: z
+            .string()
+            .optional()
+            .describe(
+                "Optional branch filter to constrain traversal to commits reachable from a specific tracked branch.",
+            ),
+        end_ref: z
+            .string()
+            .optional()
+            .describe(
+                "Optional commit hash to bound the search range. For a single-snapshot search, use the same 40-character commit hash for both start_ref and end_ref.",
+            ),
+        entity_types: z
+            .array(z.enum(["FILESYSTEM", "REGISTRY", "STRUCT", "SYMBOL"]))
+            .optional()
+            .describe(
+                "Entity types to search (default: all types). Must use uppercase enum values: FILESYSTEM, REGISTRY, STRUCT, SYMBOL.",
+            ),
+        case_sensitive: z
+            .boolean()
+            .optional()
+            .describe("Case-sensitive matching (default: false)"),
+        limit: z
+            .number()
+            .int()
+            .positive()
+            .optional()
+            .describe(
+                "Max results per page (default: 50). Use search_next with the returned session_id to get more results.",
+            ),
+    },
+    handler: (sdk, params) => search({ ...params, sdk }),
+});
