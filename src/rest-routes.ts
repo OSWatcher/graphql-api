@@ -2,12 +2,14 @@ import { Router, Request, Response } from "express";
 import { BlobHashParamSchema } from "./validation.js";
 import { ZodError } from "zod";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { WinbindexConfig, tryServeFromWinbindex } from "./winbindex.js";
 
 export const createRestRouter = (
     objectStorageUri: string,
     minioAccessKey: string,
     minioSecretKey: string,
     minioObjectsBucketName: string,
+    winbindexConfig: WinbindexConfig,
 ) => {
     const router = Router();
 
@@ -29,6 +31,37 @@ export const createRestRouter = (
             const { hash } = BlobHashParamSchema.parse(req.params);
 
             console.log(`Blob download requested: ${hash}`);
+
+            // Winbindex fast path: for Windows PE files the frontend passes
+            // `?filename=`, letting us resolve the file on Winbindex and stream
+            // verified bytes from Microsoft's symbol server instead of MinIO.
+            // Any miss or failure falls through to MinIO unchanged; a failure
+            // after bytes were already streamed ends the response here.
+            const filename =
+                typeof req.query.filename === "string"
+                    ? req.query.filename
+                    : undefined;
+            if (filename) {
+                try {
+                    const outcome = await tryServeFromWinbindex(
+                        winbindexConfig,
+                        hash,
+                        filename,
+                        res,
+                    );
+                    if (
+                        outcome === "served" ||
+                        outcome === "failed_after_send"
+                    ) {
+                        return;
+                    }
+                } catch (winbindexError) {
+                    console.warn(
+                        "Winbindex fast path threw, falling back to MinIO:",
+                        winbindexError,
+                    );
+                }
+            }
 
             // Fetch blob from MinIO using S3 SDK
             const command = new GetObjectCommand({
