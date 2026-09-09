@@ -20,7 +20,7 @@ Downloads a blob by its SHA-1 hash.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `filename` | string | No | The file's basename (e.g. `kernel32.dll`). Used **only** to look the blob up on Winbindex for the Windows-PE fast path (see [Winbindex Blob Source](./winbindex-source.md)). Ignored for non-PE names, and by the MinIO path, which always keys on `hash`. A non-plain name (anything outside `[a-z0-9._+-]`) is ignored. |
+| `filename` | string | No | The file's basename (e.g. `kernel32.dll`). Used **only** to look the blob up on Winbindex for the Windows-PE fast path (see [Winbindex Blob Source](./winbindex-source.md)). Ignored for non-PE names, and by the MinIO path, which always keys on `hash`. Matching is case-insensitive (the name is lowercased first); a name that then contains anything outside `[a-z0-9._+-]` (path separators, `?`, `#`, whitespace, ...) skips the fast path. |
 
 ## Request Headers
 

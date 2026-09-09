@@ -6,6 +6,14 @@ import { gunzip } from "node:zlib";
 const gunzipAsync = promisify(gunzip);
 
 /**
+ * Best-effort release of a fetch body we are not going to read, so undici does
+ * not keep the socket and unread data around in its connection pool.
+ */
+function discardBody(response: Response): void {
+    response.body?.cancel().catch(() => {});
+}
+
+/**
  * Winbindex fast path for Windows PE blob downloads.
  *
  * For a `GET /blob/:hash?filename=<pe file>` request the API resolves the file on
@@ -178,10 +186,12 @@ async function fetchIndex(
     }
 
     if (response.status === 404) {
+        discardBody(response);
         cacheSet(name, null);
         return null;
     }
     if (!response.ok) {
+        discardBody(response);
         return null;
     }
 
@@ -314,6 +324,7 @@ export async function streamFromSymbolServer(
     }
 
     if (!upstream.ok || !upstream.body) {
+        discardBody(upstream);
         return "not_available";
     }
 

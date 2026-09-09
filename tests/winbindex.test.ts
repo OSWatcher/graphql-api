@@ -174,6 +174,7 @@ const receivedText = (res: MockRes): string => {
 
 type FetchMock = jest.MockedFunction<(...args: any[]) => Promise<any>>;
 let fetchMock: FetchMock;
+const REAL_FETCH = globalThis.fetch;
 
 beforeEach(() => {
     __clearWinbindexCache();
@@ -185,6 +186,7 @@ beforeEach(() => {
 
 afterEach(() => {
     jest.restoreAllMocks();
+    globalThis.fetch = REAL_FETCH;
 });
 
 describe("isWindowsPEFilename", () => {
