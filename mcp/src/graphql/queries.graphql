@@ -151,3 +151,282 @@ query SearchNext($sessionId: String!) {
 mutation SearchClose($sessionId: String!) {
     searchClose(session_id: $sessionId)
 }
+
+query FetchStructByName($blobHash: String!, $structName: String!) {
+    blobs(where: { hash: $blobHash }) {
+        has_structConnection(where: { edge: { name: $structName } }) {
+            edges {
+                properties {
+                    name
+                }
+                node {
+                    hash
+                    size
+                    kind
+                }
+            }
+        }
+    }
+}
+
+query FetchStructFields($structHash: String!) {
+    structs(where: { hash: $structHash }) {
+        fieldsConnection {
+            totalCount
+            edges {
+                properties {
+                    name
+                }
+                node {
+                    hash
+                    offset
+                    data_type
+                }
+            }
+        }
+    }
+}
+
+query ListStructs($blobHash: String!, $first: Int, $after: String) {
+    blobs(where: { hash: $blobHash }) {
+        has_structConnection(first: $first, after: $after) {
+            totalCount
+            edges {
+                properties {
+                    name
+                }
+                node {
+                    hash
+                    size
+                    kind
+                }
+            }
+            pageInfo {
+                hasNextPage
+                endCursor
+            }
+        }
+    }
+}
+
+query ListStructsByName(
+    $blobHash: String!
+    $structName: String!
+    $first: Int
+    $after: String
+) {
+    blobs(where: { hash: $blobHash }) {
+        has_structConnection(
+            where: { edge: { name: $structName } }
+            first: $first
+            after: $after
+        ) {
+            totalCount
+            edges {
+                properties {
+                    name
+                }
+                node {
+                    hash
+                    size
+                    kind
+                }
+            }
+            pageInfo {
+                hasNextPage
+                endCursor
+            }
+        }
+    }
+}
+
+query ListSymbols($blobHash: String!, $first: Int, $after: String) {
+    blobs(where: { hash: $blobHash }) {
+        has_symbolConnection(first: $first, after: $after) {
+            totalCount
+            edges {
+                properties {
+                    name
+                }
+                node {
+                    hash
+                    address
+                }
+            }
+            pageInfo {
+                hasNextPage
+                endCursor
+            }
+        }
+    }
+}
+
+query ListSymbolsByName(
+    $blobHash: String!
+    $symbolName: String!
+    $first: Int
+    $after: String
+) {
+    blobs(where: { hash: $blobHash }) {
+        has_symbolConnection(
+            where: { edge: { name: $symbolName } }
+            first: $first
+            after: $after
+        ) {
+            totalCount
+            edges {
+                properties {
+                    name
+                }
+                node {
+                    hash
+                    address
+                }
+            }
+            pageInfo {
+                hasNextPage
+                endCursor
+            }
+        }
+    }
+}
+
+query ListTree(
+    $treeHash: String!
+    $first: Int
+    $afterTrees: String
+    $afterBlobs: String
+    $includeTrees: Boolean!
+    $includeBlobs: Boolean!
+) {
+    trees(where: { hash: $treeHash }) {
+        child_treesConnection(first: $first, after: $afterTrees)
+            @include(if: $includeTrees) {
+            totalCount
+            edges {
+                properties {
+                    name
+                }
+                node {
+                    hash
+                }
+            }
+            pageInfo {
+                hasNextPage
+                endCursor
+            }
+        }
+        child_blobsConnection(first: $first, after: $afterBlobs)
+            @include(if: $includeBlobs) {
+            totalCount
+            edges {
+                properties {
+                    name
+                }
+                node {
+                    hash
+                }
+            }
+            pageInfo {
+                hasNextPage
+                endCursor
+            }
+        }
+    }
+}
+
+query ListRegistryKey(
+    $keyHash: String!
+    $first: Int
+    $afterKeys: String
+    $afterValues: String
+    $includeKeys: Boolean!
+    $includeValues: Boolean!
+) {
+    winRegKeys(where: { hash: $keyHash }) {
+        child_keysConnection(first: $first, after: $afterKeys)
+            @include(if: $includeKeys) {
+            totalCount
+            edges {
+                properties {
+                    name
+                }
+                node {
+                    hash
+                }
+            }
+            pageInfo {
+                hasNextPage
+                endCursor
+            }
+        }
+        child_valuesConnection(first: $first, after: $afterValues)
+            @include(if: $includeValues) {
+            totalCount
+            edges {
+                properties {
+                    name
+                }
+                node {
+                    hash
+                    type
+                    value
+                }
+            }
+            pageInfo {
+                hasNextPage
+                endCursor
+            }
+        }
+    }
+}
+
+query TraverseRegistryPath($rootHash: String!, $path: String!) {
+    traversePath(parent_label: "WinRegKey", tree_hash: $rootHash, path: $path)
+}
+
+query GitLog(
+    $path: String!
+    $context: EntityType!
+    $commitRange: CommitRange!
+    $options: GitLogOptions
+) {
+    gitLog(
+        path: $path
+        context: $context
+        commit_range: $commitRange
+        options: $options
+    ) {
+        total_count
+        has_more
+        entries {
+            base_commit {
+                hash
+                name
+                date
+            }
+            diffee_commit {
+                hash
+                name
+                date
+            }
+            diff {
+                path
+                status
+                type
+                old_props {
+                    hash
+                    properties
+                }
+                new_props {
+                    hash
+                    properties
+                }
+            }
+        }
+    }
+}
+
+query GetCommitCapabilities($commitHash: String!) {
+    getCommitExtractedDataLabels(commit_hash: $commitHash)
+}
