@@ -15,6 +15,15 @@ import { gunzipSync } from "node:zlib";
 
 export const PE_EXTENSIONS = new Set([".exe", ".dll", ".sys"]);
 
+/**
+ * A plain, safe PE filename: lowercase letters, digits and `. _ + -` only.
+ * Every real Winbindex filename fits this. Names outside it (containing `?`,
+ * `#`, whitespace, percent-encoding, ...) are attacker attempts to steer the
+ * outbound Winbindex / symbol-server request to another path or query and are
+ * rejected before any URL, cache key or header is built from the name.
+ */
+export const SAFE_PE_NAME = /^[a-z0-9._+-]{1,255}$/;
+
 /** Parsed per-filename Winbindex JSON is cached for 24h. */
 export const WINBINDEX_JSON_TTL_MS = 86_400_000;
 
@@ -50,6 +59,8 @@ export type WinbindexOutcome = "not_available" | "served" | "failed_after_send";
 export interface BlobResponse {
     setHeader(name: string, value: string | number): void;
     write(chunk: Uint8Array): boolean;
+    once(event: string, listener: (...args: unknown[]) => void): void;
+    off(event: string, listener: (...args: unknown[]) => void): void;
     end(): void;
     destroy(): void;
 }
@@ -217,11 +228,46 @@ export async function resolveEntry(
 }
 
 /**
+ * Resolve once the response has drained and can take more data, or reject if the
+ * client went away first (so the caller stops pulling from the upstream instead
+ * of buffering forever). Listeners are always removed before settling.
+ */
+function waitForDrain(res: BlobResponse): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        const cleanup = (): void => {
+            res.off("drain", onDrain);
+            res.off("close", onClose);
+            res.off("error", onError);
+        };
+        const onDrain = (): void => {
+            cleanup();
+            resolve();
+        };
+        const onClose = (): void => {
+            cleanup();
+            reject(new Error("response closed before drain"));
+        };
+        const onError = (err: unknown): void => {
+            cleanup();
+            reject(err instanceof Error ? err : new Error(String(err)));
+        };
+        res.once("drain", onDrain);
+        res.once("close", onClose);
+        res.once("error", onError);
+    });
+}
+
+/**
  * Fetch the PE file from the symbol server and stream it to `res` while
  * verifying its SHA-1. Returns `not_available` (nothing written) on a non-2xx
- * upstream response or a fetch error, `served` on a verified transfer, and
- * `failed_after_send` if the stream errored or the digest did not match after
- * bytes were already sent (the response is destroyed in that case).
+ * upstream response, a fetch error, or a stream error before the first byte
+ * reached the client; `served` on a verified transfer; and `failed_after_send`
+ * if the stream errored or the digest did not match *after* bytes were already
+ * sent (the response is destroyed in that case).
+ *
+ * `res.write()` backpressure is honoured: on a `false` return the loop awaits
+ * `drain` before reading more, so a slow client cannot make Node buffer the
+ * whole (potentially tens-of-MB) PE in memory.
  */
 export async function streamFromSymbolServer(
     cfg: WinbindexConfig,
@@ -252,23 +298,52 @@ export async function streamFromSymbolServer(
         return "not_available";
     }
 
-    res.setHeader("Content-Type", "application/octet-stream");
-    res.setHeader("Content-Disposition", `attachment; filename="${name}"`);
+    // Only forward the upstream Content-Length when the bytes are not
+    // content-encoded: undici may have transparently decompressed the body, in
+    // which case the upstream length no longer matches what the client receives.
     const contentLength = upstream.headers.get("content-length");
-    if (contentLength) {
-        res.setHeader("Content-Length", contentLength);
-    }
+    const contentEncoding = (
+        upstream.headers.get("content-encoding") ?? ""
+    ).toLowerCase();
+    const forwardContentLength =
+        contentLength !== null &&
+        (contentEncoding === "" || contentEncoding === "identity");
+
+    // Headers are set only once bytes are actually in hand, so a failure before
+    // the first byte leaves the response pristine for the MinIO fallback.
+    const setStreamHeaders = (): void => {
+        res.setHeader("Content-Type", "application/octet-stream");
+        res.setHeader("Content-Disposition", `attachment; filename="${name}"`);
+        // The requested hash is exactly what the streamed bytes are verified
+        // against below; this gives the winbindex path ETag parity with MinIO.
+        res.setHeader("ETag", `"${expectedSha1.toLowerCase()}"`);
+        if (forwardContentLength && contentLength !== null) {
+            res.setHeader("Content-Length", contentLength);
+        }
+    };
 
     const hash = createHash("sha1");
     const reader = upstream.body.getReader();
+    let wrote = false;
     try {
         let chunk = await reader.read();
         while (!chunk.done) {
             hash.update(chunk.value);
-            res.write(chunk.value);
+            if (!wrote) {
+                setStreamHeaders();
+            }
+            const flushed = res.write(chunk.value);
+            wrote = true;
+            if (!flushed) {
+                await waitForDrain(res);
+            }
             chunk = await reader.read();
         }
     } catch (error) {
+        if (!wrote) {
+            // Nothing reached the client yet: fall back to MinIO.
+            return "not_available";
+        }
         console.warn(
             `Winbindex: symbol-server stream for ${name} errored mid-transfer, destroying response:`,
             error,
@@ -286,6 +361,10 @@ export async function streamFromSymbolServer(
         return "failed_after_send";
     }
 
+    if (!wrote) {
+        // Zero-byte body that still verified: emit the headers before ending.
+        setStreamHeaders();
+    }
     res.end();
     return "served";
 }
@@ -308,16 +387,23 @@ export async function tryServeFromWinbindex(
 
     const name = basename(filename).toLowerCase();
 
-    let entry: WinbindexEntry | null;
-    try {
-        entry = await resolveEntry(cfg, name, hash);
-    } catch (error) {
-        console.warn(`Winbindex: unexpected error resolving ${name}:`, error);
-        return "not_available";
-    }
-    if (!entry) {
+    // Single validation gate. `basename()` strips `/` and `\` but not `?`, `#`
+    // or percent-encoded segments, which would otherwise flow unencoded into the
+    // outbound Winbindex / symbol-server URLs (blind single-host SSRF). Rejecting
+    // here makes the cache key, both URLs and the Content-Disposition value all
+    // safe by construction, with no per-site encoding needed.
+    if (!SAFE_PE_NAME.test(name)) {
         return "not_available";
     }
 
-    return streamFromSymbolServer(cfg, entry, name, hash, res);
+    try {
+        const entry = await resolveEntry(cfg, name, hash);
+        if (!entry) {
+            return "not_available";
+        }
+        return await streamFromSymbolServer(cfg, entry, name, hash, res);
+    } catch (error) {
+        console.warn(`Winbindex: unexpected error serving ${name}:`, error);
+        return "not_available";
+    }
 }

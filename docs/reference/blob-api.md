@@ -16,6 +16,12 @@ Downloads a blob by its SHA-1 hash.
 |------|------|----------|-------------|
 | `hash` | string | Yes | SHA-1 hash of the blob (40 hexadecimal characters) |
 
+### Query Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `filename` | string | No | The file's basename (e.g. `kernel32.dll`). Used **only** to look the blob up on Winbindex for the Windows-PE fast path (see [Winbindex Blob Source](./winbindex-source.md)). Ignored for non-PE names, and by the MinIO path, which always keys on `hash`. A non-plain name (anything outside `[a-z0-9._+-]`) is ignored. |
+
 ## Request Headers
 
 The endpoint is unauthenticated: no headers are required.

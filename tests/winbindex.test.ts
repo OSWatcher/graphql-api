@@ -7,6 +7,7 @@ import {
     resolveEntry,
     tryServeFromWinbindex,
     __clearWinbindexCache,
+    WINBINDEX_JSON_TTL_MS,
     WinbindexConfig,
     BlobResponse,
 } from "../src/winbindex.js";
@@ -53,28 +54,72 @@ const streamOf = (data: Uint8Array): ReadableStream<Uint8Array> =>
         },
     });
 
+/** A stream that yields `data` then errors, i.e. fails *after* the first byte. */
+const streamThenError = (data: Uint8Array): ReadableStream<Uint8Array> => {
+    let sent = false;
+    return new ReadableStream({
+        pull(controller) {
+            if (!sent) {
+                sent = true;
+                controller.enqueue(data);
+            } else {
+                controller.error(new Error("upstream stream reset"));
+            }
+        },
+    });
+};
+
+/** A stream that errors before yielding anything. */
+const erroringStream = (): ReadableStream<Uint8Array> =>
+    new ReadableStream({
+        start(controller) {
+            controller.error(new Error("upstream stream reset"));
+        },
+    });
+
 /** A fake of the parts of a `fetch` Response the symbol-server path reads. */
-const symbolResponse = (body: Uint8Array | null, status = 200) => ({
-    ok: status >= 200 && status < 300,
-    body: body ? streamOf(body) : null,
-    headers: {
-        get: (name: string): string | null =>
-            body && name.toLowerCase() === "content-length"
-                ? String(body.byteLength)
-                : null,
-    },
-});
+const symbolResponse = (
+    body: Uint8Array | ReadableStream<Uint8Array> | null,
+    status = 200,
+    extraHeaders: Record<string, string> = {},
+) => {
+    const stream =
+        body instanceof ReadableStream ? body : body ? streamOf(body) : null;
+    const headers: Record<string, string> = {};
+    if (body instanceof Uint8Array) {
+        headers["content-length"] = String(body.byteLength);
+    }
+    for (const [k, v] of Object.entries(extraHeaders)) {
+        headers[k.toLowerCase()] = v;
+    }
+    return {
+        ok: status >= 200 && status < 300,
+        body: stream,
+        headers: {
+            get: (name: string): string | null =>
+                headers[name.toLowerCase()] ?? null,
+        },
+    };
+};
 
 interface MockRes extends BlobResponse {
     headers: Record<string, string | number>;
     body: Uint8Array[];
     ended: boolean;
     destroyed: boolean;
+    emit(event: string, ...args: unknown[]): void;
 }
 
-const makeMockRes = (): MockRes => {
+/**
+ * `writeReturns` feeds the boolean each `write()` call returns (default `true`).
+ * A `false` schedules a `drain` on the next microtask so the code under test
+ * resumes, exercising the backpressure path.
+ */
+const makeMockRes = (writeReturns: boolean[] = []): MockRes => {
     const headers: Record<string, string | number> = {};
     const body: Uint8Array[] = [];
+    const pending = [...writeReturns];
+    const listeners: Record<string, Array<(...args: unknown[]) => void>> = {};
     const res: MockRes = {
         headers,
         body,
@@ -85,7 +130,26 @@ const makeMockRes = (): MockRes => {
         },
         write(chunk) {
             body.push(chunk);
-            return true;
+            const ok = pending.length ? (pending.shift() as boolean) : true;
+            if (!ok) {
+                queueMicrotask(() => res.emit("drain"));
+            }
+            return ok;
+        },
+        once(event, listener) {
+            (listeners[event] ??= []).push(listener);
+        },
+        off(event, listener) {
+            listeners[event] = (listeners[event] ?? []).filter(
+                (l) => l !== listener,
+            );
+        },
+        emit(event, ...args) {
+            const ls = listeners[event] ?? [];
+            listeners[event] = [];
+            for (const l of ls) {
+                l(...args);
+            }
         },
         end() {
             res.ended = true;
@@ -116,6 +180,7 @@ beforeEach(() => {
     fetchMock = jest.fn<(...args: any[]) => Promise<any>>();
     globalThis.fetch = fetchMock as unknown as typeof fetch;
     jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -247,6 +312,58 @@ describe("resolveEntry", () => {
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
     });
+
+    it("re-fetches the index once the 24h TTL has expired", async () => {
+        jest.useFakeTimers();
+        try {
+            const index = {
+                a: {
+                    fileInfo: {
+                        timestamp: 1584069829,
+                        virtualSize: 118784,
+                        sha1: KERNEL32_SHA1,
+                    },
+                },
+            };
+            fetchMock.mockResolvedValue(jsonIndexResponse(index));
+
+            await resolveEntry(CONFIG, "kernel32.dll", KERNEL32_SHA1);
+            await resolveEntry(CONFIG, "kernel32.dll", KERNEL32_SHA1);
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+
+            jest.advanceTimersByTime(WINBINDEX_JSON_TTL_MS + 1);
+            await resolveEntry(CONFIG, "kernel32.dll", KERNEL32_SHA1);
+            expect(fetchMock).toHaveBeenCalledTimes(2);
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    it("bounds the cache to 200 entries, evicting the oldest first", async () => {
+        const index = {
+            a: {
+                fileInfo: {
+                    timestamp: 1584069829,
+                    virtualSize: 118784,
+                    sha1: KERNEL32_SHA1,
+                },
+            },
+        };
+        fetchMock.mockResolvedValue(jsonIndexResponse(index));
+
+        for (let i = 0; i < 201; i++) {
+            await resolveEntry(CONFIG, `f${i}.dll`, KERNEL32_SHA1);
+        }
+        expect(fetchMock).toHaveBeenCalledTimes(201);
+
+        // f0 was evicted when f200 was inserted -> re-fetch.
+        await resolveEntry(CONFIG, "f0.dll", KERNEL32_SHA1);
+        expect(fetchMock).toHaveBeenCalledTimes(202);
+
+        // f200 is still cached -> no fetch.
+        await resolveEntry(CONFIG, "f200.dll", KERNEL32_SHA1);
+        expect(fetchMock).toHaveBeenCalledTimes(202);
+    });
 });
 
 describe("tryServeFromWinbindex", () => {
@@ -359,5 +476,134 @@ describe("tryServeFromWinbindex", () => {
         expect(res.destroyed).toBe(true);
         expect(res.ended).toBe(false);
         expect(console.warn).toHaveBeenCalled();
+    });
+
+    it.each(["a?b.dll", "x#y.dll", "mal ware.dll", "%2e%2e.dll", "café.dll"])(
+        "returns not_available without fetching for an unsafe filename %s",
+        async (unsafe) => {
+            const res = makeMockRes();
+
+            await expect(
+                tryServeFromWinbindex(CONFIG, "a".repeat(40), unsafe, res),
+            ).resolves.toBe("not_available");
+            expect(fetchMock).not.toHaveBeenCalled();
+            expect(res.body).toHaveLength(0);
+        },
+    );
+
+    it("sets a quoted ETag of the requested hash on a successful serve", async () => {
+        const body = bytes("MZ pe bytes");
+        const hash = sha1Hex(body);
+        fetchMock.mockImplementation(async (input: unknown) =>
+            String(input).includes(".json.gz")
+                ? jsonIndexResponse(entryIndex(hash))
+                : symbolResponse(body),
+        );
+
+        const res = makeMockRes();
+        const outcome = await tryServeFromWinbindex(
+            CONFIG,
+            hash,
+            "kernel32.dll",
+            res,
+        );
+
+        expect(outcome).toBe("served");
+        expect(res.headers["ETag"]).toBe(`"${hash}"`);
+    });
+
+    it("omits Content-Length when the symbol server sent Content-Encoding: gzip", async () => {
+        const body = bytes("MZ decompressed pe bytes");
+        const hash = sha1Hex(body);
+        fetchMock.mockImplementation(async (input: unknown) =>
+            String(input).includes(".json.gz")
+                ? jsonIndexResponse(entryIndex(hash))
+                : symbolResponse(body, 200, {
+                      "content-encoding": "gzip",
+                      "content-length": "11",
+                  }),
+        );
+
+        const res = makeMockRes();
+        const outcome = await tryServeFromWinbindex(
+            CONFIG,
+            hash,
+            "kernel32.dll",
+            res,
+        );
+
+        expect(outcome).toBe("served");
+        expect(res.headers).not.toHaveProperty("Content-Length");
+    });
+
+    it("returns not_available (no destroy) when the stream errors before the first byte", async () => {
+        const hash = sha1Hex(bytes("kernel32 body"));
+        fetchMock.mockImplementation(async (input: unknown) =>
+            String(input).includes(".json.gz")
+                ? jsonIndexResponse(entryIndex(hash))
+                : symbolResponse(erroringStream()),
+        );
+
+        const res = makeMockRes();
+        const outcome = await tryServeFromWinbindex(
+            CONFIG,
+            hash,
+            "kernel32.dll",
+            res,
+        );
+
+        expect(outcome).toBe("not_available");
+        expect(res.body).toHaveLength(0);
+        expect(res.destroyed).toBe(false);
+        expect(res.ended).toBe(false);
+    });
+
+    it("returns failed_after_send and destroys the response when the stream errors after bytes were sent", async () => {
+        const first = bytes("first chunk of the pe");
+        // Requested hash need not match; the stream error fires first.
+        const hash = sha1Hex(bytes("whole file"));
+        fetchMock.mockImplementation(async (input: unknown) =>
+            String(input).includes(".json.gz")
+                ? jsonIndexResponse(entryIndex(hash))
+                : symbolResponse(streamThenError(first)),
+        );
+
+        const res = makeMockRes();
+        const outcome = await tryServeFromWinbindex(
+            CONFIG,
+            hash,
+            "kernel32.dll",
+            res,
+        );
+
+        expect(outcome).toBe("failed_after_send");
+        expect(res.destroyed).toBe(true);
+        expect(res.body).toHaveLength(1);
+        expect(console.warn).toHaveBeenCalled();
+    });
+
+    it("honours write() backpressure and still serves the whole body", async () => {
+        const body = bytes("MZ...a portable executable that needs draining...");
+        const hash = sha1Hex(body);
+        fetchMock.mockImplementation(async (input: unknown) =>
+            String(input).includes(".json.gz")
+                ? jsonIndexResponse(entryIndex(hash))
+                : symbolResponse(body),
+        );
+
+        // First write() reports the buffer is full -> code must await "drain".
+        const res = makeMockRes([false]);
+        const outcome = await tryServeFromWinbindex(
+            CONFIG,
+            hash,
+            "kernel32.dll",
+            res,
+        );
+
+        expect(outcome).toBe("served");
+        expect(receivedText(res)).toBe(
+            "MZ...a portable executable that needs draining...",
+        );
+        expect(res.ended).toBe(true);
     });
 });
