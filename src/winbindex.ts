@@ -389,6 +389,14 @@ export async function streamFromSymbolServer(
 
     const digest = hash.digest("hex");
     if (digest !== expectedSha1.toLowerCase()) {
+        if (!wrote) {
+            // Nothing reached the client (e.g. an empty 200 body): the response
+            // is still pristine, so fall back to MinIO rather than fail it.
+            console.warn(
+                `Winbindex: SHA-1 mismatch for ${name} before any byte was sent (expected ${expectedSha1.toLowerCase()}, got ${digest}), falling back`,
+            );
+            return "not_available";
+        }
         console.warn(
             `Winbindex: SHA-1 mismatch for ${name} (expected ${expectedSha1.toLowerCase()}, got ${digest}), destroying response`,
         );
