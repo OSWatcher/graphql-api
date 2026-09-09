@@ -6,7 +6,7 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import { readFileSync } from "fs";
 import neo4j from "neo4j-driver";
 import * as dotenv from "dotenv";
-import { cleanEnv, str, url } from "envalid";
+import { cleanEnv, str, url, bool, num } from "envalid";
 import { createConstraintsIfNotExists } from "./constraints.js";
 import { resolvers } from "./resolvers.js";
 import { createRestRouter } from "./rest-routes.js";
@@ -54,6 +54,24 @@ const env = cleanEnv(process.env, {
     SENSITIVE_REGISTRY_VALUES: str({
         default: "",
         desc: "Comma-separated list of sensitive registry value names to redact",
+    }),
+    // Winbindex fast path for Windows PE blob downloads -- see
+    // docs/reference/winbindex-source.md
+    WINBINDEX_ENABLED: bool({
+        default: true,
+        desc: "Enable the Winbindex fast path for Windows PE blob downloads",
+    }),
+    WINBINDEX_DATA_URL: url({
+        default: "https://winbindex.m417z.com/data/by_filename_compressed",
+        desc: "Winbindex per-filename JSON index host",
+    }),
+    WINBINDEX_SYMBOL_SERVER_URL: url({
+        default: "https://msdl.microsoft.com/download/symbols",
+        desc: "Microsoft public symbol server (serves PE binaries by timestamp+size)",
+    }),
+    WINBINDEX_FETCH_TIMEOUT_MS: num({
+        default: 15000,
+        desc: "Timeout for each Winbindex index / symbol-server request",
     }),
 });
 
@@ -322,6 +340,12 @@ async function main() {
                 env.MINIO_ACCESS_KEY,
                 env.MINIO_SECRET_KEY,
                 env.MINIO_OBJECTS_BUCKET_NAME,
+                {
+                    enabled: env.WINBINDEX_ENABLED,
+                    dataUrl: env.WINBINDEX_DATA_URL,
+                    symbolServerUrl: env.WINBINDEX_SYMBOL_SERVER_URL,
+                    timeoutMs: env.WINBINDEX_FETCH_TIMEOUT_MS,
+                },
             ),
         );
 

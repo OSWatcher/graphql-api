@@ -45,7 +45,11 @@ export class BlobService {
     hash: string,
     filename?: string
   ): Promise<void> {
-    const url = `${this.blobBaseUrl}/${hash}`;
+    // Pass `filename` as a query param so the API can serve Windows PE files
+    // from the Winbindex fast path. It is ignored for non-PE names.
+    const url = filename
+      ? `${this.blobBaseUrl}/${hash}?filename=${encodeURIComponent(filename)}`
+      : `${this.blobBaseUrl}/${hash}`;
 
     try {
       const response = await fetch(url);
@@ -115,7 +119,9 @@ export class BlobService {
     onProgress: (percent: number) => void,
     filename?: string
   ): Promise<void> {
-    const url = `${this.blobBaseUrl}/${hash}`;
+    const url = filename
+      ? `${this.blobBaseUrl}/${hash}?filename=${encodeURIComponent(filename)}`
+      : `${this.blobBaseUrl}/${hash}`;
 
     const response = await fetch(url);
 
