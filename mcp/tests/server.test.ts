@@ -27,6 +27,7 @@ describe("tool manifest", () => {
                 "list_commits",
                 "list_structs",
                 "list_symbols",
+                "list_tree",
                 "search",
                 "search_close",
                 "search_next",
