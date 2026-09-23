@@ -14,6 +14,8 @@ import listStructs from "./list-structs.js";
 import listSymbols from "./list-symbols.js";
 import listTree from "./list-tree.js";
 import listRegistryKey from "./list-registry-key.js";
+import gitLog from "./git-log.js";
+import getCommitCapabilities from "./commit-capabilities.js";
 
 export const tools: ToolModule<any>[] = [
     listBranches,
@@ -31,4 +33,6 @@ export const tools: ToolModule<any>[] = [
     listSymbols,
     listTree,
     listRegistryKey,
+    gitLog,
+    getCommitCapabilities,
 ];
