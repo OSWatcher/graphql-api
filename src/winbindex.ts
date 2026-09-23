@@ -17,10 +17,11 @@ function discardBody(response: Response): void {
  * Winbindex fast path for Windows PE blob downloads.
  *
  * For a `GET /blob/:hash?filename=<pe file>` request the API resolves the file on
- * Winbindex (per-filename index) and streams the verified bytes straight from
- * Microsoft's public symbol server, so the public corpus never re-hosts Windows
- * binaries. Every miss or failure falls back to MinIO, except once bytes have
- * already been streamed to the client.
+ * Winbindex (per-filename index) and serves the bytes from Microsoft's public
+ * symbol server, so the public corpus never re-hosts Windows binaries. The file
+ * is buffered and its SHA-1 verified before anything is sent, so a client never
+ * receives bytes that do not match the requested hash. Every miss or failure
+ * falls back to MinIO.
  *
  * See docs/reference/winbindex-source.md.
  */
@@ -44,6 +45,12 @@ const WINBINDEX_JSON_CACHE_MAX = 200;
 
 const SYMBOL_SERVER_USER_AGENT = "Microsoft-Symbol-Server/10.0.0.0";
 
+/**
+ * Upper bound on a symbol-server download buffered for verification. Windows PE
+ * files are at most a few tens of MB; anything larger falls back to MinIO.
+ */
+export const WINBINDEX_MAX_PE_BYTES = 256 * 1024 * 1024;
+
 export interface WinbindexConfig {
     enabled: boolean;
     dataUrl: string;
@@ -60,21 +67,14 @@ export interface WinbindexEntry {
  * Outcome of an attempt to serve a blob from Winbindex.
  * - `not_available`: nothing was written to the response, the caller must fall
  *   back to MinIO.
- * - `served`: the response has been fully sent, the caller must not touch it.
- * - `failed_after_send`: bytes were already streamed then something failed
- *   (post-send hash mismatch, upstream stream error); the response has been
- *   destroyed and the caller must not retry MinIO.
+ * - `served`: the verified file has been sent, the caller must not touch it.
  */
-export type WinbindexOutcome = "not_available" | "served" | "failed_after_send";
+export type WinbindexOutcome = "not_available" | "served";
 
-/** Minimal view of the HTTP response the streaming step needs. */
+/** Minimal view of the HTTP response the serving step needs. */
 export interface BlobResponse {
     setHeader(name: string, value: string | number): void;
-    write(chunk: Uint8Array): boolean;
-    once(event: string, listener: (...args: unknown[]) => void): void;
-    off(event: string, listener: (...args: unknown[]) => void): void;
-    end(): void;
-    destroy(): void;
+    end(chunk: Uint8Array): void;
 }
 
 interface WinbindexFileInfo {
@@ -247,63 +247,58 @@ export async function resolveEntry(
 }
 
 /**
- * Resolve once the response has drained and can take more data, or reject if the
- * client went away first (so the caller stops pulling from the upstream instead
- * of buffering forever). Rejects after `timeoutMs` as well, so a socket that
- * never emits `drain`, `close` or `error` cannot hang the request handler.
- * Listeners and the timer are always cleared before settling.
+ * Read the whole upstream body, giving up (returns `null`) past `maxBytes`.
+ * Stream errors propagate to the caller.
  */
-function waitForDrain(res: BlobResponse, timeoutMs: number): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-        let timer: ReturnType<typeof setTimeout> | undefined;
-        const cleanup = (): void => {
-            if (timer !== undefined) {
-                clearTimeout(timer);
+async function readBody(
+    body: ReadableStream<Uint8Array>,
+    maxBytes: number,
+): Promise<Uint8Array | null> {
+    const reader = body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    try {
+        let chunk = await reader.read();
+        while (!chunk.done) {
+            total += chunk.value.byteLength;
+            if (total > maxBytes) {
+                return null;
             }
-            res.off("drain", onDrain);
-            res.off("close", onClose);
-            res.off("error", onError);
-        };
-        const onDrain = (): void => {
-            cleanup();
-            resolve();
-        };
-        const onClose = (): void => {
-            cleanup();
-            reject(new Error("response closed before drain"));
-        };
-        const onError = (err: unknown): void => {
-            cleanup();
-            reject(err instanceof Error ? err : new Error(String(err)));
-        };
-        timer = setTimeout(() => {
-            cleanup();
-            reject(new Error("timed out waiting for the response to drain"));
-        }, timeoutMs);
-        res.once("drain", onDrain);
-        res.once("close", onClose);
-        res.once("error", onError);
-    });
+            chunks.push(chunk.value);
+            chunk = await reader.read();
+        }
+    } finally {
+        // Stops the symbol-server download when we bail out early; a no-op once
+        // the body is fully read.
+        void reader.cancel().catch(() => {});
+    }
+    const data = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+        data.set(chunk, offset);
+        offset += chunk.byteLength;
+    }
+    return data;
 }
 
 /**
- * Fetch the PE file from the symbol server and stream it to `res` while
- * verifying its SHA-1. Returns `not_available` (nothing written) on a non-2xx
- * upstream response, a fetch error, or a stream error before the first byte
- * reached the client; `served` on a verified transfer; and `failed_after_send`
- * if the stream errored or the digest did not match *after* bytes were already
- * sent (the response is destroyed in that case).
+ * Fetch the PE file from the symbol server, verify its SHA-1 against
+ * `expectedSha1`, and only then send it. Nothing is written to `res` unless the
+ * digest matches, so every failure (non-2xx, fetch or stream error, timeout,
+ * oversized body, SHA-1 mismatch) returns `not_available` with the response
+ * untouched for the MinIO fallback.
  *
- * `res.write()` backpressure is honoured: on a `false` return the loop awaits
- * `drain` before reading more, so a slow client cannot make Node buffer the
- * whole (potentially tens-of-MB) PE in memory.
+ * Buffering trades streaming for correctness: a mismatch can only be detected
+ * once the last byte is in, and by then a streamed response is already complete
+ * on the client side, so it cannot be turned into a failure.
  */
-export async function streamFromSymbolServer(
+export async function serveFromSymbolServer(
     cfg: WinbindexConfig,
     entry: WinbindexEntry,
     name: string,
     expectedSha1: string,
     res: BlobResponse,
+    maxBytes: number = WINBINDEX_MAX_PE_BYTES,
 ): Promise<WinbindexOutcome> {
     const url = symbolServerUrl(
         cfg.symbolServerUrl,
@@ -312,103 +307,49 @@ export async function streamFromSymbolServer(
         entry.virtualSize,
     );
 
-    let upstream: Response;
+    let data: Uint8Array | null;
     try {
-        upstream = await fetch(url, {
+        const upstream = await fetch(url, {
             headers: { "User-Agent": SYMBOL_SERVER_USER_AGENT },
             redirect: "follow",
             signal: AbortSignal.timeout(cfg.timeoutMs),
         });
-    } catch {
-        return "not_available";
-    }
-
-    if (!upstream.ok || !upstream.body) {
-        discardBody(upstream);
-        return "not_available";
-    }
-
-    // Only forward the upstream Content-Length when the bytes are not
-    // content-encoded: undici may have transparently decompressed the body, in
-    // which case the upstream length no longer matches what the client receives.
-    const contentLength = upstream.headers.get("content-length");
-    const contentEncoding = (
-        upstream.headers.get("content-encoding") ?? ""
-    ).toLowerCase();
-    const forwardContentLength =
-        contentLength !== null &&
-        (contentEncoding === "" || contentEncoding === "identity");
-
-    // Headers are set only once bytes are actually in hand, so a failure before
-    // the first byte leaves the response pristine for the MinIO fallback.
-    const setStreamHeaders = (): void => {
-        res.setHeader("Content-Type", "application/octet-stream");
-        res.setHeader("Content-Disposition", `attachment; filename="${name}"`);
-        // The requested hash is exactly what the streamed bytes are verified
-        // against below; this gives the winbindex path ETag parity with MinIO.
-        res.setHeader("ETag", `"${expectedSha1.toLowerCase()}"`);
-        if (forwardContentLength && contentLength !== null) {
-            res.setHeader("Content-Length", contentLength);
-        }
-    };
-
-    const hash = createHash("sha1");
-    const reader = upstream.body.getReader();
-    let wrote = false;
-    try {
-        let chunk = await reader.read();
-        while (!chunk.done) {
-            hash.update(chunk.value);
-            if (!wrote) {
-                setStreamHeaders();
-            }
-            const flushed = res.write(chunk.value);
-            wrote = true;
-            if (!flushed) {
-                await waitForDrain(res, cfg.timeoutMs);
-            }
-            chunk = await reader.read();
-        }
-    } catch (error) {
-        if (!wrote) {
-            // Nothing reached the client yet: fall back to MinIO.
+        if (!upstream.ok || !upstream.body) {
+            discardBody(upstream);
             return "not_available";
         }
+        data = await readBody(upstream.body, maxBytes);
+    } catch (error) {
         console.warn(
-            `Winbindex: symbol-server stream for ${name} errored mid-transfer, destroying response:`,
+            `Winbindex: symbol-server download for ${name} failed, falling back:`,
             error,
         );
-        res.destroy();
-        return "failed_after_send";
-    } finally {
-        // Abort the symbol-server download on any exit: a no-op once the body is
-        // fully read, but on a mid-stream error or drain timeout it stops the
-        // upstream transfer instead of leaving it running in the background.
-        void reader.cancel().catch(() => {});
+        return "not_available";
     }
 
-    const digest = hash.digest("hex");
-    if (digest !== expectedSha1.toLowerCase()) {
-        if (!wrote) {
-            // Nothing reached the client (e.g. an empty 200 body): the response
-            // is still pristine, so fall back to MinIO rather than fail it.
-            console.warn(
-                `Winbindex: SHA-1 mismatch for ${name} before any byte was sent (expected ${expectedSha1.toLowerCase()}, got ${digest}), falling back`,
-            );
-            return "not_available";
-        }
+    if (data === null) {
         console.warn(
-            `Winbindex: SHA-1 mismatch for ${name} (expected ${expectedSha1.toLowerCase()}, got ${digest}), destroying response`,
+            `Winbindex: ${name} exceeds ${maxBytes} bytes, falling back`,
         );
-        res.destroy();
-        return "failed_after_send";
+        return "not_available";
     }
 
-    if (!wrote) {
-        // Zero-byte body that still verified: emit the headers before ending.
-        setStreamHeaders();
+    const expected = expectedSha1.toLowerCase();
+    const digest = createHash("sha1").update(data).digest("hex");
+    if (digest !== expected) {
+        console.warn(
+            `Winbindex: SHA-1 mismatch for ${name} (expected ${expected}, got ${digest}), falling back`,
+        );
+        return "not_available";
     }
-    res.end();
+
+    res.setHeader("Content-Type", "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${name}"`);
+    // The bytes were verified against the requested hash just above; this gives
+    // the winbindex path ETag parity with MinIO.
+    res.setHeader("ETag", `"${expected}"`);
+    res.setHeader("Content-Length", data.byteLength);
+    res.end(data);
     return "served";
 }
 
@@ -416,7 +357,7 @@ export async function streamFromSymbolServer(
  * Orchestrator for the Winbindex fast path. Returns `not_available` (caller
  * falls back to MinIO) unless the feature is enabled, the filename is a Windows
  * PE file, and Winbindex resolves the hash; otherwise delegates to
- * {@link streamFromSymbolServer}. Never throws.
+ * {@link serveFromSymbolServer}. Never throws.
  */
 export async function tryServeFromWinbindex(
     cfg: WinbindexConfig,
@@ -444,7 +385,7 @@ export async function tryServeFromWinbindex(
         if (!entry) {
             return "not_available";
         }
-        return await streamFromSymbolServer(cfg, entry, name, hash, res);
+        return await serveFromSymbolServer(cfg, entry, name, hash, res);
     } catch (error) {
         console.warn(`Winbindex: unexpected error serving ${name}:`, error);
         return "not_available";
