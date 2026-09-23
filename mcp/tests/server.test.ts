@@ -25,6 +25,8 @@ describe("tool manifest", () => {
                 "get_winreg_root",
                 "list_branches",
                 "list_commits",
+                "list_structs",
+                "list_symbols",
                 "search",
                 "search_close",
                 "search_next",

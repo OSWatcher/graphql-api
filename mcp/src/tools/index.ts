@@ -10,6 +10,8 @@ import getWinregRoot from "./winreg-root.js";
 import getBlobsWithSymbols from "./blobs-with-symbols.js";
 import diffNodes from "./diff-nodes.js";
 import getStruct from "./get-struct.js";
+import listStructs from "./list-structs.js";
+import listSymbols from "./list-symbols.js";
 
 export const tools: ToolModule<any>[] = [
     listBranches,
@@ -23,4 +25,6 @@ export const tools: ToolModule<any>[] = [
     getBlobsWithSymbols,
     diffNodes,
     getStruct,
+    listStructs,
+    listSymbols,
 ];
