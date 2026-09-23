@@ -10,7 +10,12 @@ const { listSymbols } = await import("../src/tools/list-symbols.js");
 
 const BLOB = "b".repeat(40);
 
-function connection(edges: any[], hasNextPage: boolean, endCursor: string | null, totalCount: number) {
+function connection(
+    edges: any[],
+    hasNextPage: boolean,
+    endCursor: string | null,
+    totalCount: number,
+) {
     return {
         blobs: [
             {
@@ -32,20 +37,31 @@ describe("listSymbols", () => {
 
     it("pages the unfiltered connection", async () => {
         const sdk = {
-            ListSymbols: jest.fn<any>().mockResolvedValue(
-                connection(
-                    [
-                        { properties: { name: "NtCreateFile" }, node: { hash: "s1", address: "0x1000" } },
-                    ],
-                    true,
-                    "cur1",
-                    9000,
+            ListSymbols: jest
+                .fn<any>()
+                .mockResolvedValue(
+                    connection(
+                        [
+                            {
+                                properties: { name: "NtCreateFile" },
+                                node: { hash: "s1", address: "0x1000" },
+                            },
+                        ],
+                        true,
+                        "cur1",
+                        9000,
+                    ),
                 ),
-            ),
             ListSymbolsByName: jest.fn<any>(),
         } as any;
 
-        const page = await listSymbols(sdk, "win11", "/Windows/System32/ntdll.dll", undefined, 1);
+        const page = await listSymbols(
+            sdk,
+            "win11",
+            "/Windows/System32/ntdll.dll",
+            undefined,
+            1,
+        );
 
         expect(sdk.ListSymbols).toHaveBeenCalledWith({
             blobHash: BLOB,
@@ -64,14 +80,21 @@ describe("listSymbols", () => {
     it("uses the by-name document when name is given, and forwards the cursor", async () => {
         const sdk = {
             ListSymbols: jest.fn<any>(),
-            ListSymbolsByName: jest.fn<any>().mockResolvedValue(
-                connection(
-                    [{ properties: { name: "NtCreateFile" }, node: { hash: "s1", address: "0x1000" } }],
-                    false,
-                    "cur2",
-                    1,
+            ListSymbolsByName: jest
+                .fn<any>()
+                .mockResolvedValue(
+                    connection(
+                        [
+                            {
+                                properties: { name: "NtCreateFile" },
+                                node: { hash: "s1", address: "0x1000" },
+                            },
+                        ],
+                        false,
+                        "cur2",
+                        1,
+                    ),
                 ),
-            ),
         } as any;
 
         const page = await listSymbols(
@@ -103,6 +126,8 @@ describe("listSymbols", () => {
 
         await expect(
             listSymbols(sdk, "win11", "/Windows/readme.txt"),
-        ).rejects.toThrow("/Windows/readme.txt has no PDB symbol or struct data");
+        ).rejects.toThrow(
+            "/Windows/readme.txt has no PDB symbol or struct data",
+        );
     });
 });

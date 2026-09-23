@@ -198,3 +198,34 @@ describe("diffVersions", () => {
         ).rejects.toThrow('Invalid diff status "INVALID"');
     });
 });
+
+describe("diffVersions request body (regression)", () => {
+    it("always sends filter: ['Tree', 'Blob'], even when the caller passes none", async () => {
+        // An empty filter makes the Java procedure add only parentLabel
+        // ("Tree"), silently dropping every Blob leaf and returning 0 results
+        // for a recursive diff.
+        mockDiffNodesAt.mockResolvedValue({
+            diffNodesAt: { total_count: 0, items: [] },
+        });
+        mockResolveCommitRef.mockResolvedValue({
+            branches: [],
+            commits: [
+                { hash: "a".repeat(40), filesystem: { hash: "f".repeat(40) } },
+            ],
+        });
+
+        await diffVersions({
+            sdk,
+            base_ref: "win11-24h2",
+            diffee_ref: "win11-25h2",
+            path: "/",
+        });
+
+        expect(mockDiffNodesAt).toHaveBeenCalledWith(
+            expect.objectContaining({
+                parentLabel: "Tree",
+                filter: ["Tree", "Blob"],
+            }),
+        );
+    });
+});

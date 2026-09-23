@@ -22,7 +22,12 @@ describe("getCommitCapabilities", () => {
         });
         const sdk = {
             GetCommitCapabilities: jest.fn<any>().mockResolvedValue({
-                getCommitExtractedDataLabels: ["Tree", "Blob", "WinRegKey", "Struct"],
+                getCommitExtractedDataLabels: [
+                    "Tree",
+                    "Blob",
+                    "WinRegKey",
+                    "Struct",
+                ],
             }),
         } as any;
 

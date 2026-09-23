@@ -33,7 +33,9 @@ Registry diff procedure:
   2. get_winreg_root(hash_A) → winreg_hash_A
   3. traverse_path(diffee_ref, "/Windows/System32/config/SOFTWARE") → hash_B
   4. get_winreg_root(hash_B) → winreg_hash_B
-  5. diff_nodes(winreg_hash_A, winreg_hash_B, parent_label="WinRegKey", filter=["WinRegKey","WinRegValue"])`,
+  5. diff_nodes(winreg_hash_A, winreg_hash_B, parent_label="WinRegKey", filter=["WinRegKey","WinRegValue"])
+
+Prefer get_struct / list_tree / list_registry_key / list_symbols unless you need raw hash access.`,
     schema: {
         blob_hash: z
             .string()

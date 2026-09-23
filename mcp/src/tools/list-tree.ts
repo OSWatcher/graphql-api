@@ -105,7 +105,9 @@ The returned hashes are what \`diff_nodes\` takes if you need a raw diff at this
         cursor: z
             .string()
             .optional()
-            .describe("next_cursor from the previous page, passed back unchanged"),
+            .describe(
+                "next_cursor from the previous page, passed back unchanged",
+            ),
     },
     handler: (sdk, { ref, path, limit, cursor }) =>
         listTree(sdk, ref, path, limit, cursor),

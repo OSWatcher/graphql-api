@@ -144,3 +144,38 @@ describe("diffNodes", () => {
         ).rejects.toThrow('Invalid diff status "INVALID"');
     });
 });
+
+describe("diffNodes request body (regression)", () => {
+    it.each([
+        ["Symbol", ["Symbol"]],
+        ["Struct", ["Struct"]],
+        ["StructField", ["StructField"]],
+    ])(
+        "forwards max_depth 1 and filter %s verbatim",
+        async (_label, filter) => {
+            // max_depth=1 is required for these labels: without it the procedure
+            // recurses looking for children of the same label, finds none, and
+            // returns 0 results.
+            mockDiffNodesAt.mockResolvedValue({
+                diffNodesAt: { total_count: 0, items: [] },
+            });
+
+            await diffNodes({
+                sdk,
+                base_node_hash: "a".repeat(40),
+                diffee_node_hash: "b".repeat(40),
+                parent_label: "Blob",
+                filter,
+                max_depth: 1,
+            });
+
+            expect(mockDiffNodesAt).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    maxDepth: 1,
+                    filter,
+                    parentLabel: "Blob",
+                }),
+            );
+        },
+    );
+});

@@ -133,7 +133,9 @@ For struct field diffs scoped to a specific struct, pass at_path with the struct
 
 Struct field status_filter guidance:
 - Omit status_filter (or use ["NEW","MOD","DEL"]) for delta-only: what changed
-- Pass status_filter=["NEW","MOD","DEL","UNCHANGED"] to reconstruct the full C type layout`,
+- Pass status_filter=["NEW","MOD","DEL","UNCHANGED"] to reconstruct the full C type layout
+
+Prefer get_struct / list_tree / list_registry_key / list_symbols unless you need raw hash access.`,
     schema: {
         base_node_hash: z
             .string()

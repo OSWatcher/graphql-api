@@ -123,7 +123,9 @@ Related but different: list_commits tells you which snapshots exist; git_log tel
             .int()
             .nonnegative()
             .optional()
-            .describe("Entries to skip; pass back the previous next_cursor here"),
+            .describe(
+                "Entries to skip; pass back the previous next_cursor here",
+            ),
         status_filter: z
             .array(z.enum(["NEW", "MOD", "DEL", "UNCHANGED"]))
             .optional()

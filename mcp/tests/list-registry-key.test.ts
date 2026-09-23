@@ -15,7 +15,12 @@ const bothConnections = {
         {
             child_keysConnection: {
                 totalCount: 1,
-                edges: [{ properties: { name: "OptionalComponents" }, node: { hash: "k1" } }],
+                edges: [
+                    {
+                        properties: { name: "OptionalComponents" },
+                        node: { hash: "k1" },
+                    },
+                ],
                 pageInfo: { hasNextPage: false, endCursor: "kc" },
             },
             child_valuesConnection: {
@@ -23,7 +28,11 @@ const bothConnections = {
                 edges: [
                     {
                         properties: { name: "SecurityHealth" },
-                        node: { hash: "v1", type: "REG_EXPAND_SZ", value: "%windir%\\system32\\SecurityHealthSystray.exe" },
+                        node: {
+                            hash: "v1",
+                            type: "REG_EXPAND_SZ",
+                            value: "%windir%\\system32\\SecurityHealthSystray.exe",
+                        },
                     },
                 ],
                 pageInfo: { hasNextPage: true, endCursor: "vc" },
@@ -54,7 +63,11 @@ describe("listRegistryKey", () => {
             50,
         );
 
-        expect(mockResolveHiveRoot).toHaveBeenCalledWith(sdk, "win11", "SOFTWARE");
+        expect(mockResolveHiveRoot).toHaveBeenCalledWith(
+            sdk,
+            "win11",
+            "SOFTWARE",
+        );
         expect(sdk.TraverseRegistryPath).toHaveBeenCalledWith({
             rootHash: ROOT,
             path: "/Microsoft/Windows/CurrentVersion/Run",
@@ -67,7 +80,9 @@ describe("listRegistryKey", () => {
             includeKeys: true,
             includeValues: true,
         });
-        expect(page.subkeys).toEqual([{ name: "OptionalComponents", hash: "k1" }]);
+        expect(page.subkeys).toEqual([
+            { name: "OptionalComponents", hash: "k1" },
+        ]);
         expect(page.values).toEqual([
             {
                 name: "SecurityHealth",
@@ -99,7 +114,14 @@ describe("listRegistryKey", () => {
                     child_valuesConnection: {
                         totalCount: 2,
                         edges: [
-                            { properties: { name: "OneDrive" }, node: { hash: "v2", type: "REG_SZ", value: "C:\\OneDrive.exe" } },
+                            {
+                                properties: { name: "OneDrive" },
+                                node: {
+                                    hash: "v2",
+                                    type: "REG_SZ",
+                                    value: "C:\\OneDrive.exe",
+                                },
+                            },
                         ],
                         pageInfo: { hasNextPage: false, endCursor: "vc2" },
                     },
@@ -107,15 +129,30 @@ describe("listRegistryKey", () => {
             ],
         };
         const sdk = {
-            TraverseRegistryPath: jest.fn<any>().mockResolvedValue({ traversePath: "key1" }),
+            TraverseRegistryPath: jest
+                .fn<any>()
+                .mockResolvedValue({ traversePath: "key1" }),
             ListRegistryKey: jest
                 .fn<any>()
                 .mockResolvedValueOnce(bothConnections)
                 .mockResolvedValueOnce(second),
         } as any;
 
-        const page1 = await listRegistryKey(sdk, "win11", "SOFTWARE", "/Run", 1);
-        const page2 = await listRegistryKey(sdk, "win11", "SOFTWARE", "/Run", 1, page1.next_cursor!);
+        const page1 = await listRegistryKey(
+            sdk,
+            "win11",
+            "SOFTWARE",
+            "/Run",
+            1,
+        );
+        const page2 = await listRegistryKey(
+            sdk,
+            "win11",
+            "SOFTWARE",
+            "/Run",
+            1,
+            page1.next_cursor!,
+        );
 
         expect(sdk.ListRegistryKey).toHaveBeenLastCalledWith({
             keyHash: "key1",
@@ -132,12 +169,16 @@ describe("listRegistryKey", () => {
 
     it("throws when the key path does not exist in the hive", async () => {
         const sdk = {
-            TraverseRegistryPath: jest.fn<any>().mockResolvedValue({ traversePath: null }),
+            TraverseRegistryPath: jest
+                .fn<any>()
+                .mockResolvedValue({ traversePath: null }),
             ListRegistryKey: jest.fn<any>(),
         } as any;
 
         await expect(
             listRegistryKey(sdk, "win11", "SOFTWARE", "/Nope"),
-        ).rejects.toThrow('Registry key not found in SOFTWARE ("win11"): /Nope');
+        ).rejects.toThrow(
+            'Registry key not found in SOFTWARE ("win11"): /Nope',
+        );
     });
 });

@@ -72,7 +72,9 @@ Pass \`name\` for an exact-match lookup. Pass \`next_cursor\` back as \`cursor\`
         name: z
             .string()
             .optional()
-            .describe("Exact struct name for a direct lookup, e.g. '_EPROCESS'"),
+            .describe(
+                "Exact struct name for a direct lookup, e.g. '_EPROCESS'",
+            ),
         limit: z
             .number()
             .int()
@@ -83,7 +85,9 @@ Pass \`name\` for an exact-match lookup. Pass \`next_cursor\` back as \`cursor\`
         cursor: z
             .string()
             .optional()
-            .describe("next_cursor from the previous page, passed back unchanged"),
+            .describe(
+                "next_cursor from the previous page, passed back unchanged",
+            ),
     },
     handler: (sdk, { ref, blob_path, name, limit, cursor }) =>
         listStructs(sdk, ref, blob_path, name, limit, cursor),

@@ -32,7 +32,12 @@ describe("gitLog", () => {
             path: "/Windows/System32/ntdll.dll",
             context: "FILESYSTEM",
             commitRange: { startRef: "windows_11", direction: "BACKWARD" },
-            options: { limit: 1, offset: 0, status_filter: undefined, order: undefined },
+            options: {
+                limit: 1,
+                offset: 0,
+                status_filter: undefined,
+                order: undefined,
+            },
         });
         expect(page.total_count).toBe(3);
         expect(page.has_more).toBe(true);
@@ -53,7 +58,11 @@ describe("gitLog", () => {
     it("advances next_cursor from the supplied offset", async () => {
         const sdk = {
             GitLog: jest.fn<any>().mockResolvedValue({
-                gitLog: { total_count: 30, has_more: true, entries: [entry, entry] },
+                gitLog: {
+                    total_count: 30,
+                    has_more: true,
+                    entries: [entry, entry],
+                },
             }),
         } as any;
 

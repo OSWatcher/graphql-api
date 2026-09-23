@@ -10,7 +10,12 @@ const { listStructs } = await import("../src/tools/list-structs.js");
 
 const BLOB = "b".repeat(40);
 
-function connection(edges: any[], hasNextPage: boolean, endCursor: string | null, totalCount: number) {
+function connection(
+    edges: any[],
+    hasNextPage: boolean,
+    endCursor: string | null,
+    totalCount: number,
+) {
     return {
         blobs: [
             {
@@ -32,20 +37,35 @@ describe("listStructs", () => {
 
     it("pages the unfiltered connection", async () => {
         const sdk = {
-            ListStructs: jest.fn<any>().mockResolvedValue(
-                connection(
-                    [
-                        { properties: { name: "_EPROCESS" }, node: { hash: "s1", size: 1856, kind: "struct" } },
-                    ],
-                    true,
-                    "cur1",
-                    9000,
+            ListStructs: jest
+                .fn<any>()
+                .mockResolvedValue(
+                    connection(
+                        [
+                            {
+                                properties: { name: "_EPROCESS" },
+                                node: {
+                                    hash: "s1",
+                                    size: 1856,
+                                    kind: "struct",
+                                },
+                            },
+                        ],
+                        true,
+                        "cur1",
+                        9000,
+                    ),
                 ),
-            ),
             ListStructsByName: jest.fn<any>(),
         } as any;
 
-        const page = await listStructs(sdk, "win11", "/Windows/System32/ntoskrnl.exe", undefined, 1);
+        const page = await listStructs(
+            sdk,
+            "win11",
+            "/Windows/System32/ntoskrnl.exe",
+            undefined,
+            1,
+        );
 
         expect(sdk.ListStructs).toHaveBeenCalledWith({
             blobHash: BLOB,
@@ -54,7 +74,9 @@ describe("listStructs", () => {
         });
         expect(sdk.ListStructsByName).not.toHaveBeenCalled();
         expect(page).toEqual({
-            items: [{ name: "_EPROCESS", hash: "s1", size: 1856, kind: "struct" }],
+            items: [
+                { name: "_EPROCESS", hash: "s1", size: 1856, kind: "struct" },
+            ],
             has_more: true,
             next_cursor: "cur1",
             total_count: 9000,
@@ -64,14 +86,25 @@ describe("listStructs", () => {
     it("uses the by-name document when name is given, and forwards the cursor", async () => {
         const sdk = {
             ListStructs: jest.fn<any>(),
-            ListStructsByName: jest.fn<any>().mockResolvedValue(
-                connection(
-                    [{ properties: { name: "_EPROCESS" }, node: { hash: "s1", size: 1856, kind: "struct" } }],
-                    false,
-                    "cur2",
-                    1,
+            ListStructsByName: jest
+                .fn<any>()
+                .mockResolvedValue(
+                    connection(
+                        [
+                            {
+                                properties: { name: "_EPROCESS" },
+                                node: {
+                                    hash: "s1",
+                                    size: 1856,
+                                    kind: "struct",
+                                },
+                            },
+                        ],
+                        false,
+                        "cur2",
+                        1,
+                    ),
                 ),
-            ),
         } as any;
 
         const page = await listStructs(
@@ -103,6 +136,8 @@ describe("listStructs", () => {
 
         await expect(
             listStructs(sdk, "win11", "/Windows/readme.txt"),
-        ).rejects.toThrow("/Windows/readme.txt has no PDB symbol or struct data");
+        ).rejects.toThrow(
+            "/Windows/readme.txt has no PDB symbol or struct data",
+        );
     });
 });

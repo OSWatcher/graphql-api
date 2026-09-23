@@ -30,7 +30,9 @@ export default defineTool({
 Returns the hash of the node (Tree or Blob) located at the given path within the commit's filesystem.
 Returns null if the path does not exist.
 
-Use this to locate specific files or directories before calling diff_nodes or get_winreg_root.`,
+Use this to locate specific files or directories before calling diff_nodes or get_winreg_root.
+
+Prefer get_struct / list_tree / list_registry_key / list_symbols unless you need raw hash access.`,
     schema: {
         ref: z.string().min(1).describe("Branch name or commit hash"),
         path: z

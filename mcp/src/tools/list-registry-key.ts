@@ -132,7 +132,9 @@ To diff a registry subtree across two versions, use traverse_path + get_winreg_r
         cursor: z
             .string()
             .optional()
-            .describe("next_cursor from the previous page, passed back unchanged"),
+            .describe(
+                "next_cursor from the previous page, passed back unchanged",
+            ),
     },
     handler: (sdk, { ref, hive, key_path, limit, cursor }) =>
         listRegistryKey(sdk, ref, hive, key_path, limit, cursor),

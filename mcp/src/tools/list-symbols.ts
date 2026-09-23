@@ -81,7 +81,9 @@ Without \`name\` this pages the whole symbol table, which is large; ntdll.dll al
         cursor: z
             .string()
             .optional()
-            .describe("next_cursor from the previous page, passed back unchanged"),
+            .describe(
+                "next_cursor from the previous page, passed back unchanged",
+            ),
     },
     handler: (sdk, { ref, blob_path, name, limit, cursor }) =>
         listSymbols(sdk, ref, blob_path, name, limit, cursor),

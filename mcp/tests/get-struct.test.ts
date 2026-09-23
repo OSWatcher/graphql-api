@@ -20,7 +20,11 @@ function makeSdk(overrides: Record<string, unknown> = {}) {
                         edges: [
                             {
                                 properties: { name: "_EPROCESS" },
-                                node: { hash: STRUCT, size: 2048, kind: "struct" },
+                                node: {
+                                    hash: STRUCT,
+                                    size: 2048,
+                                    kind: "struct",
+                                },
                             },
                         ],
                     },
@@ -35,11 +39,19 @@ function makeSdk(overrides: Record<string, unknown> = {}) {
                         edges: [
                             {
                                 properties: { name: "Pcb" },
-                                node: { hash: "f1", offset: 0, data_type: { type: "struct" } },
+                                node: {
+                                    hash: "f1",
+                                    offset: 0,
+                                    data_type: { type: "struct" },
+                                },
                             },
                             {
                                 properties: { name: "UniqueProcessId" },
-                                node: { hash: "f2", offset: 1088, data_type: { type: "pointer" } },
+                                node: {
+                                    hash: "f2",
+                                    offset: 1088,
+                                    data_type: { type: "pointer" },
+                                },
                             },
                         ],
                     },
@@ -103,8 +115,22 @@ describe("getStruct", () => {
                         fieldsConnection: {
                             totalCount: 2,
                             edges: [
-                                { properties: { name: "b" }, node: { hash: "f2", offset: 16, data_type: {} } },
-                                { properties: { name: "a" }, node: { hash: "f1", offset: 0, data_type: {} } },
+                                {
+                                    properties: { name: "b" },
+                                    node: {
+                                        hash: "f2",
+                                        offset: 16,
+                                        data_type: {},
+                                    },
+                                },
+                                {
+                                    properties: { name: "a" },
+                                    node: {
+                                        hash: "f1",
+                                        offset: 0,
+                                        data_type: {},
+                                    },
+                                },
                             ],
                         },
                     },
@@ -125,7 +151,12 @@ describe("getStruct", () => {
         });
 
         await expect(
-            getStruct(sdk, "win11-24h2", "/Windows/System32/ntoskrnl.exe", "_NOPE"),
+            getStruct(
+                sdk,
+                "win11-24h2",
+                "/Windows/System32/ntoskrnl.exe",
+                "_NOPE",
+            ),
         ).rejects.toThrow(
             'Struct "_NOPE" not found in /Windows/System32/ntoskrnl.exe',
         );

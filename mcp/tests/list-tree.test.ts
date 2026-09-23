@@ -23,12 +23,22 @@ describe("listTree", () => {
                     {
                         child_treesConnection: {
                             totalCount: 1,
-                            edges: [{ properties: { name: "en-US" }, node: { hash: "d1" } }],
+                            edges: [
+                                {
+                                    properties: { name: "en-US" },
+                                    node: { hash: "d1" },
+                                },
+                            ],
                             pageInfo: { hasNextPage: false, endCursor: "dc" },
                         },
                         child_blobsConnection: {
                             totalCount: 2,
-                            edges: [{ properties: { name: "ntfs.sys" }, node: { hash: "b1" } }],
+                            edges: [
+                                {
+                                    properties: { name: "ntfs.sys" },
+                                    node: { hash: "b1" },
+                                },
+                            ],
                             pageInfo: { hasNextPage: true, endCursor: "bc" },
                         },
                     },
@@ -36,7 +46,12 @@ describe("listTree", () => {
             }),
         } as any;
 
-        const page = await listTree(sdk, "win11", "/Windows/System32/drivers", 1);
+        const page = await listTree(
+            sdk,
+            "win11",
+            "/Windows/System32/drivers",
+            1,
+        );
 
         expect(sdk.ListTree).toHaveBeenCalledWith({
             treeHash: TREE,
@@ -58,12 +73,22 @@ describe("listTree", () => {
                 {
                     child_treesConnection: {
                         totalCount: 1,
-                        edges: [{ properties: { name: "en-US" }, node: { hash: "d1" } }],
+                        edges: [
+                            {
+                                properties: { name: "en-US" },
+                                node: { hash: "d1" },
+                            },
+                        ],
                         pageInfo: { hasNextPage: false, endCursor: "dc" },
                     },
                     child_blobsConnection: {
                         totalCount: 2,
-                        edges: [{ properties: { name: "a.sys" }, node: { hash: "b1" } }],
+                        edges: [
+                            {
+                                properties: { name: "a.sys" },
+                                node: { hash: "b1" },
+                            },
+                        ],
                         pageInfo: { hasNextPage: true, endCursor: "bc" },
                     },
                 },
@@ -74,7 +99,12 @@ describe("listTree", () => {
                 {
                     child_blobsConnection: {
                         totalCount: 2,
-                        edges: [{ properties: { name: "b.sys" }, node: { hash: "b2" } }],
+                        edges: [
+                            {
+                                properties: { name: "b.sys" },
+                                node: { hash: "b2" },
+                            },
+                        ],
                         pageInfo: { hasNextPage: false, endCursor: "bc2" },
                     },
                 },
@@ -105,10 +135,12 @@ describe("listTree", () => {
     });
 
     it("throws when the path is not a directory in this ref", async () => {
-        const sdk = { ListTree: jest.fn<any>().mockResolvedValue({ trees: [] }) } as any;
+        const sdk = {
+            ListTree: jest.fn<any>().mockResolvedValue({ trees: [] }),
+        } as any;
 
-        await expect(listTree(sdk, "win11", "/Windows/notes.txt")).rejects.toThrow(
-            "/Windows/notes.txt is not a directory in \"win11\"",
-        );
+        await expect(
+            listTree(sdk, "win11", "/Windows/notes.txt"),
+        ).rejects.toThrow('/Windows/notes.txt is not a directory in "win11"');
     });
 });
