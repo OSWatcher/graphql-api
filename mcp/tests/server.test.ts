@@ -21,6 +21,7 @@ describe("tool manifest", () => {
                 "diff_nodes",
                 "diff_versions",
                 "get_blobs_with_symbols",
+                "get_struct",
                 "get_winreg_root",
                 "list_branches",
                 "list_commits",

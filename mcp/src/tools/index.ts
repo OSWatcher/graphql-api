@@ -9,6 +9,7 @@ import traversePath from "./traverse-path.js";
 import getWinregRoot from "./winreg-root.js";
 import getBlobsWithSymbols from "./blobs-with-symbols.js";
 import diffNodes from "./diff-nodes.js";
+import getStruct from "./get-struct.js";
 
 export const tools: ToolModule<any>[] = [
     listBranches,
@@ -21,4 +22,5 @@ export const tools: ToolModule<any>[] = [
     getWinregRoot,
     getBlobsWithSymbols,
     diffNodes,
+    getStruct,
 ];
