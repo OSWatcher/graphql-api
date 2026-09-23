@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from "@jest/globals";
+import {
+    describe,
+    it,
+    expect,
+    jest,
+    beforeEach,
+    afterEach,
+} from "@jest/globals";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import {
@@ -6,6 +13,7 @@ import {
     symbolServerUrl,
     resolveEntry,
     tryServeFromWinbindex,
+    serveFromSymbolServer,
     __clearWinbindexCache,
     WINBINDEX_JSON_TTL_MS,
     WinbindexConfig,
@@ -26,7 +34,8 @@ const bytes = (text: string): Uint8Array => new TextEncoder().encode(text);
 const sha1Hex = (data: Uint8Array): string =>
     createHash("sha1").update(data).digest("hex");
 
-const gzip = (text: string): Uint8Array => Uint8Array.from(gzipSync(bytes(text)));
+const gzip = (text: string): Uint8Array =>
+    Uint8Array.from(gzipSync(bytes(text)));
 
 const toArrayBuffer = (data: Uint8Array): ArrayBuffer => {
     const ab = new ArrayBuffer(data.byteLength);
@@ -38,7 +47,8 @@ const toArrayBuffer = (data: Uint8Array): ArrayBuffer => {
 const indexResponse = (gunzipped: string, status = 200) => ({
     status,
     ok: status >= 200 && status < 300,
-    arrayBuffer: async (): Promise<ArrayBuffer> => toArrayBuffer(gzip(gunzipped)),
+    arrayBuffer: async (): Promise<ArrayBuffer> =>
+        toArrayBuffer(gzip(gunzipped)),
 });
 
 const jsonIndexResponse = (value: unknown): ReturnType<typeof indexResponse> =>
@@ -130,56 +140,21 @@ interface MockRes extends BlobResponse {
     headers: Record<string, string | number>;
     body: Uint8Array[];
     ended: boolean;
-    destroyed: boolean;
-    emit(event: string, ...args: unknown[]): void;
 }
 
-/**
- * `writeReturns` feeds the boolean each `write()` call returns (default `true`).
- * A `false` schedules a `drain` on the next microtask so the code under test
- * resumes, exercising the backpressure path.
- */
-const makeMockRes = (writeReturns: boolean[] = []): MockRes => {
+const makeMockRes = (): MockRes => {
     const headers: Record<string, string | number> = {};
     const body: Uint8Array[] = [];
-    const pending = [...writeReturns];
-    const listeners: Record<string, Array<(...args: unknown[]) => void>> = {};
     const res: MockRes = {
         headers,
         body,
         ended: false,
-        destroyed: false,
         setHeader(name, value) {
             headers[name] = value;
         },
-        write(chunk) {
+        end(chunk) {
             body.push(chunk);
-            const ok = pending.length ? (pending.shift() as boolean) : true;
-            if (!ok) {
-                queueMicrotask(() => res.emit("drain"));
-            }
-            return ok;
-        },
-        once(event, listener) {
-            (listeners[event] ??= []).push(listener);
-        },
-        off(event, listener) {
-            listeners[event] = (listeners[event] ?? []).filter(
-                (l) => l !== listener,
-            );
-        },
-        emit(event, ...args) {
-            const ls = listeners[event] ?? [];
-            listeners[event] = [];
-            for (const l of ls) {
-                l(...args);
-            }
-        },
-        end() {
             res.ended = true;
-        },
-        destroy() {
-            res.destroyed = true;
         },
     };
     return res;
@@ -452,7 +427,7 @@ describe("tryServeFromWinbindex", () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it("streams verified bytes and returns served on the happy path", async () => {
+    it("serves verified bytes and returns served on the happy path", async () => {
         const bodyText = "MZ...fake portable executable bytes...";
         const body = bytes(bodyText);
         const hash = sha1Hex(body);
@@ -476,9 +451,8 @@ describe("tryServeFromWinbindex", () => {
         expect(res.headers["Content-Disposition"]).toBe(
             'attachment; filename="kernel32.dll"',
         );
-        expect(res.headers["Content-Length"]).toBe(String(body.byteLength));
+        expect(res.headers["Content-Length"]).toBe(body.byteLength);
         expect(res.ended).toBe(true);
-        expect(res.destroyed).toBe(false);
         expect(fetchMock).toHaveBeenLastCalledWith(
             "https://symbols.example/download/symbols/kernel32.dll/5E6AFCC51d000/kernel32.dll",
             expect.objectContaining({
@@ -508,10 +482,9 @@ describe("tryServeFromWinbindex", () => {
         expect(res.body).toHaveLength(0);
         expect(res.headers).toEqual({});
         expect(res.ended).toBe(false);
-        expect(res.destroyed).toBe(false);
     });
 
-    it("destroys the response and returns failed_after_send on a post-send SHA-1 mismatch", async () => {
+    it("sends nothing and falls back to MinIO on a SHA-1 mismatch", async () => {
         const requestedHash = sha1Hex(bytes("what the caller asked for"));
         const servedBody = bytes("something else entirely");
         fetchMock.mockImplementation(async (input: unknown) => {
@@ -528,8 +501,9 @@ describe("tryServeFromWinbindex", () => {
             res,
         );
 
-        expect(outcome).toBe("failed_after_send");
-        expect(res.destroyed).toBe(true);
+        expect(outcome).toBe("not_available");
+        expect(res.body).toHaveLength(0);
+        expect(res.headers).toEqual({});
         expect(res.ended).toBe(false);
         expect(console.warn).toHaveBeenCalled();
     });
@@ -551,7 +525,6 @@ describe("tryServeFromWinbindex", () => {
         );
 
         expect(outcome).toBe("not_available");
-        expect(res.destroyed).toBe(false);
         expect(res.body).toHaveLength(0);
         expect(res.headers).toEqual({});
     });
@@ -590,7 +563,7 @@ describe("tryServeFromWinbindex", () => {
         expect(res.headers["ETag"]).toBe(`"${hash}"`);
     });
 
-    it("omits Content-Length when the symbol server sent Content-Encoding: gzip", async () => {
+    it("sets Content-Length to the verified size, not the upstream content-encoded length", async () => {
         const body = bytes("MZ decompressed pe bytes");
         const hash = sha1Hex(body);
         fetchMock.mockImplementation(async (input: unknown) =>
@@ -611,10 +584,10 @@ describe("tryServeFromWinbindex", () => {
         );
 
         expect(outcome).toBe("served");
-        expect(res.headers).not.toHaveProperty("Content-Length");
+        expect(res.headers["Content-Length"]).toBe(body.byteLength);
     });
 
-    it("returns not_available (no destroy) when the stream errors before the first byte", async () => {
+    it("returns not_available and sends nothing when the stream errors before the first byte", async () => {
         const hash = sha1Hex(bytes("kernel32 body"));
         fetchMock.mockImplementation(async (input: unknown) =>
             String(input).includes(".json.gz")
@@ -632,13 +605,11 @@ describe("tryServeFromWinbindex", () => {
 
         expect(outcome).toBe("not_available");
         expect(res.body).toHaveLength(0);
-        expect(res.destroyed).toBe(false);
         expect(res.ended).toBe(false);
     });
 
-    it("returns failed_after_send and destroys the response when the stream errors after bytes were sent", async () => {
+    it("returns not_available and sends nothing when the stream errors mid-transfer", async () => {
         const first = bytes("first chunk of the pe");
-        // Requested hash need not match; the stream error fires first.
         const hash = sha1Hex(bytes("whole file"));
         fetchMock.mockImplementation(async (input: unknown) =>
             String(input).includes(".json.gz")
@@ -654,60 +625,30 @@ describe("tryServeFromWinbindex", () => {
             res,
         );
 
-        expect(outcome).toBe("failed_after_send");
-        expect(res.destroyed).toBe(true);
-        expect(res.body).toHaveLength(1);
+        expect(outcome).toBe("not_available");
+        expect(res.body).toHaveLength(0);
+        expect(res.headers).toEqual({});
         expect(console.warn).toHaveBeenCalled();
     });
 
-    it("honours write() backpressure and still serves the whole body", async () => {
-        const body = bytes("MZ...a portable executable that needs draining...");
-        const hash = sha1Hex(body);
-        fetchMock.mockImplementation(async (input: unknown) =>
-            String(input).includes(".json.gz")
-                ? jsonIndexResponse(entryIndex(hash))
-                : symbolResponse(body),
-        );
-
-        // First write() reports the buffer is full -> code must await "drain".
-        const res = makeMockRes([false]);
-        const outcome = await tryServeFromWinbindex(
-            CONFIG,
-            hash,
-            "kernel32.dll",
-            res,
-        );
-
-        expect(outcome).toBe("served");
-        expect(receivedText(res)).toBe(
-            "MZ...a portable executable that needs draining...",
-        );
-        expect(res.ended).toBe(true);
-    });
-
-    it("tears the response and the upstream down if the client never drains", async () => {
-        const body = bytes("MZ...a client that stops reading...");
+    it("falls back without sending when the body exceeds the size cap, and cancels the upstream", async () => {
+        const body = bytes("MZ...larger than the cap...");
         const hash = sha1Hex(body);
         const upstream = stallingStream(body);
-        fetchMock.mockImplementation(async (input: unknown) =>
-            String(input).includes(".json.gz")
-                ? jsonIndexResponse(entryIndex(hash))
-                : symbolResponse(upstream.stream),
-        );
+        fetchMock.mockResolvedValue(symbolResponse(upstream.stream));
 
-        // write() reports backpressure but "drain" is never emitted.
         const res = makeMockRes();
-        res.write = () => false;
-
-        const outcome = await tryServeFromWinbindex(
-            { ...CONFIG, timeoutMs: 10 },
-            hash,
+        const outcome = await serveFromSymbolServer(
+            CONFIG,
+            { timestamp: 1584069829, virtualSize: 118784 },
             "kernel32.dll",
+            hash,
             res,
+            body.byteLength - 1,
         );
 
-        expect(outcome).toBe("failed_after_send");
-        expect(res.destroyed).toBe(true);
+        expect(outcome).toBe("not_available");
+        expect(res.body).toHaveLength(0);
         expect(upstream.cancelled()).toBe(true);
     });
 });

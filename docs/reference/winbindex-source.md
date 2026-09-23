@@ -4,9 +4,9 @@
 
 A fast path in front of the `GET /blob/:hash` handler (`src/rest-routes.ts`).
 For Windows PE files the API resolves the file on
-[Winbindex](https://winbindex.m417z.com/) and streams the verified bytes
-straight from Microsoft's public symbol server, instead of proxying them from
-MinIO. The public corpus therefore never has to re-host Windows binaries.
+[Winbindex](https://winbindex.m417z.com/) and serves the bytes from
+Microsoft's public symbol server, verified against the requested SHA-1, instead
+of proxying them from MinIO. The public corpus therefore never has to re-host Windows binaries.
 
 Implementation: `src/winbindex.ts`.
 
@@ -47,16 +47,20 @@ ignores `filename`.
    `TS = timestamp.toString(16).toUpperCase().padStart(8, "0")` and
    `VS = virtualSize.toString(16)` (lowercase, unpadded). Sent with
    `User-Agent: Microsoft-Symbol-Server/10.0.0.0`, redirects followed.
-5. The body is streamed to the client as
+5. The body is read into memory, up to `WINBINDEX_MAX_PE_BYTES` (256 MiB), and
+   its SHA-1 is compared with `<sha1>` **before anything is sent**. Only a
+   matching file is written to the client, as
    `Content-Type: application/octet-stream`,
-   `Content-Disposition: attachment; filename="<name>"`, `ETag: "<sha1>"`, and
-   `Content-Length` when the upstream provides it and did not content-encode the
-   body (undici may have transparently decompressed it). `res.write()`
-   backpressure is honoured so a slow client cannot force the whole PE to buffer
-   in memory. The SHA-1 is recomputed on the fly; if the final digest does not
-   match `<sha1>`, the response is destroyed mid-transfer so the client sees a
-   failed download. A stream error *before* the first byte falls back to MinIO;
-   an error after bytes were sent ends the response as a failure.
+   `Content-Disposition: attachment; filename="<name>"`, `ETag: "<sha1>"` and
+   `Content-Length: <verified byte count>`. A mismatch, a stream error, a
+   timeout or an oversized body leaves the response untouched and falls back to
+   MinIO.
+
+   The file is buffered rather than streamed because a mismatch can only be
+   detected once the last byte is in. By then a streamed response is already
+   complete on the client side and can no longer be turned into a failure, so
+   the client would silently keep the wrong bytes. Each in-flight download
+   therefore holds one PE file (a few MB to a few tens of MB) in memory.
 
 The `symbols` plugin in the OSWatcher collector already downloads PDBs from this
 same server, so no new external trust boundary is introduced.
@@ -79,9 +83,9 @@ All four variables are optional and have defaults (`src/index.ts`).
 | Feature disabled, no `filename`, or non-PE extension | MinIO, no external call. |
 | Winbindex index 404 / network error / timeout / bad JSON | MinIO. |
 | No matching `fileInfo.sha1`, or match missing `timestamp` / `virtualSize` | MinIO. |
-| Symbol server returns non-2xx, the fetch fails, or the stream errors before any byte is sent | MinIO; nothing was written to the response. |
-| Symbol-server stream errors after bytes were sent | Response destroyed; MinIO is **not** retried. |
-| Downloaded bytes hash to something other than `<sha1>` | Response destroyed after the fact; a warning is logged; MinIO is **not** retried. |
+| Symbol server returns non-2xx, the fetch fails, the stream errors or times out | MinIO; nothing was written to the response. |
+| Body larger than `WINBINDEX_MAX_PE_BYTES` | MinIO; the upstream download is cancelled. |
+| Downloaded bytes hash to something other than `<sha1>` | MinIO; a warning is logged; nothing was written to the response. |
 
 MinIO is never written to by this feature — it is a pure proxy, `GetObject`
 only.

@@ -33,10 +33,9 @@ export const createRestRouter = (
             console.log(`Blob download requested: ${hash}`);
 
             // Winbindex fast path: for Windows PE files the frontend passes
-            // `?filename=`, letting us resolve the file on Winbindex and stream
-            // verified bytes from Microsoft's symbol server instead of MinIO.
-            // Any miss or failure falls through to MinIO unchanged; a failure
-            // after bytes were already streamed ends the response here.
+            // `?filename=`, letting us resolve the file on Winbindex and serve
+            // SHA-1-verified bytes from Microsoft's symbol server instead of
+            // MinIO. Any miss or failure falls through to MinIO unchanged.
             const filename =
                 typeof req.query.filename === "string"
                     ? req.query.filename
@@ -49,10 +48,7 @@ export const createRestRouter = (
                         filename,
                         res,
                     );
-                    if (
-                        outcome === "served" ||
-                        outcome === "failed_after_send"
-                    ) {
+                    if (outcome === "served") {
                         return;
                     }
                 } catch (winbindexError) {
