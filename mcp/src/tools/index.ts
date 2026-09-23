@@ -13,6 +13,7 @@ import getStruct from "./get-struct.js";
 import listStructs from "./list-structs.js";
 import listSymbols from "./list-symbols.js";
 import listTree from "./list-tree.js";
+import listRegistryKey from "./list-registry-key.js";
 
 export const tools: ToolModule<any>[] = [
     listBranches,
@@ -29,4 +30,5 @@ export const tools: ToolModule<any>[] = [
     listStructs,
     listSymbols,
     listTree,
+    listRegistryKey,
 ];
