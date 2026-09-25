@@ -160,20 +160,29 @@ The MCP (Model Context Protocol) server exposes OSWatcher tools to AI assistants
 - **GraphQL client**: calls the API at `GRAPHQL_API_URL` (`http://api:4000/graphql` in Docker). The API is unauthenticated, so no credential is forwarded and the SDK is built once at module scope.
 - **Codegen**: `npm run generate` (not `codegen`) regenerates `src/graphql/generated/sdk.ts` from `src/graphql/queries.graphql`. It reads the schema from a **running** API on port 4000.
 
-### Tools (10 total)
+### Tools (17 total)
+
+Task-shaped tools take `(ref, path, ...)` and resolve the chain internally. The hash-based tools are retained as an escape hatch for entity combinations the task-shaped ones do not reach.
 
 | Tool | Description |
 |------|-------------|
 | `list_branches` | List OS branches with optional name filter |
 | `list_commits` | List commits on a branch |
+| `get_commit_capabilities` | Which data kinds were extracted for a snapshot |
+| `list_tree` | List a directory's subdirectories and files |
+| `list_registry_key` | List a registry key's subkeys and values, by hive name |
+| `get_struct` | A struct's full field layout, by name |
+| `list_structs` | Structs a PE file defines, optionally by name |
+| `list_symbols` | Symbols a PE file exports, optionally by name |
+| `git_log` | How one entity changed across commit history |
 | `diff_versions` | Filesystem diff between two refs at a path |
 | `search` | Substring search across filesystem/registry/symbols/structs |
 | `search_next` | Next page of a search session |
 | `search_close` | End a search session early |
-| `traverse_path` | Walk the filesystem from a ref to a path; returns `{ hash }` |
-| `get_winreg_root` | Follow `HAS_WINREG` from a Blob hash to the registry root hash |
-| `get_blobs_with_symbols` | List PE blobs that have PDB symbols or struct data |
-| `diff_nodes` | Low-level diff on raw node hashes (registry, symbols, structs) |
+| `traverse_path` | Raw: walk the filesystem from a ref to a path |
+| `get_winreg_root` | Raw: follow `HAS_WINREG` from a Blob hash |
+| `get_blobs_with_symbols` | Raw: PE blobs that carry PDB data |
+| `diff_nodes` | Raw: diff on node hashes, any entity type |
 
 ### Key design constraints
 
@@ -184,6 +193,10 @@ The MCP (Model Context Protocol) server exposes OSWatcher tools to AI assistants
 **UNCHANGED status filter for a full C type layout**: to reconstruct a whole struct (e.g. `_EPROCESS`, 261 fields) pass `status_filter: ["NEW", "MOD", "DEL", "UNCHANGED"]`. Without it only the delta comes back (~5 items).
 
 **Search sessions are process-local**: `src/search-session.ts` holds them in a `Map`, so the API cannot be horizontally scaled while sessions are in use.
+
+**Resolution lives in the MCP layer**: `mcp/src/resolve.ts` composes existing GraphQL queries client-side. 0.1 adds no custom resolvers to the API beyond paginated search: the API is a stable open-source artifact with a second consumer (the frontend, which composes the same queries client-side), and the hops are localhost-cheap inside the compose network.
+
+**One pagination envelope**: every paginated tool returns `{ items, has_more, next_cursor }` over three different mechanisms. `list_tree` and `list_registry_key` page two connections at once and pack both cursors into one opaque composite cursor, see `mcp/src/pagination.ts`.
 
 ## Important Patterns
 
