@@ -6,7 +6,7 @@ The diff system computes changes between two filesystem snapshots. It spans thre
 
 1. **GraphQL resolver** (`src/resolvers.ts` → `diffNodesAt`): validates input with a zod schema
 2. **TypeScript diff logic** (`src/diff/diff.ts` → `diffNodesAtInternal`, `diffTreesIterative`): resolves paths, calls the Neo4j procedure
-3. **Java Neo4j procedure** (`oswatcher-procedures` → `example.diffTreesRecursive`): recursive graph traversal
+3. **Java Neo4j procedure** (`oswatcher-procedures` → `oswatcher.diffTreesRecursive`): recursive graph traversal
 
 ## `max_depth` Semantics
 
@@ -26,7 +26,7 @@ the unlimited default, is allowed. There is no authentication model in this API
 at all. `src/auth/` was removed on 2026-09-08 along with Auth0.
 
 The `filter` and `max_depth=1` gotchas below are **not** auth rules. They are
-behaviours of the Java procedure `example.diffTreesRecursive`, and they apply
+behaviours of the Java procedure `oswatcher.diffTreesRecursive`, and they apply
 identically to every caller.
 
 ## `with_intermediates` and `status_filter`

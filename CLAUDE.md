@@ -186,7 +186,7 @@ Task-shaped tools take `(ref, path, ...)` and resolve the chain internally. The 
 
 ### Key design constraints
 
-**Filesystem diff filter**: `DiffNodesAt` **must** pass `filter: ["Tree", "Blob"]` when diffing filesystems. Without it, the Java procedure (`example.diffTreesRecursive`) defaults to filtering only `Tree` nodes and silently drops every `Blob` leaf. See `docs/explanation/diff-system.md`.
+**Filesystem diff filter**: `DiffNodesAt` **must** pass `filter: ["Tree", "Blob"]` when diffing filesystems. Without it, the Java procedure (`oswatcher.diffTreesRecursive`) defaults to filtering only `Tree` nodes and silently drops every `Blob` leaf. See `docs/explanation/diff-system.md`.
 
 **`max_depth=1` required for Symbol, Struct and StructField diffs**: the Java procedure adds `parentLabel` to the filter and recurses into Struct/Symbol nodes, but their children are `StructField`, not `Struct`/`Symbol`. Without `max_depth=1` the diff silently returns 0 results.
 
