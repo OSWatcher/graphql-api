@@ -8,3 +8,4 @@
 !tsconfig.json
 !type-defs.graphql
 !jest.config.ts
+!mcp/

@@ -6,10 +6,15 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import { readFileSync } from "fs";
 import neo4j from "neo4j-driver";
 import * as dotenv from "dotenv";
-import { cleanEnv, str, url, bool, num } from "envalid";
+import { cleanEnv, bool, num, str, url } from "envalid";
 import { createConstraintsIfNotExists } from "./constraints.js";
 import { resolvers } from "./resolvers.js";
 import { createRestRouter } from "./rest-routes.js";
+import {
+    configureSessionManager,
+    startCleanupInterval,
+    closeAllSessions,
+} from "./search-session.js";
 // Sensitive registry value redaction (ProductId, DigitalProductId, etc.) is
 // disabled by default for the open-source release -- see the commented-out
 // plugin block below and docs/reference/access-restrictions.md. Uncomment
@@ -73,7 +78,22 @@ const env = cleanEnv(process.env, {
         default: 15000,
         desc: "Timeout for each Winbindex index / symbol-server request",
     }),
+    MAX_SEARCH_SESSIONS: num({
+        default: 100,
+        desc: "Maximum concurrent search sessions for paginated search",
+    }),
+    SEARCH_SESSION_TTL_MS: num({
+        default: 300000,
+        desc: "Search session TTL in milliseconds (default: 5 min)",
+    }),
 });
+
+// Configure search session manager
+configureSessionManager({
+    maxSessions: env.MAX_SEARCH_SESSIONS,
+    ttlMs: env.SEARCH_SESSION_TTL_MS,
+});
+const searchSessionCleanupTimer = startCleanupInterval();
 
 // Neo4j driver instance
 const driver = neo4j.driver(
@@ -240,6 +260,8 @@ async function main() {
                     async serverWillStart() {
                         return {
                             async drainServer() {
+                                clearInterval(searchSessionCleanupTimer);
+                                await closeAllSessions();
                                 await serverCleanup.dispose();
                             },
                         };

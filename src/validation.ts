@@ -133,6 +133,20 @@ export const BlobHashParamSchema = z.object({
     hash: GitSHA1Schema,
 });
 
+// Paginated search arguments
+export const SearchWithSessionArgsSchema = z.object({
+    input: SearchInputSchema,
+    page_size: z.number().int().positive().max(500).default(50),
+});
+
+export const SearchNextArgsSchema = z.object({
+    session_id: z.string().uuid("Invalid session ID format"),
+});
+
+export const SearchCloseArgsSchema = z.object({
+    session_id: z.string().uuid("Invalid session ID format"),
+});
+
 // Blob download arguments (GET /blob/:hash)
 export const BlobDownloadArgsSchema = BlobHashParamSchema;
 

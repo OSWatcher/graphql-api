@@ -206,6 +206,13 @@ type SearchResult @query(read: false, aggregate: false) @mutation(operations: []
     node_hash: String!
 }
 
+type PaginatedSearchResult @query(read: false, aggregate: false) @mutation(operations: []) {
+    session_id: String
+    results: [SearchResult!]!
+    has_more: Boolean!
+    total_fetched: Int!
+}
+
 input DiffNodesOptions {
     limit: Int
     offset: Int
@@ -256,6 +263,10 @@ type Query {
     getCommitExtractedDataLabels(commit_hash: String!): [String!]!
     # search
     search(input: SearchInput!): [SearchResult!]!
+    # paginated search - creates a session and returns first page
+    searchWithSession(input: SearchInput!, page_size: Int = 50): PaginatedSearchResult!
+    # fetch next page from an existing search session
+    searchNext(session_id: String!): PaginatedSearchResult!
     # get blobs that have symbols or structs for a given commit
     getBlobsWithSymbols(commit_hash: String!): [BlobWithSymbols!]!
     # git log - track entity changes across commit history
@@ -279,4 +290,10 @@ type Subscription {
         commit_range: CommitRange!
         options: GitLogOptions = null
     ): GitLogEntry!
+}
+
+# custom Mutations
+type Mutation {
+    # close a search session and free resources
+    searchClose(session_id: String!): Boolean!
 }

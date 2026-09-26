@@ -1,0 +1,4 @@
+node_modules/
+dist/
+src/graphql/generated/*
+!src/graphql/generated/sdk.ts

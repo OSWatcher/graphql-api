@@ -1,0 +1,10 @@
+schema: http://localhost:4000/graphql
+documents: "src/graphql/queries.graphql"
+generates:
+    src/graphql/generated/sdk.ts:
+        plugins:
+            - "typescript"
+            - "typescript-operations"
+            - "typescript-generic-sdk"
+        config:
+            documentMode: documentNode
